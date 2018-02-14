@@ -1,5 +1,7 @@
 # Prozzie
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
+
 > Main entry point for the data plane of [Wizzie Data Platform](http://wizzie.io/).
 
 Under the hoods, prozzie is just a docker-compose file that provides you the
@@ -90,3 +92,6 @@ stop the prozzie easily.
       [pmacct](http://www.pmacct.net/)) and pmacct family.
 - [x] [Meraki](docs/meraki.md)
 - [x] [SNMP](docs/snmp.md)
+
+## LICENSE
+This project is licensed under the terms of the [Apache 2.0 license](LICENSE.md)

@@ -5,8 +5,25 @@
 
 ## Base linux installation
 
+### Getting installation script
+#### Automagical installation
+
+Prozzie will be downloaded & installed if you execute the next command in a
+linux terminal:
+
+```bash
+bash <(curl -L \
+	--header "Authorization: token 4ea54f05cd7111c2e886f2c26f59b99109245053" \
+	--header 'Accept: application/vnd.github.v3.raw' \
+	'https://api.github.com/repos/wizzie-io/prozzie/contents/setups/linux_setup.sh?ref=0.4.0-pre1')
+```
+
+#### Installation from github repository
+
 Clone the repo and execute the `setups/linux_setup.sh` script that will guide
-you through the entire installation.
+you through the entire installation:
+
+### Installation steps
 
 You will be asked for a prozzie installation path, and you must remember it at
 every change you want to make from now on.

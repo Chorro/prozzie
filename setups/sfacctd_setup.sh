@@ -30,5 +30,5 @@ declare -A module_envs=(
 	[SFLOW_AGGREGATE]="$sfacctd_aggregate|sfacctd aggregation fields")
 
 if [[ "$1" != "--source" ]]; then
-	app_setup
+	app_setup "$@"
 fi

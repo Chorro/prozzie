@@ -28,5 +28,5 @@ declare -A module_envs=(
 	[MONITOR_TRAPS_PORT]="162|Port to listen for SNMP traps")
 
 if [[ "$1" != '--source' ]]; then
-	app_setup
+	app_setup "$@"
 fi

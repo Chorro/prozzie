@@ -161,8 +161,17 @@ function app_cleanup {
 }
 
 # Set up appliction in prozzie
-# Needs a declared "module_envs" global array: ([global_var]="default|description")
+# Needs a declared "module_envs" global array:
+# ([global_var]="default|description")
+# Arguments:
+#  [--no-reload-prozzie] Don't reload prozzie at the end of call.
 function app_setup () {
+  declare reload_prozzie=y
+  if [[ $1 == --no-reload-prozzie ]]; then
+    reload_prozzie=n
+    shift
+  fi
+
   trap app_cleanup EXIT
 
   src_env_file="$DEFAULT_PREFIX/prozzie/.env"
@@ -186,5 +195,7 @@ function app_setup () {
   cp "$tmp_env" "$src_env_file"
 
   # Reload prozzie
-  (cd $(dirname "$src_env_file"); docker-compose up -d)
+  if [[ $reload_prozzie == y ]]; then
+    (cd $(dirname "$src_env_file"); docker-compose up -d)
+  fi
 }

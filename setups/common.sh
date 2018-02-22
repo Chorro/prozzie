@@ -55,6 +55,13 @@ function func_exists {
     return $?
 }
 
+# Read a y/n response and returns it lower y if affirmative, else otherwise
+read_yn_response () {
+    local reply;
+    read -p "$1  [Y/n]: " -n 1 -r reply
+    printf "%s" "$reply" | tr 'Y' 'y'
+}
+
 # ZZ variables treatment. Checks if an environment variable is defined, and ask
 # user for value if not.
 # After that, save it in docker-compose .env file

@@ -17,138 +17,27 @@
 
 
 declare -r GITHUB_ACCESS_TOKEN=4ea54f05cd7111c2e886f2c26f59b99109245053
-declare -r PROZZIE_VERSION=0.4.0-pre1
-
-declare -r COMPOSE_YML_SHA=a5bfe40708e53aaed5474af7191de8eefc03618329f4f3ef0c842f6e8105f9d3
-declare -r COMMON_SHA=9bd860402d661c77043e4c066b01e06e88226b84bfbc6f99b82a59697bf7c17a
-
-# Text colors
-readonly red="\e[1;31m"
-readonly green="\e[1;32m"
-readonly yellow="\e[1;33m"
-readonly white="\e[1;37m"
-readonly normal="\e[m"
+declare -r PROZZIE_VERSION=0.4.0-pre2
 
 . /etc/os-release
 
-# log function
-log () {
-    case $1 in
-        e|error|erro) # ERROR
-            printf "[ ${red}ERRO${normal} ] $2"
-            ;;
-        i|info) # INFORMATION
-            printf "[ ${white}INFO${normal} ] $2"
-            ;;
-        w|warn) # WARNING
-            printf "[ ${yellow}WARN${normal} ] $2"
-            ;;
-        f|fail) # FAIL
-            printf "[ ${red}FAIL${normal} ] $2"
-            ;;
-        o|ok) # OK
-            printf "[  ${green}OK${normal}  ] $2"
-            ;;
-        *) # USAGE
-            printf "Usage: log [i|e|w|f] <message>"
-            ;;
-    esac
+declare -r installer_directory=$(dirname "${BASH_SOURCE[0]}")
+declare -r common_filename="${installer_directory}/common.sh"
+if [[ ! -f "${common_filename}" ]]; then
+    # We are probably being called from download. Need to download prozzie
+    declare -r tmp_dir=$(mktemp -d)
+    trap "rm -rf $(printf '%q' "${tmp_dir}")" EXIT
+    declare -r tarball_endpoint="wizzie-io/prozzie/archive/${PROZZIE_VERSION}.tar.gz"
+    (cd "$tmp_dir";
+        curl -L \
+        "https://${GITHUB_ACCESS_TOKEN}@github.com/${tarball_endpoint}" |
+        tar xzp;
+        "./prozzie-${PROZZIE_VERSION}/setups/linux_setup.sh"
+        )
+    exit $?
+fi
 
-}
-
-# Creates temps unnamed file to write, and assign files descriptors returned in
-# $n variable
-tmp_fd () {
-    for ret_fd in "$@"; do
-        declare -r file_name=$(mktemp)
-        eval "exec {$1}>${file_name}"
-        rm "${file_name}"
-    done
-}
-
-# Returns the SHA256 sum of a file
-zz_sha256sum () {
-    sha256sum "$1" | cut -d' ' -f1
-}
-
-# Read a y/n response and returns it lower y if affirmative, else otherwise
-read_yn_response () {
-    local reply;
-    read -p "$1  [Y/n]: " -n 1 -r reply
-    printf "%s" "$reply" | tr 'Y' 'y'
-}
-
-# Downloads a resource and makes it available in $1 file. The resource will be
-# downloaded attending to $PROZZIE_VERSION variable.
-# Caller is responsible for close it.
-#
-# Arguments:
-#   1 - Github resource
-#   2 - Output file
-#   3 - [Optional] expected SHA
-# Fatal:
-#   Curl error is considered fatal
-download_github_resource () {
-    declare -r endpoint="https://api.github.com/repos/wizzie-io/prozzie/contents"
-
-    if [[ ! -z "$3" && -e "$2" && "$(zz_sha256sum "$2")" == "$3" ]]; then
-        # Already downloaded & valid
-        return
-    fi
-
-    tmp_fd curl_err
-
-    echo "DEBUG Downloading $1"
-    curl -L -o "$2" \
-        --header "Authorization: token $GITHUB_ACCESS_TOKEN" \
-        --header 'Accept: application/vnd.github.v3.raw' \
-        "${endpoint}/$1?ref=${PROZZIE_VERSION}" \
-        2>&"${curl_err}"
-
-    if [[ $? -ne 0 ]]; then
-        # Curl was not OK
-        cat /dev/fd/"${curl_err}" >&2
-        exit 1
-    fi
-
-    if [[ ! -z "$3" && $(zz_sha256sum "$2") != "$3" ]]; then
-        # HTTP download was OK, but github returned an unexpected answer
-        log error "Unexpected response from github.\n"
-        if [[ 'y' == $(read_yn_response "Want to show?") ]]; then
-            printf "===\n%s\n===\n" "$(cat "$2")"
-        fi
-        exit 1
-    fi
-
-    exec {curl_err}<&-
-}
-
-# Load $1 prozzie library in execution folder. If not exists, download last
-# version from ZZ prozzie repo.
-#
-# Arguments:
-#  1 - Library name
-#  2 - [Optional] sha256 sum of library
-load_library () {
-    declare -r resource_filename="$(dirname ${BASH_SOURCE[0]})/$1"
-    tmp_fd library
-
-    if [[ "${BASH_SOURCE[0]}" == "main" || ! -a "${resource_filename}" ]]; then
-        download_github_resource "setups/$1" "/dev/fd/${library}" $2
-    else
-        if [[ ! -e "${resource_filename}" ]]; then
-            log fail "Couldn't locate \"${resource_filename}\"\n"
-            exit 1
-        fi
-
-        exec {library}<"${resource_filename}"
-    fi
-
-    . "/dev/fd/${library}"
-    exec {library}<&-
-}
-
-load_library common.sh "${COMMON_SHA}"
+. "${common_filename}"
 
 # [env_variable]="default|prompt"
 declare -A module_envs=(
@@ -478,11 +367,8 @@ function app_setup () {
     trap app_cleanup EXIT
   fi
 
-  # Download of prozzie and installation
-  log info "Downloading ${PROZZIE_VERSION} release of Prozzie..."
-  download_github_resource docker-compose.yml \
-    "$PREFIX/prozzie/docker-compose.yml" \
-    "${COMPOSE_YML_SHA256SUM}"
+  log info "Installing ${PROZZIE_VERSION} release of Prozzie...\n"
+  cp -- "${installer_directory}/../docker-compose.yml" "$PREFIX/prozzie/"
 
   if [[ ! -z "$tmp_env" ]]; then
     # Restore & read old env before installation

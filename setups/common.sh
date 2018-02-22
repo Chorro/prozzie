@@ -62,6 +62,17 @@ read_yn_response () {
     printf "%s" "$reply" | tr 'Y' 'y'
 }
 
+# Creates a temporary unnamed file descriptor that you can use and it will be
+# deleted at shell exit (on close). File descriptor will be saved in $1 variable
+# Arguments:
+#  1 - Variable to save newly created temp file descriptor
+tmp_fd () {
+    declare -r file_name=$(mktemp)
+    eval "exec {$1}>${file_name}"
+    rm "${file_name}"
+}
+
+
 # ZZ variables treatment. Checks if an environment variable is defined, and ask
 # user for value if not.
 # After that, save it in docker-compose .env file
@@ -161,10 +172,9 @@ function zz_variables_ask {
 }
 
 # Clean up temp file. Internal function for app_setup
-function app_cleanup {
+print_not_modified_warning () {
   echo
   log warn "No changes made to $src_env_file"
-  rm -rf "$tmp_env"
 }
 
 # Set up appliction in prozzie
@@ -172,21 +182,21 @@ function app_cleanup {
 # ([global_var]="default|description")
 # Arguments:
 #  [--no-reload-prozzie] Don't reload prozzie at the end of call.
-function app_setup () {
+app_setup () {
   declare reload_prozzie=y
   if [[ $1 == --no-reload-prozzie ]]; then
     reload_prozzie=n
     shift
   fi
 
-  trap app_cleanup EXIT
-
   src_env_file="$DEFAULT_PREFIX/prozzie/.env"
   while [[ ! -f "$src_env_file" ]]; do
     read -p ".env file not found in \"$src_env_file\". Please provide .env path: " src_env_file
   done
 
-  readonly tmp_env=$(mktemp)
+  declare mod_tmp_env
+  tmp_fd mod_tmp_env
+  trap print_not_modified_warning EXIT
 
   # Check if the user previously provided the variables. In that case,
   # offer user to mantain previous value.
@@ -194,12 +204,16 @@ function app_setup () {
   # support old bash versions (<4.3, Centos 7 case), same with returning
   # and re-declaring it. With bash `4.3`. Proper way to do is to pass the
   # array variable, and use `local -n`.
-  eval 'declare -A module_envs='$(zz_variables_env_update_array "$src_env_file" "$tmp_env" "$(declare -p module_envs)")
-  zz_variables_ask "$tmp_env" "$(declare -p module_envs)"
+  eval 'declare -A module_envs='$(zz_variables_env_update_array \
+                                                    "$src_env_file"\
+                                                    "/dev/fd/${mod_tmp_env}"\
+                                                    "$(declare -p module_envs)")
+  zz_variables_ask "/dev/fd/${mod_tmp_env}" "$(declare -p module_envs)"
 
+  # Hurray! app installation end!
+  cp "/dev/fd/${mod_tmp_env}" "$src_env_file"
+  exec {mod_tmp_env}<&-
   trap '' EXIT
-  # Hurray! f2k installation end!
-  cp "$tmp_env" "$src_env_file"
 
   # Reload prozzie
   if [[ $reload_prozzie == y ]]; then

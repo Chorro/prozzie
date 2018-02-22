@@ -360,25 +360,20 @@ function app_setup () {
   DOCKER_COMPOSE_VERSION=$(docker-compose --version) 2> /dev/null
   log ok "Installed: $DOCKER_COMPOSE_VERSION\n\n"
 
+  declare tmp_env
+  tmp_fd tmp_env
   if [[ -f "$src_env_file" ]]; then
-    # Save current env file for future references
-    local -r tmp_env="$(mktemp)"
-    cp "$src_env_file" "$tmp_env"
-    trap app_cleanup EXIT
+    trap print_not_modified_warning EXIT
+
+    # Restore old env
+    eval 'declare -A module_envs='$(zz_variables_env_update_array \
+                                                    "$src_env_file" \
+                                                    "/dev/fd/$tmp_env" \
+                                                    "$(declare -p module_envs)")
   fi
 
   log info "Installing ${PROZZIE_VERSION} release of Prozzie...\n"
   cp -- "${installer_directory}/../docker-compose.yml" "$PREFIX/prozzie/"
-
-  if [[ ! -z "$tmp_env" ]]; then
-    # Restore & read old env before installation
-    cp "$tmp_env" "$src_env_file"
-    > "$tmp_env"
-    eval 'declare -A module_envs='$(zz_variables_env_update_array "$src_env_file" "$tmp_env" "$(declare -p module_envs)")
-  else
-    # Simulate empty temp file
-    local -r tmp_env=$(mktemp)
-  fi
 
   if [[ -z $INTERFACE_IP ]]; then
     reply=$(read_yn_response "Do you want discover the IP address automatically?")
@@ -391,8 +386,9 @@ function app_setup () {
   fi
 
   # TODO: When bash >4.3, proper way is [zz_variables_ask "$PREFIX/prozzie/.env" module_envs]. Alternative:
-  zz_variables_ask "$tmp_env" "$(declare -p module_envs)"
-  mv "$tmp_env" "$src_env_file"
+  zz_variables_ask "/dev/fd/${tmp_env}" "$(declare -p module_envs)"
+  cp "/dev/fd/$tmp_env" "$src_env_file"
+  {tmp_env}<&-
 
   trap '' EXIT # No need for file cleanup anymore
 

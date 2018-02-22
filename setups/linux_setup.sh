@@ -102,6 +102,78 @@ function update {
 
 }
 
+# Custom `select` implementation
+# Pass the choices as individual arguments.
+# Output is the chosen item, or "", if the user just pressed ENTER.
+zz_select () {
+    declare -r invalid_selection_message="Invalid selection. Please try again."
+    local item i=0 numItems=$#
+
+    # Print numbered menu items, based on the arguments passed.
+    for item; do         # Short for: for item in "$@"; do
+        printf '%s\n' "$((++i))) $item"
+    done >&2 # Print to stderr, as `select` does.
+
+    # Prompt the user for the index of the desired item.
+    while :; do
+        printf %s "${PS3-#? }" >&2
+        read -r index
+
+        # Make sure that the input is either empty, idx or text.
+        [[ -z $index ]] && return  # empty input
+        if [[ $index =~ ^-?[0-9]+$ ]]; then
+            # Answer is a number
+            (( index >= 1 && index <= numItems )) 2>/dev/null || \
+                { echo "${invalid_selection_message}" >&2; continue; }
+            printf %s "${@: index:1}"
+            return
+        fi
+
+        # Input is string
+        for arg in "$@"; do
+            if [[ $arg == $index ]]; then
+                printf "%s" "$arg"
+                return
+            fi
+        done
+
+        # Non-blank unknown response
+        log error "$invalid_selection_message" >&2;
+    done
+}
+
+# Search for modules in a specific directory and offers them to the user to
+# setup them
+# Arguments:
+#  1 - Directory to search modules from
+#  2 - Current temp env file
+setup_modules () {
+    declare -r PS3='Do you want to configure modules? (Enter for quit)'
+    declare -a modules
+
+    pushd -- "$1" >/dev/null 2>&1
+    for module in ./*_setup.sh; do
+        if [[ $module == './linux_setup.sh' ]]; then
+            continue
+        fi
+
+        # Parameter expansion deletes './' and '_setup.sh'
+        modules[${#modules[@]}]="${module:2:-9}"
+    done
+
+    while :; do
+        declare reply=$(zz_select "${modules[@]}")
+        if [[ -z ${reply} ]]; then
+            break
+        fi
+
+        set +m  # Send SIGINT only to child
+        (ENV_FILE="$2" "./${reply}_setup.sh" --no-reload-prozzie)
+        set -m
+    done
+    popd >/dev/null 2>&1
+}
+
 function app_setup () {
   # Architecture
   local -r ARCH=$(uname -m | sed 's/x86_//;s/i[3-6]86/32/')
@@ -387,6 +459,7 @@ function app_setup () {
 
   # TODO: When bash >4.3, proper way is [zz_variables_ask "$PREFIX/prozzie/.env" module_envs]. Alternative:
   zz_variables_ask "/dev/fd/${tmp_env}" "$(declare -p module_envs)"
+  setup_modules "${installer_directory}" "/dev/fd/${tmp_env}"
   cp "/dev/fd/$tmp_env" "$src_env_file"
   {tmp_env}<&-
 

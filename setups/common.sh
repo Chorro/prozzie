@@ -89,21 +89,21 @@ function zz_variable () {
     local readonly env_file="$PREFIX/prozzie/.env"
   fi
 
-  if [[ -z "${!1}" ]]; then
+  while [[ -z "${!1}" ]]; do
     if [[ ! -z "$2" ]]; then
       local readonly default=" [$2]"
     fi
-    read -rp "$3$default:" $1
-  fi
 
-  if [[ -z "${!1}" ]]; then
-    if [[ ! -z "$2" ]]; then
-      read -r $1 <<< "$2"
-    else
-      log fail "[${!1}][$2] Empty $1 not allowed"
-      exit 1
+    read -rp "$3$default: " $1
+
+    if [[ -z "${!1}" ]]; then
+        if [[ -z "$2" ]]; then
+            log fail "[${!1}][$2] Empty $1 not allowed\n"
+        else
+            read -r $1 <<< "$2"
+        fi
     fi
-  fi
+  done
 
   if func_exists "$1_sanitize"; then
     read -r $1 <<< "$($1_sanitize "${!1}")"
@@ -174,7 +174,7 @@ function zz_variables_ask {
 # Clean up temp file. Internal function for app_setup
 print_not_modified_warning () {
   echo
-  log warn "No changes made to $src_env_file"
+  log warn "No changes made to $src_env_file\n"
 }
 
 # Set up appliction in prozzie
@@ -189,7 +189,12 @@ app_setup () {
     shift
   fi
 
-  src_env_file="$DEFAULT_PREFIX/prozzie/.env"
+  if [[ ! -z ${ENV_FILE+x} ]]; then
+    src_env_file="${ENV_FILE}"
+  else
+    src_env_file="${PREFIX:-${DEFAULT_PREFIX}}/prozzie/.env"
+  fi
+
   while [[ ! -f "$src_env_file" ]]; do
     read -p ".env file not found in \"$src_env_file\". Please provide .env path: " src_env_file
   done

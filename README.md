@@ -58,13 +58,22 @@ example echo server that will receive JSON messages in the demo).
 ### Installation
 
 Clone the repo and execute the `setups/linux_setup.sh` script that will guide
-you through the entire installation. After that, if you want to support another
-protocol that needs configuration, you have to execute the proper `setup` script
-under `setups/`.
+you through the entire installation. You can also use the next command if you
+don't want to waste your time messing with git:
+
+```bash
+bash <(curl -L \
+	--header "Authorization: token 4ea54f05cd7111c2e886f2c26f59b99109245053" \
+	--header 'Accept: application/vnd.github.v3.raw' \
+	'https://api.github.com/repos/wizzie-io/prozzie/contents/setups/linux_setup.sh?ref=0.4.0-pre1')
+```
 
 You will be asked for a prozzie installation path. After installation, you can
 start and stop the prozzie using `bin/start-prozzie.sh` and
 `bin/stop-prozzie.sh` under that installation path.
+
+After that, you will be prompted for the different protocols configurations
+prozzie supports.
 
 Since all prozzie is contained in a docker compose, you can use
 `docker-compose start` and `docker-compose stop` in the prozzie folder to start

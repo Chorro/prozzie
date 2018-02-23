@@ -147,9 +147,12 @@ zz_select () {
 # Arguments:
 #  1 - Directory to search modules from
 #  2 - Current temp env file
+#  3 - (Optional) list of modules to configure
 setup_modules () {
     declare -r PS3='Do you want to configure modules? (Enter for quit)'
-    declare -a modules
+    declare -a modules config_modules
+    declare reply
+    read -r -a config_modules <<< "$3"
 
     pushd -- "$1" >/dev/null 2>&1
     for module in ./*_setup.sh; do
@@ -162,10 +165,19 @@ setup_modules () {
     done
 
     while :; do
-        declare reply=$(zz_select "${modules[@]}")
+        if [[ -z ${3+x} ]]; then
+            reply=$(zz_select "${modules[@]}")
+        elif [[ ${#config_modules[@]} > 0 ]]; then
+            reply=${config_modules[-1]}
+        else
+            reply=''
+        fi
+
         if [[ -z ${reply} ]]; then
             break
         fi
+
+        log info "Configuring ${reply} module\n"
 
         set +m  # Send SIGINT only to child
         (ENV_FILE="$2" "./${reply}_setup.sh" --no-reload-prozzie)
@@ -459,7 +471,8 @@ function app_setup () {
 
   # TODO: When bash >4.3, proper way is [zz_variables_ask "$PREFIX/prozzie/.env" module_envs]. Alternative:
   zz_variables_ask "/dev/fd/${tmp_env}" "$(declare -p module_envs)"
-  setup_modules "${installer_directory}" "/dev/fd/${tmp_env}"
+  setup_modules \
+    "${installer_directory}" "/dev/fd/${tmp_env}" ${CONFIG_APPS+"$CONFIG_APPS"}
   cp "/dev/fd/$tmp_env" "$src_env_file"
   {tmp_env}<&-
 

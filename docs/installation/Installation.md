@@ -24,6 +24,7 @@ Clone the repo and execute the `setups/linux_setup.sh` script that will guide
 you through the entire installation:
 
 ### Installation steps
+#### Base prozzie installation
 
 You will be asked for a prozzie installation path, and you must remember it at
 every change you want to make from now on.
@@ -44,11 +45,30 @@ CLIENT_API_KEY
 ZZ_HTTP_ENDPOINT
 : You WDP endpoint
 
-After installation, you can
-start and stop the prozzie using `bin/start-prozzie.sh` and
-`bin/stop-prozzie.sh` under that installation path.
+#### Modules configuration
+After that, you can configure prozzie different apps introducing the name or
+the number in the prompted menu:
+
+```bash
+1) f2k
+2) monitor
+3) sfacctd
+Do you want to configure modules? (Enter for quit)
+```
+
+You can omit the prompt with `CONFIG_APPS` environment variable. For instance,
+to configure only monitor and f2k, you can use `CONFIG_APPS='monitor f2k'`, and
+you will directly be asked for these related apps. Similarly, you can omit the
+whole prompt if that variable is empty, i.e., `CONFIG_APPS=''`.
+
+If you ever want to reconfigure an specified protocol, you can launch the
+individual script under `setup` folder directly.
 
 ## Prozzie operation
+
+After installation, you can start and stop the prozzie using
+`bin/start-prozzie.sh` and `bin/stop-prozzie.sh` under defined installation
+path.
 
 Since all prozzie is contained in a docker compose, you can use
 `docker-compose start` and `docker-compose stop` in the prozzie folder to start

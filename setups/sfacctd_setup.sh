@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-. common.sh
+. "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 declare -r sfacctd_aggregate='cos, etype, src_mac, dst_mac, vlan, src_host, \
 	dst_host, src_mask, dst_mask, src_net, dst_net, proto, tos, src_port, \

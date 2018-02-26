@@ -23,5 +23,5 @@ declare -A module_envs=(
 	[NETFLOW_KAFKA_TOPIC]='flow|Topic to produce netflow traffic? ')
 
 if [[ "$1" != "--source" ]]; then
-	app_setup
+	app_setup "$@"
 fi

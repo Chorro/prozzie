@@ -55,6 +55,24 @@ function func_exists {
     return $?
 }
 
+# Read a y/n response and returns it lower y if affirmative, else otherwise
+read_yn_response () {
+    local reply;
+    read -p "$1  [Y/n]: " -n 1 -r reply
+    printf "%s" "$reply" | tr 'Y' 'y'
+}
+
+# Creates a temporary unnamed file descriptor that you can use and it will be
+# deleted at shell exit (on close). File descriptor will be saved in $1 variable
+# Arguments:
+#  1 - Variable to save newly created temp file descriptor
+tmp_fd () {
+    declare -r file_name=$(mktemp)
+    eval "exec {$1}>${file_name}"
+    rm "${file_name}"
+}
+
+
 # ZZ variables treatment. Checks if an environment variable is defined, and ask
 # user for value if not.
 # After that, save it in docker-compose .env file
@@ -71,21 +89,21 @@ function zz_variable () {
     local readonly env_file="$PREFIX/prozzie/.env"
   fi
 
-  if [[ -z "${!1}" ]]; then
+  while [[ -z "${!1}" ]]; do
     if [[ ! -z "$2" ]]; then
       local readonly default=" [$2]"
     fi
-    read -rp "$3$default:" $1
-  fi
 
-  if [[ -z "${!1}" ]]; then
-    if [[ ! -z "$2" ]]; then
-      read -r $1 <<< "$2"
-    else
-      log fail "[${!1}][$2] Empty $1 not allowed"
-      exit 1
+    read -rp "$3$default: " $1
+
+    if [[ -z "${!1}" ]]; then
+        if [[ -z "$2" ]]; then
+            log fail "[${!1}][$2] Empty $1 not allowed\n"
+        else
+            read -r $1 <<< "$2"
+        fi
     fi
-  fi
+  done
 
   if func_exists "$1_sanitize"; then
     read -r $1 <<< "$($1_sanitize "${!1}")"
@@ -154,23 +172,36 @@ function zz_variables_ask {
 }
 
 # Clean up temp file. Internal function for app_setup
-function app_cleanup {
+print_not_modified_warning () {
   echo
-  log warn "No changes made to $src_env_file"
-  rm -rf "$tmp_env"
+  log warn "No changes made to $src_env_file\n"
 }
 
 # Set up appliction in prozzie
-# Needs a declared "module_envs" global array: ([global_var]="default|description")
-function app_setup () {
-  trap app_cleanup EXIT
+# Needs a declared "module_envs" global array:
+# ([global_var]="default|description")
+# Arguments:
+#  [--no-reload-prozzie] Don't reload prozzie at the end of call.
+app_setup () {
+  declare reload_prozzie=y
+  if [[ $1 == --no-reload-prozzie ]]; then
+    reload_prozzie=n
+    shift
+  fi
 
-  src_env_file="$DEFAULT_PREFIX/prozzie/.env"
+  if [[ ! -z ${ENV_FILE+x} ]]; then
+    src_env_file="${ENV_FILE}"
+  else
+    src_env_file="${PREFIX:-${DEFAULT_PREFIX}}/prozzie/.env"
+  fi
+
   while [[ ! -f "$src_env_file" ]]; do
     read -p ".env file not found in \"$src_env_file\". Please provide .env path: " src_env_file
   done
 
-  readonly tmp_env=$(mktemp)
+  declare mod_tmp_env
+  tmp_fd mod_tmp_env
+  trap print_not_modified_warning EXIT
 
   # Check if the user previously provided the variables. In that case,
   # offer user to mantain previous value.
@@ -178,13 +209,19 @@ function app_setup () {
   # support old bash versions (<4.3, Centos 7 case), same with returning
   # and re-declaring it. With bash `4.3`. Proper way to do is to pass the
   # array variable, and use `local -n`.
-  eval 'declare -A module_envs='$(zz_variables_env_update_array "$src_env_file" "$tmp_env" "$(declare -p module_envs)")
-  zz_variables_ask "$tmp_env" "$(declare -p module_envs)"
+  eval 'declare -A module_envs='$(zz_variables_env_update_array \
+                                                    "$src_env_file"\
+                                                    "/dev/fd/${mod_tmp_env}"\
+                                                    "$(declare -p module_envs)")
+  zz_variables_ask "/dev/fd/${mod_tmp_env}" "$(declare -p module_envs)"
 
+  # Hurray! app installation end!
+  cp "/dev/fd/${mod_tmp_env}" "$src_env_file"
+  exec {mod_tmp_env}<&-
   trap '' EXIT
-  # Hurray! f2k installation end!
-  cp "$tmp_env" "$src_env_file"
 
   # Reload prozzie
-  (cd $(dirname "$src_env_file"); docker-compose up -d)
+  if [[ $reload_prozzie == y ]]; then
+    (cd $(dirname "$src_env_file"); docker-compose up -d)
+  fi
 }

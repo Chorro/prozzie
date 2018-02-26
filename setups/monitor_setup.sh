@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-. common.sh
+. "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 monitor_custom_mib_prompt='monitor custom mibs path (use monitor_custom_mibs'
 monitor_custom_mib_prompt="$monitor_custom_mib_prompt for no custom mibs)"

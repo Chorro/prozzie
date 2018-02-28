@@ -19,7 +19,7 @@ value.converter.schemas.enable=false
 #Settings
 kafka.topic=syslog
 syslog.host=0.0.0.0
-syslog.port=514
+syslog.port=1514
 syslog.structured.data=true
 ```
 
@@ -35,3 +35,5 @@ When you configure the `syslog.properties` you need to create the connector:
 
 `kcli create syslog-connector < syslog.properties`
 
+## Warning
+Currently, the only port in what you can expose syslog server is 1514.

@@ -225,11 +225,7 @@ function app_setup () {
   zz_variable_ask "/dev/null" "$(declare -p module_envs)" PREFIX
   unset "module_envs[PREFIX]"
 
-  if [[ ! -d "$PREFIX" ]]; then
-    log error "The directory [$PREFIX] doesn't exist. Re-run Prozzie installer and enter a valid path.\n"
-    exit 1
-  fi
-
+  mkdir -p "$PREFIX/prozzie/bin"
   local -r src_env_file="$PREFIX/prozzie/.env"
 
   log info "Prozzie will be installed in: [$PREFIX]\n"
@@ -494,11 +490,6 @@ function app_setup () {
     fi
 
   fi
-
-  log info "Adding start and stop scripts..."
-
-  # Create prozzie/bin directory
-  mkdir -p "$PREFIX/prozzie/bin"
 
   echo -e "#!/bin/bash\n\n(cd $PREFIX/prozzie ; docker-compose start)" > "$PREFIX/prozzie/bin/start-prozzie.sh"
   sudo chmod +x "$PREFIX/prozzie/bin/start-prozzie.sh"

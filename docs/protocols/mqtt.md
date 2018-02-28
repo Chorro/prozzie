@@ -3,6 +3,26 @@
 
 # MQTT
 
+## Interactive script
+You can execute `setups/mqtt_setup.sh` to interactively configure one mqtt kafka
+connector. You will be asked for the next variables, that can't have any
+default:
+
+mqtt__server_uris
+:MQTT brokers
+
+kafka__topic
+:MQTT Topics to consume
+
+mqtt__topic
+:Topic to produce MQTT consumed messages
+
+However, there are some others "hidden" variables that configure connector.
+They will be output at the end of interactive setup, and you can reuse them
+following the [Advanced configuration](#Advanced-configuration).
+
+## Advanced configuration
+
 To configure MQTT you can use `kcli` tool.
 
 * mqtt.properties

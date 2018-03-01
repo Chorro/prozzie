@@ -180,7 +180,8 @@ setup_modules () {
         log info "Configuring ${reply} module\n"
 
         set +m  # Send SIGINT only to child
-        (ENV_FILE="$2" "./${reply}_setup.sh" --no-reload-prozzie)
+        (ENV_FILE="$2" KCLI="${PREFIX}/bin/kcli.sh" \
+            "./${reply}_setup.sh" --no-reload-prozzie)
         set -m
     done
     popd >/dev/null 2>&1
@@ -225,11 +226,7 @@ function app_setup () {
   zz_variable_ask "/dev/null" "$(declare -p module_envs)" PREFIX
   unset "module_envs[PREFIX]"
 
-  if [[ ! -d "$PREFIX" ]]; then
-    log error "The directory [$PREFIX] doesn't exist. Re-run Prozzie installer and enter a valid path.\n"
-    exit 1
-  fi
-
+  mkdir -p "$PREFIX/prozzie/bin"
   local -r src_env_file="$PREFIX/prozzie/.env"
 
   log info "Prozzie will be installed in: [$PREFIX]\n"
@@ -471,10 +468,15 @@ function app_setup () {
 
   # TODO: When bash >4.3, proper way is [zz_variables_ask "$PREFIX/prozzie/.env" module_envs]. Alternative:
   zz_variables_ask "/dev/fd/${tmp_env}" "$(declare -p module_envs)"
-  setup_modules \
-    "${installer_directory}" "/dev/fd/${tmp_env}" ${CONFIG_APPS+"$CONFIG_APPS"}
+
   cp "/dev/fd/$tmp_env" "$src_env_file"
   {tmp_env}<&-
+  # Need for kafka connect modules configuration.
+  echo -e "#!/bin/bash\n\ndocker run -i -e KAFKA_CONNECT_REST=http://${INTERFACE_IP}:8083 gcr.io/wizzie-registry/kafka-connect-cli:1.0.3 sh -c \"kcli \$*\"" > "$PREFIX/prozzie/bin/kcli.sh"
+  sudo chmod +x "$PREFIX/prozzie/bin/kcli.sh"
+  (cd "${PREFIX}/prozzie"; docker-compose up -d kafka-connect)
+  setup_modules \
+    "${installer_directory}" "/dev/fd/${tmp_env}" ${CONFIG_APPS+"$CONFIG_APPS"}
 
   trap '' EXIT # No need for file cleanup anymore
 
@@ -495,19 +497,11 @@ function app_setup () {
 
   fi
 
-  log info "Adding start and stop scripts..."
-
-  # Create prozzie/bin directory
-  mkdir -p "$PREFIX/prozzie/bin"
-
   echo -e "#!/bin/bash\n\n(cd $PREFIX/prozzie ; docker-compose start)" > "$PREFIX/prozzie/bin/start-prozzie.sh"
   sudo chmod +x "$PREFIX/prozzie/bin/start-prozzie.sh"
 
   echo -e "#!/bin/bash\n\n(cd $PREFIX/prozzie; docker-compose stop)" > "$PREFIX/prozzie/bin/stop-prozzie.sh"
   sudo chmod +x "$PREFIX/prozzie/bin/stop-prozzie.sh"
-
-  echo -e "#!/bin/bash\n\ndocker run -i -e KAFKA_CONNECT_REST=http://${INTERFACE_IP}:8083 gcr.io/wizzie-registry/kafka-connect-cli:1.0.3 sh -c \"kcli \$*\"" > "$PREFIX/prozzie/bin/kcli.sh"
-  sudo chmod +x "$PREFIX/prozzie/bin/kcli.sh"
 
   printf "Done!\n\n"
 

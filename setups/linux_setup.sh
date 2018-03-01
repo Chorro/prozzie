@@ -192,7 +192,7 @@ function app_setup () {
   local -r ARCH=$(uname -m | sed 's/x86_//;s/i[3-6]86/32/')
 
   # List of needed depedencies for prozzie
-  local -r NEEDED_DEPENDENCIES="curl jq net-tools"
+  local -r NEEDED_DEPENDENCIES="curl net-tools"
   # List of installed dependencies
   local INSTALLED_DEPENDENCIES=""
   # Package manager for install, uninstall and update
@@ -258,12 +258,6 @@ function app_setup () {
     type $DEPENDENCY &> /dev/null
 
     if [[ $? -eq 1 ]]; then
-
-      # CentOS systems only
-      if [[ $DEPENDENCY == jq && $ID == centos ]]; then
-        install epel-release
-      fi
-
       install $DEPENDENCY
       INSTALLED_DEPENDENCIES="$INSTALLED_DEPENDENCIES $DEPENDENCY"
     fi

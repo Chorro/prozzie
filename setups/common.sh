@@ -55,6 +55,10 @@ function func_exists {
     return $?
 }
 
+command_exists () {
+    command -v "$1" 2>/dev/null
+}
+
 # Read a y/n response and returns it lower y if affirmative, else otherwise
 read_yn_response () {
     local reply;

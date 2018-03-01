@@ -39,6 +39,10 @@ fi
 
 . "${common_filename}"
 
+if command_exists sudo; then
+    declare -r sudo=sudo
+fi
+
 # [env_variable]="default|prompt"
 declare -A module_envs=(
   [PREFIX]="${DEFAULT_PREFIX}|Where do you want install prozzie?"
@@ -65,14 +69,14 @@ function show_banner {
 # Install a program
 function install {
     log info "Installing $1 dependency..."
-    sudo $PKG_MANAGER install -y $1 # &> /dev/null
+    $sudo $PKG_MANAGER install -y $1 # &> /dev/null
     printf "Done!\n"
 }
 
 # Uninstall a program
 function uninstall {
     log info "Uninstalling $1 dependency..."
-    sudo $PKG_MANAGER remove -y $1 &> /dev/null
+    $sudo $PKG_MANAGER remove -y $1 &> /dev/null
     printf "Done!\n"
 }
 
@@ -82,17 +86,17 @@ function update {
   case $PKG_MANAGER in
     apt-get) # Ubuntu/Debian
       log info "Updating apt package index..."
-      sudo $PKG_MANAGER update &> /dev/null
+      $sudo $PKG_MANAGER update &> /dev/null
       printf "Done!\n"
     ;;
     yum) # CentOS
       log info "Updating yum package index..."
-      sudo $PKG_MANAGER makecache fast &> /dev/null
+      $sudo $PKG_MANAGER makecache fast &> /dev/null
       printf "Done!\n"
     ;;
     dnf) # Fedora
       log info "Updating dnf package index..."
-      sudo $PKG_MANAGER makecache fast &> /dev/null
+      $sudo $PKG_MANAGER makecache fast &> /dev/null
       printf "Done!\n"
     ;;
     *)
@@ -204,11 +208,6 @@ function app_setup () {
   # Clear screen
   clear
 
-  if [[ $EUID -ne 0 ]]; then
-    log warn "You must be a root user for running this script. Please use sudo\n"
-    exit 1
-  fi
-
   # Show "Wizzie Prozzie" banner
   show_banner
 
@@ -272,7 +271,7 @@ function app_setup () {
 
     if [[ $ID =~ ^\"?(ubuntu|debian)\"?$ ]]; then
       log info "Installing packages to allow apt to use repository over HTTPS..."
-      sudo apt-get install -y \
+      $sudo apt-get install -y \
         apt-transport-https \
         ca-certificates &> /dev/null
       printf "Done!\n"
@@ -292,12 +291,12 @@ function app_setup () {
 
             # Add Docker’s official GPG key:
             log info "Adding Docker's official GPG key..."
-            curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add - &> /dev/null
+            curl -fsSL https://download.docker.com/linux/debian/gpg | $sudo apt-key add - &> /dev/null
             printf "Done!\n"
 
             # Set up the stable repository
             log info "Setting up Docker's stable repository..."
-            sudo add-apt-repository \
+            $sudo add-apt-repository \
               "deb [arch=amd64] https://download.docker.com/linux/debian \
               $(lsb_release -cs) \
               stable" &> /dev/null
@@ -313,7 +312,7 @@ function app_setup () {
 
             # Version 14.04 (Trusty)
             if [[ ${VERSION_ID,,} =~ ^\"?.*trusty.*\"?$  ]]; then
-              sudo apt-get install -y \
+              $sudo apt-get install -y \
                 linux-image-extra-$(uname -r) \
                 linux-image-extra-virtual &> /dev/null
             fi
@@ -325,12 +324,12 @@ function app_setup () {
 
             # Add Docker's official GPG key
             log info "Adding Docker's official GPG key..."
-            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - &> /dev/null
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | $sudo apt-key add - &> /dev/null
             printf "Done!\n"
 
             # Set up the stable repository
             log info "Setting up Docker's stable repository..."
-            sudo add-apt-repository \
+            $sudo add-apt-repository \
               "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
               $(lsb_release -cs) \
               stable" &> /dev/null
@@ -350,7 +349,7 @@ function app_setup () {
 
             # Set up the stable repository
             log info "Setting up Docker's stable repository..."
-            sudo yum-config-manager \
+            $sudo yum-config-manager \
                  --add-repo \
                  https://download.docker.com/linux/centos/docker-ce.repo &> /dev/null
             printf "Done!\n"
@@ -372,7 +371,7 @@ function app_setup () {
 
             # Set up the stable repository
             log info "Setting up Docker's stable repository..."
-            sudo dnf config-manager \
+            $sudo dnf config-manager \
                  --add-repo \
                  https://download.docker.com/linux/fedora/docker-ce.repo &> /dev/null
             printf "Done!\n"
@@ -402,10 +401,10 @@ function app_setup () {
     if [[ $reply == y || -z $reply ]]; then
       case $ID in
         debian|ubuntu)
-          sudo systemctl enable docker &> /dev/null
+          $sudo systemctl enable docker &> /dev/null
         ;;
         fedora|centos)
-          sudo systemctl start docker &> /dev/null
+          $sudo systemctl start docker &> /dev/null
         ;;
       esac
       log ok "Configured docker to start on boot!\n"
@@ -425,9 +424,9 @@ function app_setup () {
     log info "Initializing Docker-Compose installation\n"
     # Download latest release (Not for production)
     log info "Downloading latest release of Docker Compose..."
-    sudo curl -s -L "https://github.com/docker/compose/releases/download/1.11.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/bin/docker-compose &> /dev/null
+    $sudo curl -s -L "https://github.com/docker/compose/releases/download/1.11.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/bin/docker-compose &> /dev/null
     # Add permissions
-    sudo chmod +x /usr/bin/docker-compose &> /dev/null
+    $sudo chmod +x /usr/bin/docker-compose &> /dev/null
     printf "Done!\n"
   fi
 
@@ -467,7 +466,7 @@ function app_setup () {
   {tmp_env}<&-
   # Need for kafka connect modules configuration.
   echo -e "#!/bin/bash\n\ndocker run -i -e KAFKA_CONNECT_REST=http://${INTERFACE_IP}:8083 gcr.io/wizzie-registry/kafka-connect-cli:1.0.3 sh -c \"kcli \$*\"" > "$PREFIX/prozzie/bin/kcli.sh"
-  sudo chmod +x "$PREFIX/prozzie/bin/kcli.sh"
+  chmod +x "$PREFIX/prozzie/bin/kcli.sh"
   (cd "${PREFIX}/prozzie"; docker-compose up -d kafka-connect)
   setup_modules \
     "${installer_directory}" "/dev/fd/${tmp_env}" ${CONFIG_APPS+"$CONFIG_APPS"}
@@ -492,23 +491,23 @@ function app_setup () {
   fi
 
   echo -e "#!/bin/bash\n\n(cd $PREFIX/prozzie ; docker-compose start)" > "$PREFIX/prozzie/bin/start-prozzie.sh"
-  sudo chmod +x "$PREFIX/prozzie/bin/start-prozzie.sh"
+  chmod +x "$PREFIX/prozzie/bin/start-prozzie.sh"
 
   echo -e "#!/bin/bash\n\n(cd $PREFIX/prozzie; docker-compose stop)" > "$PREFIX/prozzie/bin/stop-prozzie.sh"
-  sudo chmod +x "$PREFIX/prozzie/bin/stop-prozzie.sh"
+  chmod +x "$PREFIX/prozzie/bin/stop-prozzie.sh"
 
   printf "Done!\n\n"
 
   if [[ ! -f /usr/bin/prozzie-start ]]; then
-    sudo ln -s "$PREFIX/prozzie/bin/start-prozzie.sh" /usr/bin/prozzie-start
+    ln -s "$PREFIX/prozzie/bin/start-prozzie.sh" /usr/bin/prozzie-start
   fi
 
   if [[ ! -f /usr/bin/prozzie-stop ]]; then
-    sudo ln -s "$PREFIX/prozzie/bin/stop-prozzie.sh" /usr/bin/prozzie-stop
+    ln -s "$PREFIX/prozzie/bin/stop-prozzie.sh" /usr/bin/prozzie-stop
   fi
 
   if [[ ! -f /usr/bin/kcli ]]; then
-    sudo ln -s "$PREFIX/prozzie/bin/kcli.sh" /usr/bin/kcli
+    ln -s "$PREFIX/prozzie/bin/kcli.sh" /usr/bin/kcli
   fi
 
   log ok "Prozzie installation is finished!\n"

@@ -22,7 +22,7 @@ declare -r PROZZIE_VERSION=0.4.0-pre3
 . /etc/os-release
 
 declare -r installer_directory=$(dirname "${BASH_SOURCE[0]}")
-declare -r common_filename="${installer_directory}/common.sh"
+declare -r common_filename="${installer_directory}/../cli/common.bash"
 if [[ ! -f "${common_filename}" ]]; then
     # We are probably being called from download. Need to download prozzie
     declare -r tmp_dir=$(mktemp -d)
@@ -36,6 +36,9 @@ if [[ ! -f "${common_filename}" ]]; then
         )
     exit $?
 fi
+
+# Directories created at installation
+declare -a created_files
 
 . "${common_filename}"
 
@@ -199,6 +202,107 @@ setup_modules () {
     popd >/dev/null 2>&1
 }
 
+# Trap function to rollback installation
+# Arguments:
+#  -
+#
+# Environment:
+#  created_files - Installation created directories.
+#
+# Out:
+#  -
+#
+# Exit points:
+#  -
+#
+# Exit status:
+#  -
+install_rollback () {
+    rm -rf "${created_files[@]}"
+    print_not_modified_warning
+}
+
+# Trap function to stop prozzie and call install_rollback
+# Arguments:
+#  -
+#
+# Environment:
+#  created_files - Installation created directories.
+#  PREFIX - Where to search for prozzie installation to set it down
+#
+#
+# Out:
+#  -
+#
+# Exit points:
+#  -
+#
+# Exit status:
+#  -
+stop_prozzie_install_rollback () {
+    "${PREFIX}/bin/prozzie" down
+    install_rollback
+}
+
+
+# Create prozzie directory tree
+# Arguments:
+#  -
+#
+# Environment:
+#  PREFIX - Where to create the directory tree
+#  created_files - Array of created directories
+#
+# Out:
+#  mkdir errors by stderr
+#
+# Exit points:
+#  If any directory could not be created, it will call to exit
+#
+# Exit status:
+#  Always 0
+create_directory_tree () {
+    declare -r directories=("${PREFIX}/"{share/prozzie/cli,bin,etc/prozzie})
+    declare mkdir_out
+    mkdir_out=$(mkdir -vp "${directories[@]}")
+    if [[ $? != 0 ]]; then
+        exit $?
+    fi
+
+    readarray -t created_files < <(printf '%s\n' "${mkdir_out}")
+
+    # Remove mkdir unused output: All but string between the first and last
+    # quote
+    created_files=( "${created_files[@]%\'}" )
+    created_files=( "${created_files[@]#*\'}" )
+}
+
+# Create the prozzie CLI directory tree under $PREFIX
+# Arguments:
+#  -
+#
+# Environment:
+#  installer_directory - Installer execution path
+#  PREFIX - Where to create CLI directory tree
+#
+# Out:
+#  cp errors
+#
+# Exit points:
+#  If any file could not be created, it will call to exit
+#
+# Exit status:
+#  Always 0
+install_cli () {
+    declare -r cli_base_dir="${installer_directory}/../cli"
+    declare -r cli_dst_dir="${PREFIX}/share/prozzie"
+    cp -r -- "${cli_base_dir}" "${cli_dst_dir}"
+    if [[ ! -L "${PREFIX}/bin/prozzie" ]]; then
+        created_files+=("${PREFIX}/bin/prozzie")
+        ln -s "${cli_dst_dir}/cli/prozzie.bash" "${PREFIX}/bin/prozzie"
+    fi
+}
+
 function app_setup () {
   # Architecture
   local -r ARCH=$(uname -m | sed 's/x86_//;s/i[3-6]86/32/')
@@ -233,11 +337,6 @@ function app_setup () {
   zz_variable_ask "/dev/null" "$(declare -p module_envs)" PREFIX
   unset "module_envs[PREFIX]"
 
-  mkdir -p "$PREFIX/prozzie/bin"
-  local -r src_env_file="$PREFIX/prozzie/.env"
-
-  log info "Prozzie will be installed in: [$PREFIX]\n"
-
   # Set PKG_MANAGER first time
   case $ID in
     debian|ubuntu)
@@ -266,7 +365,6 @@ function app_setup () {
 
     if [[ $? -eq 1 ]]; then
       install $DEPENDENCY
-      INSTALLED_DEPENDENCIES="$INSTALLED_DEPENDENCIES $DEPENDENCY"
     fi
   done
 
@@ -442,11 +540,16 @@ function app_setup () {
   DOCKER_COMPOSE_VERSION=$(docker-compose --version) 2> /dev/null
   log ok "Installed: $DOCKER_COMPOSE_VERSION\n\n"
 
+  declare -r src_env_file="${PREFIX}/etc/prozzie/.env"
+  declare -r docker_compose_file="${PREFIX}/share/prozzie/docker-compose.yml"
+  create_directory_tree
+  trap install_rollback EXIT
+
+  log info "Prozzie will be installed under: [${PREFIX}]\n"
+
   declare tmp_env
   tmp_fd tmp_env
   if [[ -f "$src_env_file" ]]; then
-    trap print_not_modified_warning EXIT
-
     # Restore old env
     eval 'declare -A module_envs='$(zz_variables_env_update_array \
                                                     "$src_env_file" \
@@ -455,7 +558,8 @@ function app_setup () {
   fi
 
   log info "Installing ${PROZZIE_VERSION} release of Prozzie...\n"
-  cp -- "${installer_directory}/../docker-compose.yml" "$PREFIX/prozzie/"
+  cp -- "${installer_directory}/../docker-compose.yml" \
+        "${docker_compose_file}"
 
   if [[ -z $INTERFACE_IP ]]; then
     reply=$(read_yn_response "Do you want discover the IP address automatically?")
@@ -467,62 +571,27 @@ function app_setup () {
     fi
   fi
 
-  # TODO: When bash >4.3, proper way is [zz_variables_ask "$PREFIX/prozzie/.env" module_envs]. Alternative:
+  # TODO: When bash >4.3, proper way is [zz_variables_ask ... module_envs]. Alternative:
   zz_variables_ask "/dev/fd/${tmp_env}" "$(declare -p module_envs)"
 
   cp "/dev/fd/$tmp_env" "$src_env_file"
   {tmp_env}<&-
+  install_cli
   # Need for kafka connect modules configuration.
-  echo -e "#!/bin/bash\n\ndocker run -i -e KAFKA_CONNECT_REST=http://${INTERFACE_IP}:8083 gcr.io/wizzie-registry/kafka-connect-cli:1.0.3 sh -c \"kcli \$*\"" > "$PREFIX/prozzie/bin/kcli.sh"
-  chmod +x "$PREFIX/prozzie/bin/kcli.sh"
-  (cd "${PREFIX}/prozzie"; docker-compose up -d kafka-connect)
+  echo -e "#!/bin/bash\n\ndocker run -i -e KAFKA_CONNECT_REST=http://${INTERFACE_IP}:8083 gcr.io/wizzie-registry/kafka-connect-cli:1.0.3 sh -c \"kcli \$*\"" > "${PREFIX}/bin/kcli.sh"
+  chmod +x "${PREFIX}/bin/kcli.sh"
+  "${PREFIX}/bin/prozzie" up kafka-connect
+  trap stop_prozzie_install_rollback EXIT
   setup_modules \
-    "${installer_directory}" "/dev/fd/${tmp_env}" ${CONFIG_APPS+"$CONFIG_APPS"}
-
-  trap '' EXIT # No need for file cleanup anymore
-
-  # Check installed dependencies
-  if ! [[ -z "$INSTALLED_DEPENDENCIES" || "x$REMOVE_DEPS" == "x0" ]]; then
-    log info "This script has installed next dependencies: $INSTALLED_DEPENDENCIES\n\n"
-
-    reply=$(read_yn_response "They are no longer needed. Would you like to uninstall?")
-    printf "\n\n"
-
-    if [[ $reply == y ]]; then
-      # Uninstall dependencies
-      for DEPENDENCY in $INSTALLED_DEPENDENCIES; do
-        uninstall $DEPENDENCY
-      done
-      log info "All Prozzie dependecies have been uninstalled!\n"
-    fi
-
-  fi
-
-  echo -e "#!/bin/bash\n\n(cd $PREFIX/prozzie ; docker-compose start)" > "$PREFIX/prozzie/bin/start-prozzie.sh"
-  chmod +x "$PREFIX/prozzie/bin/start-prozzie.sh"
-
-  echo -e "#!/bin/bash\n\n(cd $PREFIX/prozzie; docker-compose stop)" > "$PREFIX/prozzie/bin/stop-prozzie.sh"
-  chmod +x "$PREFIX/prozzie/bin/stop-prozzie.sh"
+    "${installer_directory}" "${src_env_file}" ${CONFIG_APPS+"$CONFIG_APPS"}
 
   printf "Done!\n\n"
 
-  if [[ ! -f /usr/bin/prozzie-start ]]; then
-    ln -s "$PREFIX/prozzie/bin/start-prozzie.sh" /usr/bin/prozzie-start
-  fi
-
-  if [[ ! -f /usr/bin/prozzie-stop ]]; then
-    ln -s "$PREFIX/prozzie/bin/stop-prozzie.sh" /usr/bin/prozzie-stop
-  fi
-
-  if [[ ! -f /usr/bin/kcli ]]; then
-    ln -s "$PREFIX/prozzie/bin/kcli.sh" /usr/bin/kcli
-  fi
-
   log ok "Prozzie installation is finished!\n"
+  trap '' EXIT # No need for file cleanup anymore
   log info "Starting Prozzie...\n\n"
 
-  (cd "$PREFIX/prozzie"; \
-  docker-compose up -d)
+  "${PREFIX}/bin/prozzie" start
 }
 
 # Allow inclusion on other modules with no app_setup call

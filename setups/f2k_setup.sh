@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-. "$(dirname "${BASH_SOURCE[0]}")/common.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../cli/common.bash"
 
 declare -A module_envs=(
 	[NETFLOW_PROBES]="|JSON object of NF probes (It's recommend to use env var) "

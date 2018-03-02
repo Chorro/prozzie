@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-. "$(dirname "${BASH_SOURCE[0]}")/common.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../cli/common.bash"
 
 # Calls awk and replace file
 # Arguments:
@@ -41,7 +41,7 @@ inline_awk () {
     rc=$?
     cp "/dev/fd/${inline_awk_temp}" "${file_name}"
     exec {inline_awk_temp}<&-
-    return $?
+    return $rc
 }
 
 # Update kcli properties file

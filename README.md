@@ -85,10 +85,13 @@ After installation, you can re-run `linux_setup.sh` or the others `*_setup.sh`
 tools to reconfigure different prozzie components.
 
 Syslog and mqtt protocols are handled via kafka connect, so you need to use the
-installed `kcli` component to handle them.
+installed `kcli.sh` component to handle them.
 
-Lastly, you will have the tools `prozzie-start` and `prozzie-stop` to start and
-stop the prozzie easily.
+In order to operate on created compose, you can use `prozzie compose` command,
+and it will forward arguments with proper compose file and configurations. You
+can start, stop, create or destroy prozzie compose with shortcuts
+`prozzie start`, `prozzie stop`, `prozzie up` and `prozzie down` shortcuts, and
+arguments will be forwarded to these commands.
 
 ## Supported Protocols
 

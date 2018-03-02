@@ -2,6 +2,8 @@
   url: /
 - title: Installation
   url: /installation/Installation
+- title: Command Line Interface
+  url: /cli/CLI
 - title: Protocols
   children:
     - title: http

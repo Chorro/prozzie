@@ -90,7 +90,7 @@ function zz_variable () {
     local readonly env_file="${1#--env-file=}"
     shift
   else
-    local readonly env_file="$PREFIX/prozzie/.env"
+    local readonly env_file="$PREFIX/etc/prozzie/.env"
   fi
 
   while [[ -z "${!1}" ]]; do
@@ -175,10 +175,24 @@ function zz_variables_ask {
   done
 }
 
-# Clean up temp file. Internal function for app_setup
+# Print a warning saying that "$src_env_file" has not been modified.
+# Arguments:
+#  -
+#
+# Environment:
+#  src_env_file - Original file to print in warning. It will print no message if
+#  it does not exist or if it is under /dev/fd/.
+#
+# Out:
+#  -
+#
+# Exit status:
+#  Always 0
 print_not_modified_warning () {
-  echo
-  log warn "No changes made to $src_env_file\n"
+    echo
+    if [[ "$src_env_file" != '/dev/fd/'* && -f "$src_env_file" ]]; then
+        log warn "No changes made to $src_env_file"'\n'
+    fi
 }
 
 # Set up appliction in prozzie
@@ -196,7 +210,7 @@ app_setup () {
   if [[ ! -z ${ENV_FILE+x} ]]; then
     src_env_file="${ENV_FILE}"
   else
-    src_env_file="${PREFIX:-${DEFAULT_PREFIX}}/prozzie/.env"
+    src_env_file="${PREFIX:-${DEFAULT_PREFIX}}/etc/prozzie/.env"
   fi
 
   while [[ ! -f "$src_env_file" ]]; do
@@ -226,6 +240,6 @@ app_setup () {
 
   # Reload prozzie
   if [[ $reload_prozzie == y ]]; then
-    (cd $(dirname "$src_env_file"); docker-compose up -d)
+    "${src_env_file%etc/prozzie/.env}/bin/prozzie" up -d
   fi
 }

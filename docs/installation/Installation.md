@@ -66,14 +66,14 @@ individual script under `setup` folder directly.
 
 ## Prozzie operation
 
-After installation, you can start and stop the prozzie using
-`bin/start-prozzie.sh` and `bin/stop-prozzie.sh` under defined installation
-path.
+You can start, stop, create or destroy prozzie compose with installed commands
+`prozzie start`, `prozzie stop`, `prozzie up` and `prozzie down`, respectively.
 
-Since all prozzie is contained in a docker compose, you can use
-`docker-compose start` and `docker-compose stop` in the prozzie folder to start
-and stop the prozzie and `docker-compose down` for delete all created
-containers.
+In order to operate at low level on created compose, you can use
+`prozzie compose` command, and it will forward arguments with proper compose
+file and configurations. So, `prozzie start`, `prozzie stop`, `prozzie up` and
+`prozzie down` are just shortcuts for the long version
+`prozzie compose [up|down|...]`, and arguments will be also forwarded.
 
 ## Protocol installation
 

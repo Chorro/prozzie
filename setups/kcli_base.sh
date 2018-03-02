@@ -87,43 +87,33 @@ kcli_update_properties_file () {
     inline_awk "$1" -F '=' -v OFS="=" '{ gsub(/__/, ".", $1); }1-2'
 }
 
-# Search or ask the user for kcli command
+# Search prozzie cli that contains "prozzie kcli" command
 # Arguments:
 #  -
 #
 # Environment:
-#  KCLI - override KCLI and does not ask for anything. If not defined, KCLI will
-#  location will be returned here.
-#  PREFIX - If KCLI env is not defined, it will search ${PREFIX/bin/kcli.sh}. If
-#  it does not exists, it will ask user for prozzie location.
+#  PREFIX - If PROZZIE_CLI env is not defined, it will search
+#           ${PREFIX}/bin/prozzie. If it does not exists, it will try with
+#           common.bash ${DEFAULT_PREFIX}/bin/prozzie. If it does not exist, it
+#           will ask the user for prozzie location.
 #
 # Out:
 #  User interface
 #
 # Exit status:
 #  Regular
-search_kcli () {
-    declare -r kcli_path="/bin/kcli.sh"
-
-    if [[ -f KCLI ]]; then
-        return 0
+search_prozzie () {
+    if [[ ! -v PROZZIE_CLI ]]; then
+        if [[ ! -v "${PREFIX}" ]]; then
+            PREFIX="${DEFAULT_PREFIX}"
+        fi
+        declare -g PROZZIE_CLI="${PREFIX}/bin/prozzie"
     fi
 
-    if [[ -z "${PREFIX}" ]]; then
-        PREFIX="${DEFAULT_PREFIX}"
-    fi
-
-    declare -r install_dir="${PREFIX}/prozzie"
-
-    if [[ -f "${install_dir}/${kcli_path}" ]]; then
-        KCLI="${install_dir}/${kcli_path}"
-        return 0
-    fi
-
-    while [[ ! -f "${KCLI}" ]]; do
-        log error "Couldn't find \"${KCLI}\"\n"
-        read -i "${install_dir}" \
-            -p 'Please introduce prozzie installation dir: ' install_dir
+    while [[ ! -x $(realpath "${PROZZIE_CLI}") ]]; do
+        log error "Couldn't find \"${PROZZIE_CLI}\""'\n'
+        read -e -r -i "${PROZZIE_CLI}" \
+            -p 'Please introduce prozzie cli path: ' PROZZIE_CLI
     done
 }
 
@@ -132,7 +122,7 @@ search_kcli () {
 #  1 - properties file to update
 #
 # Environment:
-#  KCLI - prozzie kcli.sh binary
+#  PROZZIE_CLI - prozzie cli binary
 #  module_envs - Variables to ask via app_setup.
 #  module_hidden_envs - Variables to add to base file if it is not defined. If
 #    some variable is already defined, it will NOT be override.
@@ -146,6 +136,6 @@ kcli_setup () {
     log info "These changes will be applied at the end of app setup\n"
     kcli_update_properties_file "$1"
     declare -r module_name="${module_envs['name']-${module_hidden_envs['name']}}"
-    search_kcli
-    "${KCLI}" create "${module_name}" < "$1"
+    search_prozzie
+    "${PROZZIE_CLI}" kcli create "${module_name}" < "$1"
 }

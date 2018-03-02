@@ -33,7 +33,7 @@ kafka.topic
 
 When you configure the `syslog.properties` you need to create the connector:
 
-`kcli create syslog-connector < syslog.properties`
+`prozzie kcli create syslog-connector < syslog.properties`
 
 ## Warning
 Currently, the only port in what you can expose syslog server is 1514.

@@ -59,4 +59,4 @@ kafka.topic
 
 When you configure the `mqtt.properties` you need to create the connector:
 
-`kcli create mqtt-connector < mqtt.properties`
+`prozzie kcli create mqtt-connector < mqtt.properties`

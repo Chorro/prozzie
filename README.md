@@ -84,8 +84,8 @@ containers.
 After installation, you can re-run `linux_setup.sh` or the others `*_setup.sh`
 tools to reconfigure different prozzie components.
 
-Syslog and mqtt protocols are handled via kafka connect, so you need to use the
-installed `kcli.sh` component to handle them.
+Syslog and mqtt protocols are handled via kafka connect, so you need to call
+`prozzie kcli` component to handle them.
 
 In order to operate on created compose, you can use `prozzie compose` command,
 and it will forward arguments with proper compose file and configurations. You

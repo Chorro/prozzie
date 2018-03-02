@@ -195,7 +195,7 @@ setup_modules () {
         log info "Configuring ${reply} module\n"
 
         set +m  # Send SIGINT only to child
-        (ENV_FILE="$2" KCLI="${PREFIX}/bin/kcli.sh" \
+        (ENV_FILE="$2" PROZZIE_CLI="${PREFIX}/bin/prozzie" \
             "./${reply}_setup.sh" --no-reload-prozzie)
         set -m
     done
@@ -578,8 +578,6 @@ function app_setup () {
   {tmp_env}<&-
   install_cli
   # Need for kafka connect modules configuration.
-  echo -e "#!/bin/bash\n\ndocker run -i -e KAFKA_CONNECT_REST=http://${INTERFACE_IP}:8083 gcr.io/wizzie-registry/kafka-connect-cli:1.0.3 sh -c \"kcli \$*\"" > "${PREFIX}/bin/kcli.sh"
-  chmod +x "${PREFIX}/bin/kcli.sh"
   "${PREFIX}/bin/prozzie" up kafka-connect
   trap stop_prozzie_install_rollback EXIT
   setup_modules \

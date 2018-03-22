@@ -80,16 +80,49 @@ tmp_fd () {
     rm "${file_name}"
 }
 
+# Reads user input, using readline completions interface to fill paths.
+# Arguments:
+#  $1 - Variable to store user introduced text
+#  $2 - Prompt to user
+#  $3 - Default answer (optional)
+zz_read_path () {
+    read -e -i "$3" -r -p "$2: " "$1"
+}
+
+# Reads user input, forbidding tab (or other keys) completions but enabling
+# the rest of readline features, like navigate through arrow keys
+# Arguments:
+#  $1 - Variable to store user introduced text
+#  $2 - Prompt to user
+#  $3 - Default answer (optional)
+zz_read () {
+    read -r "$1" < <(
+        # Process substitution avoids overriding complete un-binding. Another
+        # way, exiting with Ctrol-C would cause binding ruined.
+        bind -u 'complete' 2>/dev/null
+        zz_read_path "$1" "$2" "$3" >/dev/tty
+        printf '%s' "${!1}"
+    )
+}
 
 # ZZ variables treatment. Checks if an environment variable is defined, and ask
 # user for value if not.
 # After that, save it in docker-compose .env file
 # Arguments:
 #  [--env-file] env file to write (default to $PREFIX/prozzie/.env)
-#  Variable name
-#  Default if empty text introduced ("" for error raising)
-#  Question text
-function zz_variable () {
+#  $1 The variable name. Will be overridden if needed.
+#  $2 Default value if empty text introduced ("" for error raising)
+#  $3 Question text
+#
+# Environment:
+#  -
+#
+# Out:
+#  User Interface
+#
+# Exit status:
+#  Always 0
+zz_variable () {
   if [[ $1 == --env-file=* ]]; then
     local readonly env_file="${1#--env-file=}"
     shift
@@ -97,19 +130,17 @@ function zz_variable () {
     local readonly env_file="$PREFIX/etc/prozzie/.env"
   fi
 
+  if [[ "$1" == PREFIX || "$1" == *_PATH ]]; then
+    declare -r read_callback=zz_read_path
+  else
+    declare -r read_callback=zz_read
+  fi
+
   while [[ -z "${!1}" ]]; do
-    if [[ ! -z "$2" ]]; then
-      local readonly default=" [$2]"
-    fi
+    "$read_callback" "$1" "$3" "$2"
 
-    read -rp "$3$default: " $1
-
-    if [[ -z "${!1}" ]]; then
-        if [[ -z "$2" ]]; then
-            log fail "[${!1}][$2] Empty $1 not allowed\n"
-        else
-            read -r $1 <<< "$2"
-        fi
+    if [[ -z "${!1}" && -z "$2" ]]; then
+      log fail "[${!1}][$2] Empty $1 not allowed"'\n'
     fi
   done
 
@@ -218,7 +249,9 @@ app_setup () {
   fi
 
   while [[ ! -f "$src_env_file" ]]; do
-    read -p ".env file not found in \"$src_env_file\". Please provide .env path: " src_env_file
+    zz_read_path src_env_file \
+        ".env file not found. Please provide .env path" \
+        "$src_env_file"
   done
 
   declare mod_tmp_env

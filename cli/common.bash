@@ -59,11 +59,15 @@ command_exists () {
     command -v "$1" 2>/dev/null
 }
 
-# Read a y/n response and returns it lower y if affirmative, else otherwise
+# Read a y/n response and returns true if answer is yes
 read_yn_response () {
     local reply;
-    read -p "$1  [Y/n]: " -n 1 -r reply
-    printf "%s" "$reply" | tr 'Y' 'y'
+    read -p "$1 [Y/n]: " -n 1 -r reply
+    if [[ ! -z $reply ]]; then
+        printf '\n'
+    fi
+
+    [[ -z $reply || $reply == 'y' || $reply == 'Y' ]]
 }
 
 # Creates a temporary unnamed file descriptor that you can use and it will be

@@ -500,11 +500,7 @@ function app_setup () {
     $PKG_MANAGER install -y docker-ce &> /dev/null;
     printf "Done!\n\n"
 
-    # Configure Docker to start boot
-    reply=$(read_yn_response "Do you want that docker to start on boot?")
-    printf "\n\n"
-
-    if [[ $reply == y || -z $reply ]]; then
+    if read_yn_response "Do you want that docker to start on boot?"; then
       case $ID in
         debian|ubuntu)
           $sudo systemctl enable docker &> /dev/null
@@ -561,14 +557,12 @@ function app_setup () {
   cp -- "${installer_directory}/../docker-compose.yml" \
         "${docker_compose_file}"
 
-  if [[ -z $INTERFACE_IP ]]; then
-    reply=$(read_yn_response "Do you want discover the IP address automatically?")
-    printf "\n"
-
-    if [[ $reply == y || -z $reply ]]; then
+  if [[ -z $INTERFACE_IP ]] && \
+                      read_yn_response \
+                        "Do you want discover the IP address automatically?"; \
+  then
       MAIN_INTERFACE=$(route -n | awk '{printf("%s %s\n", $1, $8)}' | grep 0.0.0.0 | awk '{printf("%s", $2)}')
       INTERFACE_IP=$(ifconfig ${MAIN_INTERFACE} | grep inet | grep -v inet6 | awk '{printf("%s", $2)}' | sed -E -e 's/(inet|addr)://')
-    fi
   fi
 
   # TODO: When bash >4.3, proper way is [zz_variables_ask ... module_envs]. Alternative:

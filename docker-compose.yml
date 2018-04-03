@@ -98,7 +98,7 @@ services:
       KAFKA_TOPICS: "*"
       KAFKA_VERSION: "0_10_2_0"
   f2k:
-    image: gcr.io/wizzie-registry/prozzie-f2k:1.0.2
+    image: gcr.io/wizzie-registry/prozzie-f2k:1.1.0
     restart: always
     depends_on:
       - kafka

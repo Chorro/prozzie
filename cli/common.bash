@@ -242,7 +242,7 @@ app_setup () {
     shift
   fi
 
-  if [[ ! -z ${ENV_FILE+x} ]]; then
+  if [[ -v ENV_FILE ]]; then
     src_env_file="${ENV_FILE}"
   else
     src_env_file="${PREFIX:-${DEFAULT_PREFIX}}/etc/prozzie/.env"

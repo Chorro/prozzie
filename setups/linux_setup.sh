@@ -333,8 +333,7 @@ function app_setup () {
   fi
 
   # Special treatment of PREFIX variable
-  # TODO: When bash >4.3, proper way is [zz_variable_ask "/dev/null" module_envs PREFIX]. Alternative:
-  zz_variable_ask "/dev/null" "$(declare -p module_envs)" PREFIX
+  zz_variable_ask "/dev/null" PREFIX
   unset "module_envs[PREFIX]"
 
   # Set PKG_MANAGER first time
@@ -546,11 +545,8 @@ function app_setup () {
   declare tmp_env
   tmp_fd tmp_env
   if [[ -f "$src_env_file" ]]; then
-    # Restore old env
-    eval 'declare -A module_envs='$(zz_variables_env_update_array \
-                                                    "$src_env_file" \
-                                                    "/dev/fd/$tmp_env" \
-                                                    "$(declare -p module_envs)")
+    # Copy not interested variables and take previous values.
+    zz_variables_env_update_array "$src_env_file" "/dev/fd/$tmp_env"
   fi
 
   log info "Installing ${PROZZIE_VERSION} release of Prozzie...\n"
@@ -565,8 +561,7 @@ function app_setup () {
       INTERFACE_IP=$(ifconfig ${MAIN_INTERFACE} | grep inet | grep -v inet6 | awk '{printf("%s", $2)}' | sed -E -e 's/(inet|addr)://')
   fi
 
-  # TODO: When bash >4.3, proper way is [zz_variables_ask ... module_envs]. Alternative:
-  zz_variables_ask "/dev/fd/${tmp_env}" "$(declare -p module_envs)"
+  zz_variables_ask "/dev/fd/${tmp_env}"
 
   cp "/dev/fd/$tmp_env" "$src_env_file"
   {tmp_env}<&-

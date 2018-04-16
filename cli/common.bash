@@ -109,13 +109,12 @@ zz_read () {
 # user for value if not.
 # After that, save it in docker-compose .env file
 # Arguments:
-#  [--env-file] env file to write (default to $PREFIX/prozzie/.env)
 #  $1 The variable name. Will be overridden if needed.
 #  $2 Default value if empty text introduced ("" for error raising)
 #  $3 Question text
-#
+#  $4 env file to write
 # Environment:
-#  -
+#  module_envs - Associated array to update.
 #
 # Out:
 #  User Interface
@@ -123,12 +122,7 @@ zz_read () {
 # Exit status:
 #  Always 0
 zz_variable () {
-  if [[ $1 == --env-file=* ]]; then
-    local readonly env_file="${1#--env-file=}"
-    shift
-  else
-    local readonly env_file="$PREFIX/etc/prozzie/.env"
-  fi
+  declare -r env_file="$4"
 
   if [[ "$1" == PREFIX || "$1" == *_PATH ]]; then
     declare -r read_callback=zz_read_path
@@ -154,60 +148,71 @@ zz_variable () {
 }
 
 # Update zz variables array default values using a docker-compose .env file. If
-# variable it's not contained in $2, copy it to .env file
+# variable it's not contained in module_envs, copy it to .env file
 # Arguments:
-#  $1 source .env file
-#  $2 destination .env file
-#  $3 Array to update
-function zz_variables_env_update_array {
-  # TODO: bash >4.3, proper way is [local -n zz_vars_array=$3]. Alternative:
-  eval "declare -A zz_vars_array="${3#*=}
-
+#  1 - File to read previous values
+#  2 - File to save not-interesting values
+#
+# Environment:
+#  module_envs - Associated array to update and iterate searching for variables
+#
+# Out:
+#  -
+#
+# Exit status:
+#  Always 0
+zz_variables_env_update_array () {
   while IFS='=' read -r var_key var_val || [[ -n "$var_key" ]]; do
-    if [ ${zz_vars_array[$var_key]+_} ]; then
+    if [ ${module_envs[$var_key]+_} ]; then
       # Update zz variable
-      local readonly prompt=$(cut -d '|' -f 2 <<< ${zz_vars_array[$var_key]})
-      zz_vars_array[$var_key]=$(printf "%s|%s" "$var_val" "$prompt")
+      declare -r prompt=$(cut -d '|' -f 2 <<< "${module_envs[$var_key]}")
+      module_envs[$var_key]=$(printf "%s|%s" "$var_val" "$prompt")
     else
       # Copy to output .env file
       printf "%s=%s\n" "$var_key" "$var_val" >> "$2"
     fi
   done < "$1"
-
-  # TODO bash >4.3 hack. We don't need this with bash>4.3
-  local -r ret="$(declare -p zz_vars_array)"
-  printf "%s" "${ret#*=}"
 }
 
-# Ask user for a single ZZ variable
+# Ask user for a single ZZ variable. If the environment variable is defined,
+# assign the value to the variable directly.
 # Arguments:
-#  $1 env file to save variables
-#  $2 Array with variables
-#  $3 Variable to ask user for
-# Notes:
-#  - If environment variable is defined, user will not be asked for value
-function zz_variable_ask {
-  local var_default
-  local var_prompt
-  # TODO: When bash >4.3, proper way is [local -n var_array=$2]. Alternative:
-  eval "declare -A var_array="${2#*=}
+#  $1 The env file to save variables
+#  $2 The variable to ask user for
+#
+# Environment:
+#  module_envs - The associated array to update.
+#
+# Out:
+#  User Interface
+#
+# Exit status:
+#  Always 0
+zz_variable_ask () {
+    local var_default
+    local var_prompt
 
-  IFS='|' read var_default var_prompt <<< "${var_array[$3]}"
-  zz_variable --env-file="$1" "$3" "$var_default" "$var_prompt"
+    IFS='|' read -r var_default var_prompt <<< "${module_envs[$2]}"
+    zz_variable "$2" "$var_default" "$var_prompt" "$1"
 }
 
-# Ask user for ZZ module variables
+# Ask the user for module variables. If the environment variable is defined,
+# assign the value to the variable directly.
 # Arguments:
-#  $1 env file to save variables
-#  $2 Array with variables
-function zz_variables_ask {
-  # TODO: When bash >4.3, proper way is [local -n zz_variables=$2]. Alternative:
-  eval "declare -A zz_variables="${2#*=}
-
-  for var_key in "${!zz_variables[@]}"; do
-    # TODO: When bash >4.3, proper way is [zz_variable_ask "$1" $2 "$var_key"]. Alternative:
-    zz_variable_ask "$1" "$(declare -p zz_variables)" "$var_key"
-  done
+#  $1 The env file to save variables
+#
+# Environment:
+#  module_envs - The associated array to update.
+#
+# Out:
+#  User Interface
+#
+# Exit status:
+#  Always 0
+zz_variables_ask () {
+    for var_key in "${!module_envs[@]}"; do
+        zz_variable_ask "$1" "$var_key"
+    done
 }
 
 # Print a warning saying that "$src_env_file" has not been modified.
@@ -231,10 +236,24 @@ print_not_modified_warning () {
 }
 
 # Set up appliction in prozzie
-# Needs a declared "module_envs" global array:
-# ([global_var]="default|description")
 # Arguments:
-#  [--no-reload-prozzie] Don't reload prozzie at the end of call.
+#  [--no-reload-prozzie] Don't reload prozzie at the end of `.env` changes
+#
+# Environment:
+#  ENV_FILE - The path of `.env` file to modify
+#  src_env_file - ENV_FILE Backup. Variable will be unset after function call.
+#    See print_not_modified_warning.
+#  DEFAULT_PREFIX - (see common.bash:DEFAULT_PREFIX)
+#  PREFIX - Where to look for the `.env` file. Defaults to DEFAULT_PREFIX
+#  module_envs - The variables to ask for, in form:
+#    ([global_var]="default|description"). See also
+#    `zz_variables_env_update_array` and `zz_variables_ask`
+#
+# Out:
+#  User interface
+#
+# Exit status:
+#  Always 0
 app_setup () {
   declare reload_prozzie=y
   if [[ $1 == --no-reload-prozzie ]]; then
@@ -260,15 +279,8 @@ app_setup () {
 
   # Check if the user previously provided the variables. In that case,
   # offer user to mantain previous value.
-  # TODO all the `$(declare -p module_envs)` are just a hack in order to
-  # support old bash versions (<4.3, Centos 7 case), same with returning
-  # and re-declaring it. With bash `4.3`. Proper way to do is to pass the
-  # array variable, and use `local -n`.
-  eval 'declare -A module_envs='$(zz_variables_env_update_array \
-                                                    "$src_env_file"\
-                                                    "/dev/fd/${mod_tmp_env}"\
-                                                    "$(declare -p module_envs)")
-  zz_variables_ask "/dev/fd/${mod_tmp_env}" "$(declare -p module_envs)"
+  zz_variables_env_update_array "$src_env_file" "/dev/fd/${mod_tmp_env}"
+  zz_variables_ask "/dev/fd/${mod_tmp_env}"
 
   # Hurray! app installation end!
   cp "/dev/fd/${mod_tmp_env}" "$src_env_file"
@@ -279,4 +291,6 @@ app_setup () {
   if [[ $reload_prozzie == y ]]; then
     "${src_env_file%etc/prozzie/.env}/bin/prozzie" up -d
   fi
+
+  unset -v src_env_file
 }

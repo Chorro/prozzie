@@ -26,7 +26,7 @@ readonly normal="\e[m"
 readonly DEFAULT_PREFIX="/usr/local"
 
 # log function
-function log {
+log () {
   case $1 in
     e|error|erro) # ERROR
       printf "[ ${red}ERRO${normal} ] $2"
@@ -50,7 +50,7 @@ function log {
 }
 
 # Check function $1 existence
-function func_exists {
+func_exists () {
     declare -f "$1" > /dev/null
     return $?
 }

@@ -53,6 +53,22 @@ So, `prozzie start`, `prozzie stop`, `prozzie up` and
 `prozzie down` are just shortcuts for the long version
 `prozzie compose [up|down|...]`, and arguments will be also forwarded.
 
+### Prozzie message queue operation
+#### Topic management
+You can manage topics with `prozzie kafka topics` subcommand. If you execute 
+it, you can check the options it offers to you. Check included examples in
+this document.
+
+##### Creating topics
+```bash
+prozzie kafka topics --create --topic abc --partitions 1 --replication-factor 1
+```
+
+#### List topics
+```bash
+prozzie kafka topics --list
+```
+
 ## Creating custom subcommands
 
 You can create your own prozzie CLI subcommands just placing it under

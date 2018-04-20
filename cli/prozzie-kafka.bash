@@ -15,16 +15,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Main kafka prozzie CLI entrypoint
+# Arguments:
+#  [--shorthelp] - Show one line help
+#  [-h/--help] - Show help
+#
+# Environment
+#  - PREFIX: Prozzie installation location
+#
+# Out:
+#  UI
+#
+# Exit status:
+#  Subcommand exit status
 
-# We are located in ${PREFIX}/share/prozzie/cli/prozzie.bash, so...
-# Resolve symlinks
-declare -r my_path=$(realpath "${BASH_SOURCE[0]}")
-# Extract prozzie prefix
-declare -r PREFIX=${my_path%/share/prozzie/cli/prozzie.bash}
 
 . "${PREFIX}/share/prozzie/cli/common.bash"
 
-# Prozzie cli help
+# Main command help
 # Arguments:
 #  1 - Prefix for subcommand help execution
 #
@@ -36,37 +44,32 @@ declare -r PREFIX=${my_path%/share/prozzie/cli/prozzie.bash}
 #
 # Exit status:
 #  Always 0
-main_help () {
+kafka_help () {
     cat <<-EOF
-		Welcome to Prozzie CLI interface!
+		Prozzie kafka configuration tool.
 
-		Please use some of the next options to start using prozzie:
+		Please use some of the following commands:
 	EOF
 
     zz_cli_subcommand_help "$1"
 }
 
 # Main cli entrypoint
-# Arguments:
-#  [-h/--help] - Show help
-#
-# Environment
-#  - PREFIX: Prozzie installation location
-#
-# Out:
-#  Help or subcommand output
-#
-# Exit status:
-#  Subcommand exit status
 main () {
-    declare -r prozzie_cli_prefix="${PREFIX}/share/prozzie/cli/prozzie-"
+    declare prozzie_kafka_cli_prefix
+    prozzie_kafka_cli_prefix="${PREFIX}/share/prozzie/cli/prozzie-kafka-"
+    declare -r prozzie_kafka_cli_prefix
 
-    if [[ $# == 0 || $1 == '-h' || $1 == '--help' ]]; then
-        main_help "${prozzie_cli_prefix}"
+    if [[ $# == 0 || $1 == --help ]]; then
+        kafka_help "$prozzie_kafka_cli_prefix"
+        exit 0
+    elif [[ $1 == --shorthelp ]]; then
+        printf '%s\n' 'Handle or ask prozzie kafka cluster'
         exit 0
     fi
 
-    zz_cli_case "${prozzie_cli_prefix}" "$@"
+
+    zz_cli_case "${prozzie_kafka_cli_prefix}" "$@"
 }
 
 main "$@"

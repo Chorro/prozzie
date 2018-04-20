@@ -294,3 +294,86 @@ app_setup () {
 
   unset -v src_env_file
 }
+
+#
+# CLI
+#
+
+# Main case switch in prozzie cli
+# Arguments:
+#  1 - Prefix to search command
+#  2 - Command to execute
+#  N - Rest of the options to send to command
+#
+# Environment
+#  PREFIX - Prozzie installation location
+#
+# Out:
+#  Error string if cannot find command
+#
+# Exit status:
+#  Subcommand exit status
+zz_cli_case () {
+    declare -r subcommand="$1$2.bash"
+    if [[ ! -x $(realpath "${subcommand}") ]]; then
+        "$0: '$1$2' is not a $0 command. See '$0 --help'." >&2
+        exit 1
+    fi
+    shift  2  # Prefix & subcommand
+    (export PREFIX; "$subcommand" "$@")
+}
+
+# Return a newline separated array with available commands.
+#
+# Arguments:
+#  1 - Prefix to search, including folder and file CLI prefix. For example,
+#      /share/prozzie/cli/prozzie- will return all files matching with
+#      /share/prozzie/cli/prozzie-* as subcommands, and will assume
+#      prozzie-test-1 and prozzie-test-2 as the same command (test).
+#
+# Environment
+#  -
+#
+# Out:
+#  Newline separated subcommands
+#
+# Exit status:
+#  -
+zz_cli_available_commands () {
+    declare -a ret=( "$1"* )
+
+    # Filter prefix and suffix
+    ret=( "${ret[@]#$1}" )
+    ret=( "${ret[@]%%.bash}" )
+    ret=( "${ret[@]%-*}" )
+
+    # Delete duplicates
+    read -d '' -r -a ret <<< "$(printf '%s\n' "${ret[@]}" | sort -u)"
+
+    printf '%s\n' "${ret[@]}"
+}
+
+# Prozzie cli subcommands help
+# Arguments:
+#  1 - Prefix for subcommand help execution
+#
+# Environment
+#  subcommands_help - This associative array will be printed before of the
+#                     subcommands if it exists.
+#
+# Out:
+#  Proper help
+#
+# Exit status:
+#  Always 0
+zz_cli_subcommand_help () {
+    declare -a subcommands
+    declare subcommand shorthelp
+
+    readarray -t subcommands < <(zz_cli_available_commands "$1")
+
+    for subcommand in "${subcommands[@]}"; do
+        shorthelp=$(export PREFIX; "${1}${subcommand}.bash" --shorthelp)
+        printf '\t%s\t%s\n' "${subcommand}" "${shorthelp}"
+    done
+}

@@ -64,10 +64,25 @@ this document.
 prozzie kafka topics --create --topic abc --partitions 1 --replication-factor 1
 ```
 
+Note that you don't need to create a topic before produce data. Kafka cluster
+creates it for you at the same moment you produce the first message.
+
 #### List topics
 ```bash
 prozzie kafka topics --list
 ```
+
+#### Produce messages
+```bash
+prozzie kafka produce <topic>
+```
+
+You can introduce as many messages as you want, separated by a newline.
+
+#### Advanced operation
+If you know how to use kafka distributed configuration scripts, you can
+execute them directly using
+`prozzie compose exec kafka /opt/kafka/bin/<you_script>`.
 
 ## Creating custom subcommands
 

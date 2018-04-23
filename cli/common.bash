@@ -105,6 +105,63 @@ zz_read () {
     )
 }
 
+# Check if an array contains a particular element
+#
+# Arguments:
+#  1 - Element to find
+#  N - Array passed as "${arr[@]}"
+#
+# Out:
+#  None
+#
+# Return:
+#  True if found, false other way
+array_contains () {
+    declare -r needle="$1"
+    shift
+
+    for element in "$@"; do
+        if [[ "${needle}" == "${element}" ]]; then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+
+# Print a string which is the concatenation of the strings in parameters >1. The
+# separator between elements is $1.
+#
+# Arguments
+#  1 - The Token to use to join (can be empty, '')
+#  N - The strings to join
+#
+# Environment
+#  -
+#
+# Out:
+#  Joined string
+#
+# Return code
+#  Always 0
+str_join () {
+    declare ret
+    declare -r join_str="$1"
+    shift
+
+    while [[ $# -gt 0 ]]; do
+        ret+="$1"
+        if [[ $# -gt 1 ]]; then
+            ret+="$join_str"
+        fi
+
+        shift
+    done
+
+    printf '%s\n' "$ret"
+}
+
 # ZZ variables treatment. Checks if an environment variable is defined, and ask
 # user for value if not.
 # After that, save it in docker-compose .env file

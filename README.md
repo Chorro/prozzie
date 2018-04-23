@@ -39,8 +39,7 @@ localhost:7980/v1/data/testtopic
 And using a kafka producer (for example, prozzie built in one):
 
 ```bash
-$ docker-compose exec kafka /opt/kafka/bin/kafka-console-producer.sh \
---broker-list 192.168.1.203:9092 --topic testtopic
+$ prozzie kafka produce testtopic
 ```
 
 You can check that prozzie kafka receives message:

@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Main cli entrypoint
+# Main kafka subcommands entrypoint
 # Arguments:
 #  [--shorthelp] - Show one line help
 #  [-h/--help] - Show help
@@ -45,10 +45,21 @@ declare -r env_file="${PREFIX}/etc/prozzie/.env"
 #  UX message
 #
 ux_print_help_options () {
-    awk 'NR==2 {RS="\n--"} NR<=3 {print $0; next} !/^zookeeper/ {print "--"$0}'
-    #    ^^^^^^^^^^^^^^^^^- Set this record separator only after the 3rd line
-    #                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ Skip help and table header
-    #          Filter out zookeeper help command ^^^^^^^^^^^^
+    declare -a omit_parameters_arr=("${!cmd_default_parameters[@]}")
+
+    declare omit_parameters
+    omit_parameters=$(str_join '\|' "${omit_parameters_arr[@]#--}")
+    declare -r omit_parameters
+
+    declare -r print_headers_awk="NR==2 {RS=\"\\n--\"} NR<=3 {print \$0; next}"
+    # Set this record separator   ^^^^^^^^^^^^^^^^^^^
+    # only after the 3rd line
+    # Skip help and table header                       ^^^^^^^^^^^^^^^^^^^^^^^
+    declare -r print_arguments_awk="!/^(${omit_parameters})/ {print \"--\"\$0}"
+    # Filter out the unwanted help    ^^^^^^^^^^^^^^
+    # parameters
+
+    awk "${print_headers_awk} ${print_arguments_awk}"
 }
 
 # Print kafka exception in an user friendly way. Use stdin to provide Kafka
@@ -69,79 +80,133 @@ ux_print_java_exception () {
 
 # Filter complicated kafka output and filter-out connection hidden stuff
 # Arguments
-#  $1 - kafka command output
-ux_print () {
-    declare first_line
-    first_line=$(head -n 1 "$1")
-
-    case "$first_line" in
-        'Command must include exactly one action:'*| \
-        'Missing required argument'*)
-            ux_print_help_options < "$1"
-            ;;
-        'Exception in thread'*)
-            ux_print_java_exception < "$1"
-            ;;
-        *)
-            cat "$1"  # Last resort
-    esac
-}
-
-# Execute the kafka_topics.sh script located in the container, forwarding all
-# arguments and adding proper "--zookeeper" if needed.
-container_kafka_topics () {
-    # Externally given zookeeper
-    declare param zookeeper_args
-    declare zookeeper_in_params=n
-    declare zookeeper_host
-    declare topics_out
-    for param in "$@"; do
-        if [[ "$param" == --zookeeper ]]; then
-            zookeeper_in_params=y
-            break;
-        fi
-    done
-
-    if [[ "$zookeeper_in_params" == n ]]; then
-        declare -g -A module_envs=([INTERFACE_IP]='')
-        zz_variables_env_update_array "$env_file" /dev/null
-        # Trim last pipe that difference between variable and prompt
-        zookeeper_host="${module_envs[INTERFACE_IP]%|*}"
-        zookeeper_args=('--zookeeper' "${zookeeper_host}:2181")
-        unset -v module_envs
-    fi
-
-    tmp_fd topics_out
-    "${PREFIX}/bin/prozzie" compose exec kafka \
-            /opt/kafka/bin/kafka-topics.sh "${zookeeper_args[@]}" "$@" \
-            > "/dev/fd/${topics_out}"
-    ux_print "/dev/fd/${topics_out}"
-}
-
-# Main command help
-# Arguments:
-#  1 - Prefix for subcommand help execution
-#
+#  -
 # Environment
 #  -
 #
-# Out:
-#  Proper help
-#
-# Exit status:
-#  Always 0
-kafka_topic_help () {
-    container_kafka_topics
+# Out
+#  UX message
+ux_print () {
+    declare first_character first_line print_callback
+    read -r -n 1 first_character
+    if [[ "$first_character" == '>' ]]; then
+        # We are waiting for user input, so just print every character until end
+        printf '%s' "$first_character"
+        cat -
+        return
+    fi
+
+    first_line="${first_character}$(head -n 1 -)"
+    case "$first_line" in
+        'Command must include exactly one action:'*| \
+        'Missing required argument'*)
+            print_callback=ux_print_help_options
+            ;;
+        'Exception in thread'*)
+            print_callback=ux_print_java_exception
+            ;;
+        *)
+            # Last resort
+            print_callback='cat'
+            ;;
+    esac
+
+    cat <(printf '%s\n' "$first_line") - | "$print_callback"
 }
 
-# Main kafka topics entrypoint
+# Execute the given kafka container script located in /opt/kafka/.sh script
+# located in the container, forwarding all arguments and adding proper options
+# if needed.
+# Arguments
+#  1 - The container command to execute
+#  N - The container binary arguments
+#
+# Environment
+#  cmd_default_parameters - Use this parameters if they are not found in the cmd
+#  line. They will be erased from the help also.
+#
+# Out
+#  UX message
+#
+container_kafka_exec () {
+    declare -a prozzie_params
+    declare -r container_bin="$1"
+    shift
+
+    for arg in "${!cmd_default_parameters[@]}"; do
+        prozzie_params+=("$arg")
+        prozzie_params+=("${cmd_default_parameters[$arg]}")
+    done
+
+    "${PREFIX}/bin/prozzie" compose exec kafka \
+            "/opt/kafka/bin/${container_bin}" "${prozzie_params[@]}" "$@" \
+            | ux_print
+}
+
+# Prepare kafka container command server parameter.
+# Arguments
+#  1 - The parameter that uses the command to identify server
+#  2 - The port of the parameter value
+#  N - Provided binary arguments
+#
+# Environment
+#  cmd_default_parameters - The associative array that will be filled with
+#  server parameter
+#
+# Out
+#  -
+#
+prepare_cmd_default_server () {
+    declare -r server_parameter="$1"
+    declare -r server_port="$2"
+    shift 2
+
+    if ! array_contains "${server_parameter}" "$@"; then
+        declare -g -A module_envs=([INTERFACE_IP]='')
+        zz_variables_env_update_array "$env_file" /dev/null
+        # Trim the last pipe that difference between variable and prompt
+        server_host="${module_envs[INTERFACE_IP]%|*}"
+        cmd_default_parameters["$server_parameter"]="${server_host}:${server_port}"
+        unset -v module_envs
+    fi
+}
+
+# Main kafka subcommands entrypoint
 main () {
     if [[ "$1" == '--shorthelp' ]]; then
         printf '%s\n' 'Handle or ask kafka cluster'
         exit 0
     fi
 
-    container_kafka_topics "$@"
+    declare -g -A cmd_default_parameters
+
+    declare my_name container_bin server_parameter server_port
+    my_name=$(basename -s '.bash' "$0")
+    declare -r my_tail="${my_name##*-}"
+
+    case "${my_tail}" in
+    topics)
+        container_bin='kafka-topics.sh'
+        server_parameter='--zookeeper'
+        server_port=2181
+        ;;
+    produce)
+        container_bin='kafka-console-producer.sh'
+        server_parameter='--broker-list'
+        server_port=9092
+        if [[ $# -gt 0 && "$1" != "--"* ]]; then
+            # First argument is topic
+            cmd_default_parameters['--topic']="$1"
+            shift
+        fi
+        ;;
+    *)
+        log error "Unknown subcommand ${my_tail}.\\n"
+        exit 1
+    esac
+
+    prepare_cmd_default_server "${server_parameter}" "${server_port}"
+    container_kafka_exec "${container_bin}" "$@"
 }
 
 main "$@"

@@ -15,38 +15,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-# Text colors
-readonly red="\e[1;31m"
-readonly green="\e[1;32m"
-readonly yellow="\e[1;33m"
-readonly white="\e[1;37m"
-readonly normal="\e[m"
-
 readonly DEFAULT_PREFIX="/usr/local"
 
 # log function
 log () {
-  case $1 in
-    e|error|erro) # ERROR
-      printf "[ ${red}ERRO${normal} ] $2"
-      ;;
-    i|info) # INFORMATION
-      printf "[ ${white}INFO${normal} ] $2"
-    ;;
-    w|warn) # WARNING
-      printf "[ ${yellow}WARN${normal} ] $2"
-    ;;
-    f|fail) # FAIL
-      printf "[ ${red}FAIL${normal} ] $2"
-    ;;
-    o|ok) # OK
-      printf "[  ${green}OK${normal}  ] $2"
-    ;;
-    *) # USAGE
-      printf "Usage: log [i|e|w|f] <message>"
-    ;;
-  esac
+    # Text colors definition
+    declare -r red='\e[1;31m'
+    declare -r green='\e[1;32m'
+    declare -r yellow='\e[1;33m'
+    declare -r white='\e[1;37m'
+    declare -r normal='\e[m'
+
+    case $1 in
+        e|error|erro) # ERROR
+            printf "[ ${red}ERRO${normal} ] $2"
+        ;;
+        i|info) # INFORMATION
+            printf "[ ${white}INFO${normal} ] $2"
+        ;;
+        w|warn) # WARNING
+            printf "[ ${yellow}WARN${normal} ] $2"
+        ;;
+        f|fail) # FAIL
+            printf "[ ${red}FAIL${normal} ] $2"
+        ;;
+        o|ok) # OK
+            printf "[  ${green}OK${normal}  ] $2"
+        ;;
+        *) # USAGE
+            printf "Usage: log [i|e|w|f] <message>"
+        ;;
+    esac
 }
 
 # Check function $1 existence

@@ -15,14 +15,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 # We are located in ${PREFIX}/share/prozzie/cli/prozzie.bash, so...
 # Resolve symlinks
 declare -r my_path=$(realpath "${BASH_SOURCE[0]}")
 # Extract prozzie prefix
 declare -r PREFIX=${my_path%/share/prozzie/cli/prozzie.bash}
 
-. "${PREFIX}/share/prozzie/cli/common.bash"
+# Include common functions
+. "${PROZZIE_CLI}/include/common.bash"
+. "${PROZZIE_CLI}/include/cli.bash"
 
 # Prozzie cli help
 # Arguments:

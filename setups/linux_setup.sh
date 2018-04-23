@@ -22,7 +22,10 @@ declare -r PROZZIE_VERSION=0.4.0-pre3
 . /etc/os-release
 
 declare -r installer_directory=$(dirname "${BASH_SOURCE[0]}")
-declare -r common_filename="${installer_directory}/../cli/common.bash"
+declare -r common_filename="${installer_directory}/../cli/include/common.bash"
+declare -r config_filename="${installer_directory}/../cli/include/config.bash"
+declare -r cli_filename="${installer_directory}/../cli/include/cli.bash"
+
 if [[ ! -f "${common_filename}" ]]; then
     # We are probably being called from download. Need to download prozzie
     declare -r tmp_dir=$(mktemp -d)
@@ -41,6 +44,8 @@ fi
 declare -a created_files
 
 . "${common_filename}"
+. "${config_filename}"
+. "${cli_filename}"
 
 if command_exists sudo; then
     declare -r sudo=sudo

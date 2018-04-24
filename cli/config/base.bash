@@ -15,18 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-. "$(dirname "${BASH_SOURCE[0]}")/../cli/common.bash"
-
-monitor_custom_mib_prompt='monitor custom mibs path (use monitor_custom_mibs'
-monitor_custom_mib_prompt="$monitor_custom_mib_prompt for no custom mibs)"
-
 declare -A module_envs=(
-	[MONITOR_REQUEST_TIMEOUT]='25|Seconds between monitor polling'
-	[MONITOR_KAFKA_TOPIC]='monitor|Topic to produce monitor metrics'
-	[MONITOR_CUSTOM_MIB_PATH]="monitor_custom_mibs|$monitor_custom_mib_prompt"
-	[MONITOR_SENSORS_ARRAY]="''|Monitor agents array"
-	[MONITOR_TRAPS_PORT]="162|Port to listen for SNMP traps")
+	[ZZ_HTTP_ENDPOINT]="|Data HTTPS endpoint URL (use http://.. for plain HTTP)"
+	[INTERFACE_IP]='|Interface IP address '
+	[CLIENT_API_KEY]='|Client API key ')
 
-if [[ "$1" != '--source' ]]; then
-	app_setup "$@"
-fi
+showVarsDescription () {
+    printf "\t%-40s%s\n" "ZZ_HTTP_ENDPOINT" "HTTPS endpoint URL"
+    printf "\t%-40s%s\n" "INTERFACE_IP" "Interface IP address"
+    printf "\t%-40s%s\n" "CLIENT_API_KEY" "Client API key"
+}

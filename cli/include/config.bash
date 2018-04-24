@@ -151,6 +151,35 @@ zz_variables_ask () {
     done
 }
 
+zz_describe_variables () {
+    declare key value
+    for key in "${!module_envs[@]}"; do
+        value=${module_envs[$key]}
+        IFS='|' read value _ <<< "${value}" # Using '_' as ignore symbol
+        printf '%s: %s' "$key" "$value"
+    done
+}
+
+show_variables() {
+    declare src_env_file value
+
+    if [[ -v ENV_FILE ]]; then
+        src_env_file="${ENV_FILE}"
+    else
+        src_env_file="${PREFIX:-${DEFAULT_PREFIX}}/etc/prozzie/.env"
+    fi
+
+    zz_variables_env_update_array "$src_env_file" "/dev/null"
+
+    if [[ $1 ]]; then
+        value="${module_envs[$1]}"
+        IFS='|' read -r value _ <<< "${value}" # Using '_' as ignore symbol
+        printf '%s: %s' "$1" "$value"
+    else
+        zz_describe_variables
+    fi
+}
+
 # Print a warning saying that "$src_env_file" has not been modified.
 # Arguments:
 #  -
@@ -168,6 +197,69 @@ print_not_modified_warning () {
     echo
     if [[ "$src_env_file" != '/dev/fd/'* && -f "$src_env_file" ]]; then
         log warn "No changes made to $src_env_file"'\n'
+    fi
+}
+
+# Print value of variable.
+# Arguments:
+#  1 - File from get variables
+#  2 - Key to filter
+# Environment:
+#  -
+#
+# Out:
+#  -
+#
+# Exit status:
+#  Always 0
+zz_get_var() {
+        grep "${2}" "${1}"|sed 's/^'"${2}"'=//'
+}
+
+# Print value of all variables.
+# Arguments:
+#  1 - File from get variables
+#
+# Environment:
+#  module_envs - Array of variables
+#
+# Out:
+#  -
+#
+# Exit status:
+#  Always 0
+zz_get_vars () {
+        declare -A env_content
+
+        while IFS='=' read -r key val || [[ -n "$key" ]]; do
+                env_content[$key]=$val
+        done < "$1"
+
+        for key in "${!module_envs[@]}"; do
+                declare value=${env_content[$key]}
+                if [[ -n  $value ]]; then
+                        printf "%s=%s\n" "$key" "$value"
+                fi
+        done
+}
+
+# Set variable in env file
+# Arguments:
+#  1 - File from get variables
+#  2 - Variable to set
+#  3 - Value to set
+# Environment:
+#  -
+#
+# Out:
+#  -
+#
+# Exit status:
+#  Always 0
+zz_set_var () {
+    if [[ ! -z "$3" ]]; then
+        printf -v new_value "%s=%s" "$2" "$3"
+        sed -i '/'"$2"'.*/c\'"$new_value" "$1"
     fi
 }
 

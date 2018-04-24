@@ -15,8 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-. "$(dirname "${BASH_SOURCE[0]}")/kcli_base.sh"
-
 declare -A module_envs=()
 
 declare -A module_hidden_envs=(
@@ -33,8 +31,16 @@ declare -A module_hidden_envs=(
 	[syslog.structured.data]='true'
 )
 
-if [[ "$1" != "--source" ]]; then
-	tmp_fd syslog_properties
-	kcli_setup "/dev/fd/${syslog_properties}" "$@"
-	exec {syslog_properties}<&-
-fi
+showVarsDescription () {
+    printf "\t%-40s%s\n" "name" "Syslog client's name"
+    printf "\t%-40s%s\n" "connector.class" "Connector Java class"
+    printf "\t%-40s%s\n" "tasks.max" "Max number of tasks"
+    printf "\t%-40s%s\n" "key.converter" "Key converter Java class"
+    printf "\t%-40s%s\n" "value.converter" "Value converter Java class"
+    printf "\t%-40s%s\n" "key.converter.schemas.enable" "Enable key schema conversion "
+    printf "\t%-40s%s\n" "value.converter.schemas.enable" "Value converter Enable value schema conversion"
+    printf "\t%-40s%s\n" "kafka.topic" "Kafka's topic"
+    printf "\t%-40s%s\n" "syslog.host" "Syslog's host"
+    printf "\t%-40s%s\n" "syslog.port" "Syslog's port"
+    printf "\t%-40s%s\n" "syslog.structured.data" "Enable structured data"
+}

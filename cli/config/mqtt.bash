@@ -15,8 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-. "$(dirname "${BASH_SOURCE[0]}")/kcli_base.sh"
-
 declare -A module_envs=(
 	[mqtt.server_uris]="|MQTT brokers"
 	[kafka.topic]='|MQTT Topics to consume'
@@ -36,8 +34,19 @@ declare -A module_hidden_envs=(
 	[message_processor_class]='com.evokly.kafka.connect.mqtt.sample.StringProcessor'
 )
 
-if [[ "$1" != "--source" ]]; then
-	tmp_fd mqtt_properties
-	kcli_setup "/dev/fd/${mqtt_properties}" "$@"
-	exec {mqtt_properties}<&-
-fi
+showVarsDescription () {
+    printf "\t%-40s%s\n" "mqtt.server_uris" "MQTT brokers"
+    printf "\t%-40s%s\n" "kafka.topic" "MQTT's topics to consume"
+    printf "\t%-40s%s\n" "mqtt.topic" "Kafka's topic to produce MQTT consumed messages"
+    printf "\t%-40s%s\n" "name" "MQTT client's name"
+    printf "\t%-40s%s\n" "connector.class" "MQTT connector"
+    printf "\t%-40s%s\n" "tasks.max" "Max number of tasks"
+    printf "\t%-40s%s\n" "key.converter" "Key converter class"
+    printf "\t%-40s%s\n" "value.converter" "Value converter class"
+    printf "\t%-40s%s\n" "mqtt.client_id" "MQTT client's id"
+    printf "\t%-40s%s\n" "mqtt.clean_session" "Clean session"
+    printf "\t%-40s%s\n" "mqtt.connection_timeout" "Value converter class"
+    printf "\t%-40s%s\n" "mqtt.keep_alive_interval" "Value converter class"
+    printf "\t%-40s%s\n" "mqtt.qosl" "Value converter class"
+    printf "\t%-40s%s\n" "message_processor_class" "Value converter class"
+}

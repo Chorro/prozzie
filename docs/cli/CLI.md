@@ -18,6 +18,71 @@ internals or advance docker or docker-compose commands.
 
 ## Commands
 
+### Prozzie configuration operation
+You can handle prozzie configuration with `prozzie config` subcommand.
+
+```bash
+prozzie config [<options>] [<module>] [<key>] [<value>]
+```
+
+#### Checking prozzie configuration
+If you doesn't set any option, you can use next command to check and list all variables in a specific module:
+
+```bash
+prozzie config <module>
+```
+
+i.e:
+
+```bash
+prozzie config base
+```
+
+You can get a specific variable value with next command:
+
+```bash
+prozzie config <module> <key>
+```
+
+i.e:
+
+```bash
+prozzie config base INTERFACE_IP
+```
+
+You can set a specific variable value with next command:
+
+```bash
+prozzie config <module> <key> <value>
+```
+
+i.e:
+
+```bash 
+prozzie config base INTERFACE_IP 192.168.1.100
+```
+
+`prozzie config` command allows you check next modules:
+
+- [x] [**base**](https://github.com/wizzie-io/prozzie/blob/master/docs/installation/Installation.md)
+- [x] [**f2K**](https://github.com/wizzie-io/prozzie/blob/master/docs/protocols/flow.md)
+- [x] [**monitor**](https://github.com/wizzie-io/prozzie/blob/master/docs/protocols/snmp.md)
+- [x] [**sfacctd**](https://github.com/wizzie-io/prozzie/blob/master/docs/protocols/flow.md)
+- [x] [**syslog**](https://github.com/wizzie-io/prozzie/blob/master/docs/protocols/syslog.md)
+- [x] [**mqtt**](https://github.com/wizzie-io/prozzie/blob/master/docs/protocols/mqtt.md)
+
+#### Prozzie config options
+
+Prozzie config command have next options:
+
+`-d|--describe <module>` : Shows what variables have a specific module.
+
+`-s|--setup <module>` : Allow you configure a module with setup assistant.
+
+`--describe-all` : Shows all variables of each module.
+
+`-h|--help` : Shows prozzie help.
+
 ### Prozzie service operation
 
 You have the next commands for basic prozzie operation:

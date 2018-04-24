@@ -175,13 +175,14 @@ setup_modules () {
     read -r -a config_modules <<< "$3"
 
     pushd -- "$1" >/dev/null 2>&1
-    for module in ./*_setup.sh; do
-        if [[ $module == './linux_setup.sh' ]]; then
+
+    for module in ../cli/config/*.bash; do
+        if [[ $module == *base.bash ]]; then
             continue
         fi
 
-        # Parameter expansion deletes './' and '_setup.sh'
-        modules[${#modules[@]}]="${module:2:-9}"
+        # Parameter expansion deletes '../cli/config/' and '.bash'
+        modules[${#modules[@]}]="${module:14:-5}"
     done
 
     while :; do
@@ -200,8 +201,7 @@ setup_modules () {
         log info "Configuring ${reply} module\n"
 
         set +m  # Send SIGINT only to child
-        (ENV_FILE="$2" PROZZIE_CLI="${PREFIX}/bin/prozzie" \
-            "./${reply}_setup.sh" --no-reload-prozzie)
+        prozzie config -s ${reply}
         set -m
     done
     popd >/dev/null 2>&1

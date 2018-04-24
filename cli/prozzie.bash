@@ -22,8 +22,8 @@ declare -r my_path=$(realpath "${BASH_SOURCE[0]}")
 declare -r PREFIX=${my_path%/share/prozzie/cli/prozzie.bash}
 
 # Include common functions
-. "${PROZZIE_CLI}/include/common.bash"
-. "${PROZZIE_CLI}/include/cli.bash"
+. "${PREFIX}/share/prozzie/cli/include/common.bash"
+. "${PREFIX}/share/prozzie/cli/include/cli.bash"
 
 # Prozzie cli help
 # Arguments:

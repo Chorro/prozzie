@@ -36,5 +36,7 @@ if [[ $# -gt 0 && $1 == '--shorthelp' ]]; then
 	exit 0
 fi
 
-docker run --rm -i -e KAFKA_CONNECT_REST="http://${INTERFACE_IP}:8083" \
-    gcr.io/wizzie-registry/kafka-connect-cli:1.0.3 sh -c \"kcli \$*\"
+HOST=$(prozzie config base INTERFACE_IP)
+
+docker run --rm -i -e KAFKA_CONNECT_REST="http://${HOST}:8083" \
+    gcr.io/wizzie-registry/kafka-connect-cli:1.0.3 sh -c "kcli $*"

@@ -46,6 +46,9 @@ if [[ $# -gt 0 && ($1 == '--shorthelp' || $1 == '--help' ) ]]; then
     prozzie-down)
         message='Stop prozzie services and remove kafka queue'
         ;;
+    prozzie-logs)
+        message='View output from connectors'
+        ;;
     prozzie-compose|*)
         message='Send generic commands to prozzie docker compose'
         ;;

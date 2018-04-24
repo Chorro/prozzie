@@ -53,6 +53,25 @@ So, `prozzie start`, `prozzie stop`, `prozzie up` and
 `prozzie down` are just shortcuts for the long version
 `prozzie compose [up|down|...]`, and arguments will be also forwarded.
 
+### Prozzie components logs
+You can use the command `logs` to see the different prozzie components logs:
+
+```bash
+$ prozzie logs
+```
+
+You can keep seeing logs with the option `-f/--follow`:
+
+```bash
+$ prozzie logs -f
+```
+
+And check only a specific component if you append that component's name. For
+example, to check kafka logs:
+```bash
+$ prozzie logs kafka
+```
+
 ### Prozzie message queue operation
 #### Topic management
 You can manage topics with `prozzie kafka topics` subcommand. If you execute 

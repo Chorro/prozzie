@@ -45,10 +45,11 @@ declare -r env_file="${PREFIX}/etc/prozzie/.env"
 #  UX message
 #
 ux_print_help_options () {
-    declare -a omit_parameters_arr=("${!cmd_default_parameters[@]}")
+    declare -r -a omit_parameters_arr=(
+        zookeeper broker-list bootstrap-server new-consumer)
 
     declare omit_parameters
-    omit_parameters=$(str_join '\|' "${omit_parameters_arr[@]#--}")
+    omit_parameters=$(str_join '|' "${omit_parameters_arr[@]}")
     declare -r omit_parameters
 
     declare -r print_headers_awk="NR==2 {RS=\"\\n--\"} NR<=3 {print \$0; next}"
@@ -99,7 +100,9 @@ ux_print () {
     first_line="${first_character}$(head -n 1 -)"
     case "$first_line" in
         'Command must include exactly one action:'*| \
-        'Missing required argument'*)
+        'Exactly one of whitelist/topic is required.'*| \
+        'Missing required argument'*| \
+        *'is not a recognized option'*)
             print_callback=ux_print_help_options
             ;;
         'Exception in thread'*)
@@ -123,7 +126,7 @@ ux_print () {
 #
 # Environment
 #  cmd_default_parameters - Use this parameters if they are not found in the cmd
-#  line. They will be erased from the help also.
+#  line.
 #
 # Out
 #  UX message
@@ -188,15 +191,30 @@ main () {
     topics)
         container_bin='kafka-topics.sh'
         server_parameter='--zookeeper'
-        server_port=2181
         ;;
+    produce|consume)
+        if [[ $# -gt 0 && "$1" != "--"* ]]; then
+            # The first argument is topic
+            cmd_default_parameters['--topic']="$1"
+            shift
+        fi
+        ;;&
     produce)
         container_bin='kafka-console-producer.sh'
         server_parameter='--broker-list'
-        server_port=9092
+        ;;
+    consume)
+        container_bin='kafka-console-consumer.sh'
+
+        if array_contains '--zookeeper' "$@"; then
+            server_parameter='--zookeeper'
+        else
+            server_parameter='--bootstrap-server'
+        fi
+
         if [[ $# -gt 0 && "$1" != "--"* ]]; then
-            # First argument is topic
-            cmd_default_parameters['--topic']="$1"
+            # The second argument is partition
+            cmd_default_parameters['--partition']="$1"
             shift
         fi
         ;;
@@ -204,6 +222,12 @@ main () {
         log error "Unknown subcommand ${my_tail}.\\n"
         exit 1
     esac
+
+    if [[ "${server_parameter}" == '--zookeeper' ]]; then
+        server_port=2181
+    else
+        server_port=9092
+    fi
 
     prepare_cmd_default_server "${server_parameter}" "${server_port}"
     container_kafka_exec "${container_bin}" "$@"

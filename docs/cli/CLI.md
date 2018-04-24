@@ -79,6 +79,22 @@ prozzie kafka produce <topic>
 
 You can introduce as many messages as you want, separated by a newline.
 
+#### Consume messages
+```bash
+prozzie kafka consume <topic> [<partition>]
+```
+
+You can consume from many topics using `--whitelist` or `--blacklist`:
+```bash
+prozzie kafka consume --whitelist '<topic1>|<topic2>|...'
+prozzie kafka consume --blacklist '<topic1>|<topic2>|...'
+```
+
+Or consume from the earlier message in the kafka log
+```bash
+prozzie kafka consume <topic> [<partition>] --from-beginning
+```
+
 #### Advanced operation
 If you know how to use kafka distributed configuration scripts, you can
 execute them directly using

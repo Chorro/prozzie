@@ -45,8 +45,7 @@ $ prozzie kafka produce testtopic
 You can check that prozzie kafka receives message:
 
 ```bash
-$ docker-compose exec kafka /opt/kafka/bin/kafka-console-consumer.sh \
---bootstrap-server 192.168.1.203:9092 --topic testtopic
+$ prozzie kafka consume testtopic
 ```
 
 And check the result on WDP. (Note: as a simpler alternative to WDP, we use an

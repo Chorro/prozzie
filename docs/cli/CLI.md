@@ -75,6 +75,8 @@ prozzie config base INTERFACE_IP 192.168.1.100
 
 Prozzie config command have next options:
 
+`-w|--wizard` : Allow you configure all modules with wizard assitant.
+
 `-d|--describe <module>` : Shows what variables have a specific module.
 
 `-s|--setup <module>` : Allow you configure a module with setup assistant.

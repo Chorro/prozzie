@@ -263,6 +263,48 @@ zz_set_var () {
     fi
 }
 
+# Search for modules in a specific directory and offers them to the user to
+# setup them
+# Arguments:
+#  1 - Directory to search modules from
+#  2 - Current temp env file
+#  3 - (Optional) list of modules to configure
+wizard () {
+    declare -r PS3='Do you want to configure modules? (Enter for quit): '
+    declare -a modules config_modules
+    declare reply
+    read -r -a config_modules <<< "$3"
+
+    for module in "${PROZZIE_CLI_CONFIG}"/*.bash; do
+        if [[ "$module" == *base.bash ]]; then
+            continue
+        fi
+
+        # Parameter expansion deletes '../cli/config/' and '.bash'
+        modules[${#modules[@]}]="${module:36:-5}"
+    done
+
+    while :; do
+        if [[ -z ${3+x} ]]; then
+            reply=$(zz_select "${modules[@]}")
+        elif [[ ${#config_modules[@]} > 0 ]]; then
+            reply=${config_modules[-1]}
+        else
+            reply=''
+        fi
+
+        if [[ -z ${reply} ]]; then
+            break
+        fi
+
+        log info "Configuring ${reply} module\n"
+
+        set +m  # Send SIGINT only to child
+        prozzie config -s ${reply}
+        set -m
+    done
+}
+
 # Set up appliction in prozzie
 # Arguments:
 #  [--no-reload-prozzie] Don't reload prozzie at the end of `.env` changes

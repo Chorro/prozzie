@@ -103,6 +103,45 @@ array_contains () {
     return 1
 }
 
+# Custom `select` implementation
+# Pass the choices as individual arguments.
+# Output is the chosen item, or "", if the user just pressed ENTER.
+zz_select () {
+    declare -r invalid_selection_message="Invalid selection. Please try again.\n"
+    local item i=0 numItems=$#
+
+    # Print numbered menu items, based on the arguments passed.
+    for item; do         # Short for: for item in "$@"; do
+        printf '%s\n' "$((++i))) $item"
+    done >&2 # Print to stderr, as `select` does.
+
+    # Prompt the user for the index of the desired item.
+    while :; do
+        printf %s "${PS3-#? }" >&2
+        read -r index
+
+        # Make sure that the input is either empty, idx or text.
+        [[ -z $index ]] && return  # empty input
+        if [[ $index =~ ^-?[0-9]+$ ]]; then
+            # Answer is a number
+            (( index >= 1 && index <= numItems )) 2>/dev/null || \
+                { echo "${invalid_selection_message}" >&2; continue; }
+            printf %s "${@: index:1}"
+            return
+        fi
+
+        # Input is string
+        for arg in "$@"; do
+            if [[ $arg == $index ]]; then
+                printf "%s" "$arg"
+                return
+            fi
+        done
+
+        # Non-blank unknown response
+        log error "$invalid_selection_message" >&2;
+    done
+}
 
 # Print a string which is the concatenation of the strings in parameters >1. The
 # separator between elements is $1.

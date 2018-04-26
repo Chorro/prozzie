@@ -28,17 +28,11 @@ printHelp() {
     printf "Handle prozzie configuration\n"
     printf "\tusage: prozzie config [<options>] [<module>] [<key>] [<value>]\n"
     printf "\t\tOptions:\n"
-    printf "\t\t%-40s%s\n" "-w, --wizzard" "Start modules wizard"
+    printf "\t\t%-40s%s\n" "-w, --wizard" "Start modules wizard"
     printf "\t\t%-40s%s\n" "-d, --describe <module>" "Describe module vars"
     printf "\t\t%-40s%s\n" "-s, --setup <module>" "Configure module with setup assistant"
     printf "\t\t%-40s%s\n" "--describe-all" "Describe all modules vars"
     printf "\t\t%-40s%s\n" "-h, --help" "Show this help"
-
-    printf "Modules:\n"
-    for config_module in "$PROZZIE_CLI_CONFIG/"*.bash; do
-        . "$config_module"
-        showVarsDescription
-    done
 
     exit 0
 }
@@ -61,6 +55,10 @@ if [[ $1 ]]; then
     case $1 in
         -h|--help)
             printHelp
+        ;;
+        -w|--wizard)
+            wizard "$src_env_file"
+            exit 0
         ;;
         -d|--describe)
             if [[ $2 ]]; then

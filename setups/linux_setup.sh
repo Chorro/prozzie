@@ -122,91 +122,6 @@ function update {
 
 }
 
-# Custom `select` implementation
-# Pass the choices as individual arguments.
-# Output is the chosen item, or "", if the user just pressed ENTER.
-zz_select () {
-    declare -r invalid_selection_message='Invalid selection. Please try again.\n'
-    local item i=0 numItems=$#
-
-    # Print numbered menu items, based on the arguments passed.
-    for item; do         # Short for: for item in "$@"; do
-        printf '%s\n' "$((++i))) $item"
-    done >&2 # Print to stderr, as `select` does.
-
-    # Prompt the user for the index of the desired item.
-    while :; do
-        printf %s "${PS3-#? }" >&2
-        read -r index
-
-        # Make sure that the input is either empty, idx or text.
-        [[ -z $index ]] && return  # empty input
-        if [[ $index =~ ^-?[0-9]+$ ]]; then
-            # Answer is a number
-            (( index >= 1 && index <= numItems )) 2>/dev/null || \
-                { echo "${invalid_selection_message}" >&2; continue; }
-            printf %s "${@: index:1}"
-            return
-        fi
-
-        # Input is string
-        for arg in "$@"; do
-            if [[ $arg == $index ]]; then
-                printf "%s" "$arg"
-                return
-            fi
-        done
-
-        # Non-blank unknown response
-        log error "$invalid_selection_message" >&2;
-    done
-}
-
-# Search for modules in a specific directory and offers them to the user to
-# setup them
-# Arguments:
-#  1 - Directory to search modules from
-#  2 - Current temp env file
-#  3 - (Optional) list of modules to configure
-setup_modules () {
-    declare -r PS3='Do you want to configure modules? (Enter for quit)'
-    declare -a modules config_modules
-    declare reply
-    read -r -a config_modules <<< "$3"
-
-    pushd -- "$1" >/dev/null 2>&1
-
-    for module in ../cli/config/*.bash; do
-        if [[ $module == *base.bash ]]; then
-            continue
-        fi
-
-        # Parameter expansion deletes '../cli/config/' and '.bash'
-        modules[${#modules[@]}]="${module:14:-5}"
-    done
-
-    while :; do
-        if [[ -z ${3+x} ]]; then
-            reply=$(zz_select "${modules[@]}")
-        elif [[ ${#config_modules[@]} > 0 ]]; then
-            reply=${config_modules[-1]}
-        else
-            reply=''
-        fi
-
-        if [[ -z ${reply} ]]; then
-            break
-        fi
-
-        log info "Configuring ${reply} module\n"
-
-        set +m  # Send SIGINT only to child
-        prozzie config -s ${reply}
-        set -m
-    done
-    popd >/dev/null 2>&1
-}
-
 # Trap function to rollback installation
 # Arguments:
 #  -
@@ -575,8 +490,8 @@ function app_setup () {
   # Need for kafka connect modules configuration.
   "${PREFIX}/bin/prozzie" up -d kafka-connect
   trap stop_prozzie_install_rollback EXIT
-  setup_modules \
-    "${installer_directory}" "${src_env_file}" ${CONFIG_APPS+"$CONFIG_APPS"}
+
+  "${PREFIX}/bin/prozzie" config --wizard
 
   printf "Done!\n\n"
 

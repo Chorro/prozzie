@@ -568,7 +568,7 @@ function app_setup () {
   {tmp_env}<&-
   install_cli
   # Need for kafka connect modules configuration.
-  "${PREFIX}/bin/prozzie" up kafka-connect
+  "${PREFIX}/bin/prozzie" up -d kafka-connect
   trap stop_prozzie_install_rollback EXIT
   setup_modules \
     "${installer_directory}" "${src_env_file}" ${CONFIG_APPS+"$CONFIG_APPS"}

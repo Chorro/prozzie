@@ -330,6 +330,7 @@ function app_setup () {
   # Check architecture
   if [[ $ARCH -ne 64 ]]; then
     log error "You need 64 bits OS. Your current architecture is: $ARCH"
+    exit 1
   fi
 
   # Special treatment of PREFIX variable

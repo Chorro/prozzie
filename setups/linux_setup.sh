@@ -121,7 +121,7 @@ function update {
 # Pass the choices as individual arguments.
 # Output is the chosen item, or "", if the user just pressed ENTER.
 zz_select () {
-    declare -r invalid_selection_message="Invalid selection. Please try again."
+    declare -r invalid_selection_message='Invalid selection. Please try again.\n'
     local item i=0 numItems=$#
 
     # Print numbered menu items, based on the arguments passed.

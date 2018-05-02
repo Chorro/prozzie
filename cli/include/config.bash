@@ -98,10 +98,11 @@ zz_variable () {
 # Exit status:
 #  Always 0
 zz_variables_env_update_array () {
+  declare prompt
   while IFS='=' read -r var_key var_val || [[ -n "$var_key" ]]; do
     if [ ${module_envs[$var_key]+_} ]; then
       # Update zz variable
-      declare -r prompt=$(cut -d '|' -f 2 <<< "${module_envs[$var_key]}")
+      prompt=$(cut -d '|' -f 2 <<< "${module_envs[$var_key]}")
       module_envs[$var_key]=$(printf "%s|%s" "$var_val" "$prompt")
     else
       # Copy to output .env file

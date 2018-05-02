@@ -22,7 +22,10 @@ declare -r PROZZIE_VERSION=0.4.0-pre3
 . /etc/os-release
 
 declare -r installer_directory=$(dirname "${BASH_SOURCE[0]}")
-declare -r common_filename="${installer_directory}/../cli/common.bash"
+declare -r common_filename="${installer_directory}/../cli/include/common.bash"
+declare -r config_filename="${installer_directory}/../cli/include/config.bash"
+declare -r cli_filename="${installer_directory}/../cli/include/cli.bash"
+
 if [[ ! -f "${common_filename}" ]]; then
     # We are probably being called from download. Need to download prozzie
     declare -r tmp_dir=$(mktemp -d)
@@ -41,6 +44,8 @@ fi
 declare -a created_files
 
 . "${common_filename}"
+. "${config_filename}"
+. "${cli_filename}"
 
 if command_exists sudo; then
     declare -r sudo=sudo
@@ -115,91 +120,6 @@ function update {
     ;;
   esac
 
-}
-
-# Custom `select` implementation
-# Pass the choices as individual arguments.
-# Output is the chosen item, or "", if the user just pressed ENTER.
-zz_select () {
-    declare -r invalid_selection_message='Invalid selection. Please try again.\n'
-    local item i=0 numItems=$#
-
-    # Print numbered menu items, based on the arguments passed.
-    for item; do         # Short for: for item in "$@"; do
-        printf '%s\n' "$((++i))) $item"
-    done >&2 # Print to stderr, as `select` does.
-
-    # Prompt the user for the index of the desired item.
-    while :; do
-        printf %s "${PS3-#? }" >&2
-        read -r index
-
-        # Make sure that the input is either empty, idx or text.
-        [[ -z $index ]] && return  # empty input
-        if [[ $index =~ ^-?[0-9]+$ ]]; then
-            # Answer is a number
-            (( index >= 1 && index <= numItems )) 2>/dev/null || \
-                { echo "${invalid_selection_message}" >&2; continue; }
-            printf %s "${@: index:1}"
-            return
-        fi
-
-        # Input is string
-        for arg in "$@"; do
-            if [[ $arg == $index ]]; then
-                printf "%s" "$arg"
-                return
-            fi
-        done
-
-        # Non-blank unknown response
-        log error "$invalid_selection_message" >&2;
-    done
-}
-
-# Search for modules in a specific directory and offers them to the user to
-# setup them
-# Arguments:
-#  1 - Directory to search modules from
-#  2 - Current temp env file
-#  3 - (Optional) list of modules to configure
-setup_modules () {
-    declare -r PS3='Do you want to configure modules? (Enter for quit)'
-    declare -a modules config_modules
-    declare reply
-    read -r -a config_modules <<< "$3"
-
-    pushd -- "$1" >/dev/null 2>&1
-    for module in ./*_setup.sh; do
-        if [[ $module == './linux_setup.sh' ]]; then
-            continue
-        fi
-
-        # Parameter expansion deletes './' and '_setup.sh'
-        modules[${#modules[@]}]="${module:2:-9}"
-    done
-
-    while :; do
-        if [[ -z ${3+x} ]]; then
-            reply=$(zz_select "${modules[@]}")
-        elif [[ ${#config_modules[@]} > 0 ]]; then
-            reply=${config_modules[-1]}
-        else
-            reply=''
-        fi
-
-        if [[ -z ${reply} ]]; then
-            break
-        fi
-
-        log info "Configuring ${reply} module\n"
-
-        set +m  # Send SIGINT only to child
-        (ENV_FILE="$2" PROZZIE_CLI="${PREFIX}/bin/prozzie" \
-            "./${reply}_setup.sh" --no-reload-prozzie)
-        set -m
-    done
-    popd >/dev/null 2>&1
 }
 
 # Trap function to rollback installation
@@ -570,8 +490,8 @@ function app_setup () {
   # Need for kafka connect modules configuration.
   "${PREFIX}/bin/prozzie" up -d kafka-connect
   trap stop_prozzie_install_rollback EXIT
-  setup_modules \
-    "${installer_directory}" "${src_env_file}" ${CONFIG_APPS+"$CONFIG_APPS"}
+
+  "${PREFIX}/bin/prozzie" config --wizard
 
   printf "Done!\n\n"
 

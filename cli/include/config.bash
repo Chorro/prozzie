@@ -15,69 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-readonly DEFAULT_PREFIX="/usr/local"
-
-# log function
-log () {
-    # Text colors definition
-    declare -r red='\e[1;31m'
-    declare -r green='\e[1;32m'
-    declare -r yellow='\e[1;33m'
-    declare -r white='\e[1;37m'
-    declare -r normal='\e[m'
-
-    case $1 in
-        e|error|erro) # ERROR
-            printf "[ ${red}ERRO${normal} ] $2"
-        ;;
-        i|info) # INFORMATION
-            printf "[ ${white}INFO${normal} ] $2"
-        ;;
-        w|warn) # WARNING
-            printf "[ ${yellow}WARN${normal} ] $2"
-        ;;
-        f|fail) # FAIL
-            printf "[ ${red}FAIL${normal} ] $2"
-        ;;
-        o|ok) # OK
-            printf "[  ${green}OK${normal}  ] $2"
-        ;;
-        *) # USAGE
-            printf "Usage: log [i|e|w|f] <message>"
-        ;;
-    esac
-}
-
-# Check function $1 existence
-func_exists () {
-    declare -f "$1" > /dev/null
-    return $?
-}
-
-command_exists () {
-    command -v "$1" 2>/dev/null
-}
-
-# Read a y/n response and returns true if answer is yes
-read_yn_response () {
-    local reply;
-    read -p "$1 [Y/n]: " -n 1 -r reply
-    if [[ ! -z $reply ]]; then
-        printf '\n'
-    fi
-
-    [[ -z $reply || $reply == 'y' || $reply == 'Y' ]]
-}
-
-# Creates a temporary unnamed file descriptor that you can use and it will be
-# deleted at shell exit (on close). File descriptor will be saved in $1 variable
-# Arguments:
-#  1 - Variable to save newly created temp file descriptor
-tmp_fd () {
-    declare -r file_name=$(mktemp)
-    eval "exec {$1}>${file_name}"
-    rm "${file_name}"
-}
 
 # Reads user input, using readline completions interface to fill paths.
 # Arguments:
@@ -102,63 +39,6 @@ zz_read () {
         zz_read_path "$1" "$2" "$3" >/dev/tty
         printf '%s' "${!1}"
     )
-}
-
-# Check if an array contains a particular element
-#
-# Arguments:
-#  1 - Element to find
-#  N - Array passed as "${arr[@]}"
-#
-# Out:
-#  None
-#
-# Return:
-#  True if found, false other way
-array_contains () {
-    declare -r needle="$1"
-    shift
-
-    for element in "$@"; do
-        if [[ "${needle}" == "${element}" ]]; then
-            return 0
-        fi
-    done
-
-    return 1
-}
-
-
-# Print a string which is the concatenation of the strings in parameters >1. The
-# separator between elements is $1.
-#
-# Arguments
-#  1 - The Token to use to join (can be empty, '')
-#  N - The strings to join
-#
-# Environment
-#  -
-#
-# Out:
-#  Joined string
-#
-# Return code
-#  Always 0
-str_join () {
-    declare ret
-    declare -r join_str="$1"
-    shift
-
-    while [[ $# -gt 0 ]]; do
-        ret+="$1"
-        if [[ $# -gt 1 ]]; then
-            ret+="$join_str"
-        fi
-
-        shift
-    done
-
-    printf '%s\n' "$ret"
 }
 
 # ZZ variables treatment. Checks if an environment variable is defined, and ask
@@ -271,6 +151,35 @@ zz_variables_ask () {
     done
 }
 
+zz_describe_variables () {
+    declare key value
+    for key in "${!module_envs[@]}"; do
+        value=${module_envs[$key]}
+        IFS='|' read value _ <<< "${value}" # Using '_' as ignore symbol
+        printf '%s: %s' "$key" "$value"
+    done
+}
+
+show_variables() {
+    declare src_env_file value
+
+    if [[ -v ENV_FILE ]]; then
+        src_env_file="${ENV_FILE}"
+    else
+        src_env_file="${PREFIX:-${DEFAULT_PREFIX}}/etc/prozzie/.env"
+    fi
+
+    zz_variables_env_update_array "$src_env_file" "/dev/null"
+
+    if [[ $1 ]]; then
+        value="${module_envs[$1]}"
+        IFS='|' read -r value _ <<< "${value}" # Using '_' as ignore symbol
+        printf '%s: %s' "$1" "$value"
+    else
+        zz_describe_variables
+    fi
+}
+
 # Print a warning saying that "$src_env_file" has not been modified.
 # Arguments:
 #  -
@@ -289,6 +198,111 @@ print_not_modified_warning () {
     if [[ "$src_env_file" != '/dev/fd/'* && -f "$src_env_file" ]]; then
         log warn "No changes made to $src_env_file"'\n'
     fi
+}
+
+# Print value of variable.
+# Arguments:
+#  1 - File from get variables
+#  2 - Key to filter
+# Environment:
+#  -
+#
+# Out:
+#  -
+#
+# Exit status:
+#  Always 0
+zz_get_var() {
+        grep "${2}" "${1}"|sed 's/^'"${2}"'=//'
+}
+
+# Print value of all variables.
+# Arguments:
+#  1 - File from get variables
+#
+# Environment:
+#  module_envs - Array of variables
+#
+# Out:
+#  -
+#
+# Exit status:
+#  Always 0
+zz_get_vars () {
+        declare -A env_content
+
+        while IFS='=' read -r key val || [[ -n "$key" ]]; do
+                env_content[$key]=$val
+        done < "$1"
+
+        for key in "${!module_envs[@]}"; do
+                declare value=${env_content[$key]}
+                if [[ -n  $value ]]; then
+                        printf "%s=%s\n" "$key" "$value"
+                fi
+        done
+}
+
+# Set variable in env file
+# Arguments:
+#  1 - File from get variables
+#  2 - Variable to set
+#  3 - Value to set
+# Environment:
+#  -
+#
+# Out:
+#  -
+#
+# Exit status:
+#  Always 0
+zz_set_var () {
+    if [[ ! -z "$3" ]]; then
+        printf -v new_value "%s=%s" "$2" "$3"
+        sed -i '/'"$2"'.*/c\'"$new_value" "$1"
+    fi
+}
+
+# Search for modules in a specific directory and offers them to the user to
+# setup them
+# Arguments:
+#  1 - Directory to search modules from
+#  2 - Current temp env file
+#  3 - (Optional) list of modules to configure
+wizard () {
+    declare -r PS3='Do you want to configure modules? (Enter for quit): '
+    declare -a modules config_modules
+    declare reply
+    read -r -a config_modules <<< "$3"
+
+    for module in "${PROZZIE_CLI_CONFIG}"/*.bash; do
+        if [[ "$module" == *base.bash ]]; then
+            continue
+        fi
+
+        # Parameter expansion deletes '../cli/config/' and '.bash'
+        modules[${#modules[@]}]="${module:36:-5}"
+    done
+
+    while :; do
+        if [[ -z ${3+x} ]]; then
+            reply=$(zz_select "${modules[@]}")
+        elif [[ ${#config_modules[@]} > 0 ]]; then
+            reply=${config_modules[-1]}
+        else
+            reply=''
+        fi
+
+        if [[ -z ${reply} ]]; then
+            break
+        fi
+
+        log info "Configuring ${reply} module\n"
+
+        set +m  # Send SIGINT only to child
+        prozzie config -s ${reply}
+        set -m
+    done
 }
 
 # Set up appliction in prozzie
@@ -349,87 +363,4 @@ app_setup () {
   fi
 
   unset -v src_env_file
-}
-
-#
-# CLI
-#
-
-# Main case switch in prozzie cli
-# Arguments:
-#  1 - Prefix to search command
-#  2 - Command to execute
-#  N - Rest of the options to send to command
-#
-# Environment
-#  PREFIX - Prozzie installation location
-#
-# Out:
-#  Error string if cannot find command
-#
-# Exit status:
-#  Subcommand exit status
-zz_cli_case () {
-    declare -r subcommand="$1$2.bash"
-    if [[ ! -x $(realpath "${subcommand}") ]]; then
-        "$0: '$1$2' is not a $0 command. See '$0 --help'." >&2
-        exit 1
-    fi
-    shift  2  # Prefix & subcommand
-    (export PREFIX; "$subcommand" "$@")
-}
-
-# Return a newline separated array with available commands.
-#
-# Arguments:
-#  1 - Prefix to search, including folder and file CLI prefix. For example,
-#      /share/prozzie/cli/prozzie- will return all files matching with
-#      /share/prozzie/cli/prozzie-* as subcommands, and will assume
-#      prozzie-test-1 and prozzie-test-2 as the same command (test).
-#
-# Environment
-#  -
-#
-# Out:
-#  Newline separated subcommands
-#
-# Exit status:
-#  -
-zz_cli_available_commands () {
-    declare -a ret=( "$1"* )
-
-    # Filter prefix and suffix
-    ret=( "${ret[@]#$1}" )
-    ret=( "${ret[@]%%.bash}" )
-    ret=( "${ret[@]%-*}" )
-
-    # Delete duplicates
-    read -d '' -r -a ret <<< "$(printf '%s\n' "${ret[@]}" | sort -u)"
-
-    printf '%s\n' "${ret[@]}"
-}
-
-# Prozzie cli subcommands help
-# Arguments:
-#  1 - Prefix for subcommand help execution
-#
-# Environment
-#  subcommands_help - This associative array will be printed before of the
-#                     subcommands if it exists.
-#
-# Out:
-#  Proper help
-#
-# Exit status:
-#  Always 0
-zz_cli_subcommand_help () {
-    declare -a subcommands
-    declare subcommand shorthelp
-
-    readarray -t subcommands < <(zz_cli_available_commands "$1")
-
-    for subcommand in "${subcommands[@]}"; do
-        shorthelp=$(export PREFIX; "${1}${subcommand}.bash" --shorthelp)
-        printf '\t%s\t%s\n' "${subcommand}" "${shorthelp}"
-    done
 }

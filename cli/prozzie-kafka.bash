@@ -29,8 +29,8 @@
 # Exit status:
 #  Subcommand exit status
 
-
-. "${PREFIX}/share/prozzie/cli/common.bash"
+. "${BASH_SOURCE%/*}/include/common.bash"
+. "${BASH_SOURCE%/*}/include/cli.bash"
 
 # Main command help
 # Arguments:

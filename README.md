@@ -79,8 +79,7 @@ and stop the prozzie, and `docker-compose down` for delete all created
 containers.
 
 ### Operation
-After installation, you can re-run `linux_setup.sh` or the others `*_setup.sh`
-tools to reconfigure different prozzie components.
+After installation, you can use `prozzie config` command to (re)configure different prozzie components.
 
 Syslog and mqtt protocols are handled via kafka connect, so you need to call
 `prozzie kcli` component to handle them.

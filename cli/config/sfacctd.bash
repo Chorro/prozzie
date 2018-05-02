@@ -15,8 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-. "$(dirname "${BASH_SOURCE[0]}")/../cli/common.bash"
-
 declare -r sfacctd_aggregate='cos, etype, src_mac, dst_mac, vlan, src_host, \
 	dst_host, src_mask, dst_mask, src_net, dst_net, proto, tos, src_port, \
 	dst_port, tcpflags, src_as, dst_as, as_path, src_as_path,
@@ -29,6 +27,9 @@ declare -A module_envs=(
 	[SFLOW_RENORMALIZE]="true|Normalize sflow based on sampling"
 	[SFLOW_AGGREGATE]="$sfacctd_aggregate|sfacctd aggregation fields")
 
-if [[ "$1" != "--source" ]]; then
-	app_setup "$@"
-fi
+showVarsDescription () {
+    printf "\t%-40s%s\n" "SFLOW_KAFKA_TOPIC" "Topic to produce sflow traffic"
+    printf "\t%-40s%s\n" "SFLOW_COLLECTOR_PORT" "Port to listen sflow traffic"
+    printf "\t%-40s%s\n" "SFLOW_RENORMALIZE" "Normalize sflow based on sampling"
+    printf "\t%-40s%s\n" "SFLOW_AGGREGATE" "Aggregation fields"
+}

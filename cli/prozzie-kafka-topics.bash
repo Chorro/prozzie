@@ -162,17 +162,14 @@ container_kafka_exec () {
 #  -
 #
 prepare_cmd_default_server () {
+    declare server_host
     declare -r server_parameter="$1"
     declare -r server_port="$2"
     shift 2
 
     if ! array_contains "${server_parameter}" "$@"; then
-        declare -g -A module_envs=([INTERFACE_IP]='')
-        zz_variables_env_update_array "$env_file" /dev/null
-        # Trim the last pipe that difference between variable and prompt
-        server_host="${module_envs[INTERFACE_IP]%|*}"
+        server_host="$("${PREFIX}/bin/prozzie" config base INTERFACE_IP)"
         cmd_default_parameters["$server_parameter"]="${server_host}:${server_port}"
-        unset -v module_envs
     fi
 }
 

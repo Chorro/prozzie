@@ -17,7 +17,7 @@
 
 
 declare -r GITHUB_ACCESS_TOKEN=4ea54f05cd7111c2e886f2c26f59b99109245053
-declare -r PROZZIE_VERSION=0.4.0-pre3
+declare -r PROZZIE_VERSION=0.4.0
 
 . /etc/os-release
 

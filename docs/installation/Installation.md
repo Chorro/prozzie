@@ -15,7 +15,7 @@ linux terminal:
 bash <(curl -L \
 	--header "Authorization: token 4ea54f05cd7111c2e886f2c26f59b99109245053" \
 	--header 'Accept: application/vnd.github.v3.raw' \
-	'https://api.github.com/repos/wizzie-io/prozzie/contents/setups/linux_setup.sh?ref=0.4.0-pre3')
+	'https://api.github.com/repos/wizzie-io/prozzie/contents/setups/linux_setup.sh?ref=0.4.0')
 ```
 
 #### Installation from github repository

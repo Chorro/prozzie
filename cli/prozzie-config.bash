@@ -24,8 +24,13 @@
 declare -r PROZZIE_CLI_CONFIG="${BASH_SOURCE%/*}/config"
 # .env file path
 declare src_env_file="${PREFIX:-${DEFAULT_PREFIX}}/etc/prozzie/.env"
-printHelp() {
+
+printShortHelp() {
     printf "Handle prozzie configuration\n"
+}
+
+printHelp() {
+    printShortHelp
     printf "\tusage: prozzie config [<options>] [<module>] [<key>] [<value>]\n"
     printf "\t\tOptions:\n"
     printf "\t\t%-40s%s\n" "-w, --wizard" "Start modules wizard"
@@ -53,6 +58,9 @@ fi
 
 if [[ $1 ]]; then
     case $1 in
+        --shorthelp)
+            printShortHelp
+        ;;
         -h|--help)
             printHelp
         ;;

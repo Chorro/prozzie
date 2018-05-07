@@ -16,6 +16,17 @@
 # limitations under the License.
 
 
+function ZZ_HTTP_ENDPOINT_sanitize() {
+  declare out="$1"
+  if [[ ! "$out" =~ ^http[s]?://* ]]; then
+    declare out="https://${out}"
+  fi
+  if [[ ! "$out" =~ /v1/data[/]?$ ]]; then
+    declare out="${out}/v1/data"
+  fi
+  printf "%s" "$out"
+}
+
 # Reads user input, using readline completions interface to fill paths.
 # Arguments:
 #  $1 - Variable to store user introduced text
@@ -102,7 +113,7 @@ zz_variables_env_update_array () {
   while IFS='=' read -r var_key var_val || [[ -n "$var_key" ]]; do
     if [ ${module_envs[$var_key]+_} ]; then
       # Update zz variable
-      prompt=$(cut -d '|' -f 2 <<< "${module_envs[$var_key]}")
+      declare prompt=$(cut -d '|' -f 2 <<< "${module_envs[$var_key]}")
       module_envs[$var_key]=$(printf "%s|%s" "$var_val" "$prompt")
     else
       # Copy to output .env file
@@ -259,9 +270,24 @@ zz_get_vars () {
 #  Always 0
 zz_set_var () {
     if [[ ! -z "$3" ]]; then
-        printf -v new_value "%s=%s" "$2" "$3"
-        sed -i '/'"$2"'.*/c\'"$new_value" "$1"
+        if [[ "${module_envs[$2]+1}" == 1 ]]; then
+            declare value="$3"
+
+            if func_exists "$2_sanitize"; then
+                value="$($2_sanitize "${3}")"
+            fi
+
+            printf -v new_value "%s=%s" "$2" "$value"
+
+            sed -i '/'"$2"'.*/c\'"$new_value" "$1"
+        else
+            printf "Variable '%s' not recognized! No changes made to %s\n" "$2" "$1" >&2
+	    return 1
+        fi
+	return 0
     fi
+    printf "Variable '%s' can't be empty" "$2" >&2
+    return 1
 }
 
 # Search for modules in a specific directory and offers them to the user to

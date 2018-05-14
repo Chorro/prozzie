@@ -1,0 +1,36 @@
+version: 2
+
+jobs:
+  # Check source format
+  ubuntu16.04:
+    docker:
+      - image: gcr.io/wizzie-registry/prozzie-test-env:ubuntu-16.04
+    environment:
+      PROZZIE_PREFIX: /opt/prozzie
+      KCOV_FLAGS: --include-path=/opt/prozzie,/root/project/setups
+      KCOV_OUT: /tmp/coverage
+    steps:
+      - setup_remote_docker
+      - checkout
+      - run:
+          name: Install prozzie & dependencies
+          environment:
+            CLIENT_API_KEY: prozzieapi
+            ZZ_HTTP_ENDPOINT: localhost
+          # yes will fail
+          command: >
+            set +o pipefail;
+            yes |
+            env PREFIX="${PROZZIE_PREFIX}" INTERFACE_IP=${HOSTNAME}
+            kcov ${KCOV_FLAGS} ${KCOV_OUT} setups/linux_setup.sh
+      - run:
+          name: Run actual tests
+          command: cd tests; make coverage
+      - store_artifacts:
+          path: '/tmp/coverage'
+
+workflows:
+  version: 2
+  tests:
+    jobs:
+      - ubuntu16.04

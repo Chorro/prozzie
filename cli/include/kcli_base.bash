@@ -38,7 +38,7 @@ inline_awk () {
     tmp_fd inline_awk_temp
     awk "$@" < "${file_name}" > "/dev/fd/${inline_awk_temp}"
     rc=$?
-    cp "/dev/fd/${inline_awk_temp}" "${file_name}"
+    cp -- "/dev/fd/${inline_awk_temp}" "${file_name}"
     exec {inline_awk_temp}<&-
     return $rc
 }

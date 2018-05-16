@@ -174,3 +174,41 @@ str_join () {
 
     printf '%s\n' "$ret"
 }
+
+# Fallback cp in case that file is deleted.
+# On some systems, copy the temporary file descriptor created by temp_fd will
+# give a 'Stale file handle'. This wrapper will fallback to a file copy if that
+# is needed
+cp () {
+    declare opt_index src_file dst_file dash_options=y
+    # Extract first file name
+    for ((opt_index=1;opt_index<=$#;opt_index++)); do
+
+        # Find source file option index
+        if [[ "$dash_options" == 'y' && "${!opt_index}" == '-'* ]]; then
+            if [[ "${!opt_index}" == '--' ]]; then
+                # Beyond this point, only files are allowed
+                dash_options=n
+            fi
+
+            continue # This option did not contain src or dest files
+        fi
+
+        if [[ -z "$src_file" ]]; then
+            src_file="${!opt_index}"
+        else
+            dst_file="${!opt_index}"
+            break
+        fi
+    done
+
+
+    # If source file is deleted, fallback to dd
+    if [[ -L "${src_file}" ]] && \
+                        ! realpath -e "${src_file}" >/dev/null 2>&1; then
+        dd status='none' if="${src_file}" of="${dst_file}" 2>/dev/null
+
+    else
+        /usr/bin/env cp "$@"
+    fi
+}

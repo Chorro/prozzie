@@ -354,7 +354,7 @@ app_setup () {
   zz_variables_ask "/dev/fd/${mod_tmp_env}"
 
   # Hurray! app installation end!
-  cp "/dev/fd/${mod_tmp_env}" "$src_env_file"
+  cp -- "/dev/fd/${mod_tmp_env}" "$src_env_file"
   exec {mod_tmp_env}<&-
   trap '' EXIT
 

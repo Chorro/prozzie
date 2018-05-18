@@ -107,7 +107,8 @@ if [[ $1 ]]; then
             declare -r option="$PROZZIE_CLI_CONFIG/$1.bash"
 
             if [[ ! -f "$option" ]]; then
-                printHelp
+                printf "Unknow module: %s\nPlease use 'prozzie config --describe-all' to see a complete list of modules and their variables\n" "$1" >&2
+                exit 1
             fi
 
             . "$option"

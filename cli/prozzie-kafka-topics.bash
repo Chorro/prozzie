@@ -143,7 +143,7 @@ container_kafka_exec () {
         prozzie_params+=("${cmd_default_parameters[$arg]}")
     done
 
-    "${PREFIX}/bin/prozzie" compose exec kafka \
+    "${PREFIX}/bin/prozzie" compose exec -T kafka \
             "/opt/kafka/bin/${container_bin}" "${prozzie_params[@]}" "$@" \
             | ux_print
 }

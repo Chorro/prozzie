@@ -446,7 +446,7 @@ function app_setup () {
     log info "Initializing Docker-Compose installation\n"
     # Download latest release (Not for production)
     log info "Downloading latest release of Docker Compose..."
-    $sudo curl -s -L "https://github.com/docker/compose/releases/download/1.11.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/bin/docker-compose &> /dev/null
+    $sudo curl -s -L "https://github.com/docker/compose/releases/download/1.21.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/bin/docker-compose &> /dev/null
     # Add permissions
     $sudo chmod +x /usr/bin/docker-compose &> /dev/null
     printf "Done!\n"

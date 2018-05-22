@@ -164,12 +164,15 @@ container_kafka_exec () {
 prepare_cmd_default_server () {
     declare server_host
     declare -r server_parameter="$1"
-    declare -r server_port="$2"
-    shift 2
+    shift 1
 
     if ! array_contains "${server_parameter}" "$@"; then
-        server_host="$("${PREFIX}/bin/prozzie" config base INTERFACE_IP)"
-        cmd_default_parameters["$server_parameter"]="${server_host}:${server_port}"
+        if [[ "${server_parameter}" == zookeeper ]]; then
+            server_host=zookeeper:2181
+        else
+            server_host="$("${PREFIX}/bin/prozzie" config base INTERFACE_IP):9092"
+        fi
+        cmd_default_parameters["$server_parameter"]="${server_host}"
     fi
 }
 
@@ -182,7 +185,7 @@ main () {
 
     declare -g -A cmd_default_parameters
 
-    declare my_name container_bin server_parameter server_port
+    declare my_name container_bin server_parameter
     my_name=$(basename -s '.bash' "$0")
     declare -r my_tail="${my_name##*-}"
 
@@ -222,13 +225,7 @@ main () {
         exit 1
     esac
 
-    if [[ "${server_parameter}" == '--zookeeper' ]]; then
-        server_port=2181
-    else
-        server_port=9092
-    fi
-
-    prepare_cmd_default_server "${server_parameter}" "${server_port}"
+    prepare_cmd_default_server "${server_parameter}"
     container_kafka_exec "${container_bin}" "$@"
 }
 

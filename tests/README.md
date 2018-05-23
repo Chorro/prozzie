@@ -14,10 +14,15 @@ tests specified in the `tests.sh` file, explained in the next section.
 
 ## Actual tests
 ### Raw tests
-Currently, the few tests implemented are in tests.sh. Use `make check` to run
-all of them in your environment. Please note that these tests could be
+Currently, the few tests implemented are under `tests/`. Use `make check` to
+run all of them in your environment. Please note that these tests could be
 destructive or add unwanted data to the prozzie installation, so don't execute
 it in production code.
+
+Tests function needs to start with `test_`, and they have available the nexts
+environments:
+:PROZZIE_PREFIX
+Where is the prozzie installed. `/opt/prozzie` by default.
 
 ### Coverage
 You can use `make coverage` to get the coverage, what run the test suite under

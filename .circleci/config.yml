@@ -22,7 +22,7 @@ jobs:
             set +o pipefail;
             yes |
             env PREFIX="${PROZZIE_PREFIX}" INTERFACE_IP=${HOSTNAME}
-            kcov ${KCOV_FLAGS} ${KCOV_OUT} setups/linux_setup.sh
+            kcov ${KCOV_FLAGS} install_cov setups/linux_setup.sh
       # Circleci forbids us to communicate with remote docker host, so we need
       # to make kafka find it's own address as the exported broker
       - run:
@@ -30,10 +30,12 @@ jobs:
           command: >
             "${PROZZIE_PREFIX}/bin/prozzie" compose exec -T kafka
             bash -c "printf '%s %s\n' '127.0.0.1' \"${HOSTNAME}\" >> /etc/hosts"
-
       - run:
           name: Run actual tests
           command: cd tests; make coverage
+      - run:
+          name: Merge all coverage
+          command: kcov --merge ${KCOV_OUT} install_cov temp/coverage.html
       - store_artifacts:
           path: '/tmp/coverage'
 

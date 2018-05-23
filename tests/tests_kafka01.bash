@@ -1,15 +1,5 @@
 #!/usr/bin/env bash
 
-if [[ ! -v PROZZIE_PREFIX ]]; then
-	declare -r PROZZIE_PREFIX=/opt/prozzie/
-fi
-
-test_help () {
-	# Prozzie must show help with no failure
-	"${PROZZIE_PREFIX}/bin/prozzie" >/dev/null 2>&1
-	assertTrue $?
-}
-
 wait_for_kafka_consumer_ready () {
 	while ! grep \
 	  'Error while fetching metadata with correlation id.*LEADER_NOT_AVAILABLE' \
@@ -41,4 +31,4 @@ test_internal_kafka () {
 	set +e
 }
 
-. /usr/bin/shunit2
+. test_run.sh

@@ -35,7 +35,7 @@ jobs:
           command: cd tests; make coverage
       - run:
           name: Merge all coverage
-          command: kcov --merge ${KCOV_OUT} install_cov temp/coverage.html
+          command: kcov --merge ${KCOV_OUT} install_cov tests/coverage.html
       - store_artifacts:
           path: '/tmp/coverage'
 

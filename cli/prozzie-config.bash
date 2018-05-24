@@ -117,7 +117,7 @@ if [[ $1 ]]; then
             case $# in
                 0)
                     if [[ "$module" =~ ^(mqtt|syslog)$ ]]; then
-                        prozzie kcli get "$module"
+                        "${PREFIX}"/bin/prozzie kcli get "$module"
                         exit 0
                     fi
                     zz_get_vars "$src_env_file"
@@ -125,7 +125,7 @@ if [[ $1 ]]; then
                 ;;
                 1)
                     if [[ "$module" =~ ^(mqtt|syslog)$ ]]; then
-                        prozzie kcli get "$module"|grep -P "^${1}=.*$"|sed 's/'"${1}"'=//'
+                        "${PREFIX}"/bin/prozzie kcli get "$module"|grep -P "^${1}=.*$"|sed 's/'"${1}"'=//'
                         exit 0
                     fi
                     zz_get_var "$src_env_file" "$@"

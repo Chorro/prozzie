@@ -327,7 +327,7 @@ wizard () {
         log info "Configuring ${reply} module\n"
 
         set +m  # Send SIGINT only to child
-        prozzie config -s ${reply}
+        "${PREFIX}"/bin/prozzie config -s ${reply}
         set -m
     done
 }

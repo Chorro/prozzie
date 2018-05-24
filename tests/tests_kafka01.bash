@@ -1,27 +1,81 @@
 #!/usr/bin/env bash
 
-wait_for_kafka_consumer_ready () {
-	while ! grep \
-	  'Error while fetching metadata with correlation id.*LEADER_NOT_AVAILABLE' \
-	  "$1" >/dev/null; do
+declare -r kafkacat_cmd='kafkacat'
+declare -r kafkacat_base_args='-b localhost:9092'
+declare -r kafkacat_produce_cmd="${kafkacat_base_args} -P -t "
+declare -r kafkacat_consume_cmd="${kafkacat_base_args} -d topic -C -t"
+
+##
+## @brief      Wait for a given message in file $1 appear
+##
+## @param      1     Grep pattern to wait
+## @param      2     File to watch
+##
+## @return     Always true
+##
+wait_for_message () {
+	while ! grep -i "$1" "$2" >/dev/null; do
 	  	:
-	 done
+	done
+
 }
 
-test_internal_kafka () {
+##
+## @brief      Wait to kafka distribution kafka_consumer_example to be ready
+##
+## @param      1    Kafka console consumer PID
+##
+## @return     Always true
+##
+wait_for_kafka_java_consumer_ready () {
+	wait_for_message 'LEADER_NOT_AVAILABLE' "$1"
+}
+
+##
+## @brief      Wait to kafka distribution kafka_consumer_example to be ready
+##
+## @param      1    Kafka console consumer PID
+##
+## @return     Always true
+##
+wait_for_kafkacat_consumer_ready () {
+	wait_for_message 'Fetch topic .* at offset .*' "$1"
+}
+
+
+##
+## @brief      Template for test kafka behavior.
+##
+## @param      1     Kafka command
+## @param      2     Kafka produce parameters
+## @param      3     Kafka consume parameters
+## @param      4     Kafka consumer readiness check callback. stderr will be
+##                   passed as $1 to this callback
+##
+## @return     { description_of_the_return_value }
+##
+kafka_produce_consume () {
 	set -e
+	declare -r kafka_cmd="$1"
+	declare -r produce_args="$2"
+	declare -r consume_args="$3"
+	declare -r wait_for_kafka_consumer_ready="$4"
 	# We should be able to produce & consume from kafka
-	declare kafka_topic message COPROC COPROC_PID
+	declare kafka_topic message COPROC COPROC_PID consumer_stderr_log
 	declare -r expected_message='{"my":"message"}'
 	kafka_topic=$(mktemp ptXXXXXXXXXX)
+	consumer_stderr_log=$(mktemp plXXXXXXXXXX)
 
-	coproc { "${PROZZIE_PREFIX}/bin/prozzie" kafka consume "${kafka_topic}"; } \
-							2>consume.stderr;
+	# Need to retry because of kafkacat sometimes miss messages
+	coproc { while timeout 60 \
+	               "${kafka_cmd}" $consume_args "${kafka_topic}" || true; do :
+		done;
+	} 2>"$consumer_stderr_log"
 
-	wait_for_kafka_consumer_ready consume.stderr
+	"$wait_for_kafka_consumer_ready" "$consumer_stderr_log"
 
 	printf '%s\n' "$expected_message" | \
-		"${PROZZIE_PREFIX}/bin/prozzie" kafka produce "${kafka_topic}"
+				   "${kafka_cmd}" $produce_args "${kafka_topic}"
 
 	IFS= read -ru "${COPROC[0]}" message
 
@@ -29,6 +83,30 @@ test_internal_kafka () {
 
 	rkill "$COPROC_PID" >/dev/null
 	set +e
+}
+
+##
+## @brief      Test prozzie kafka consume/produce command
+##
+test_internal_kafka () {
+	declare -r kafka_cmd="${PROZZIE_PREFIX}/bin/prozzie"
+	declare -r consume_cmd='kafka consume'
+	declare -r produce_cmd='kafka produce'
+
+	kafka_produce_consume "${kafka_cmd}" \
+						  "${produce_cmd}" \
+						  "${consume_cmd}" \
+						  wait_for_kafka_java_consumer_ready
+}
+
+##
+## @brief      Test external kafka consume/produce command
+##
+test_external_kafka () {
+	kafka_produce_consume "${kafkacat_cmd}" \
+						  "${kafkacat_produce_cmd}" \
+						  "${kafkacat_consume_cmd}" \
+						  wait_for_kafkacat_consumer_ready
 }
 
 . test_run.sh

@@ -30,6 +30,7 @@ RUN make -j 2 kcov
 FROM ubuntu:16.04
 
 RUN apt update && apt install --no-install-recommends -y \
+	kafkacat \
 	libdw1 \
 	make \
 	pslist \

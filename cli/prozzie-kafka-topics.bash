@@ -133,7 +133,10 @@ ux_print () {
 # Out
 #  UX message
 #
-container_kafka_exec () {
+# Note
+#  Running in a subshell to achieve pipefail locality
+container_kafka_exec () (
+    set -o pipefail
     declare -a prozzie_params
     declare -r container_bin="$1"
     shift
@@ -146,7 +149,7 @@ container_kafka_exec () {
     "${PREFIX}/bin/prozzie" compose exec -T kafka \
             "/opt/kafka/bin/${container_bin}" "${prozzie_params[@]}" "$@" \
             | ux_print
-}
+)
 
 # Prepare kafka container command server parameter.
 # Arguments

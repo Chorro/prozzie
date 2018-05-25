@@ -57,7 +57,6 @@ wait_for_kafkacat_consumer_ready () {
 ## @return     { description_of_the_return_value }
 ##
 kafka_produce_consume () {
-	set -e
 	declare -r kafka_cmd="$1"
 	declare -r produce_args="$2"
 	declare -r consume_args="$3"
@@ -84,7 +83,6 @@ kafka_produce_consume () {
 	assertEquals "${expected_message}" "${message}"
 
 	rkill "$COPROC_PID" >/dev/null
-	set +e
 }
 
 ##
@@ -117,10 +115,8 @@ test_external_kafka () {
 ##
 test_kafka_help () {
 	# Only execute kafka should return OK and show help
-	set -e
 	"${PROZZIE_PREFIX}/bin/prozzie" kafka > /dev/null
 	"${PROZZIE_PREFIX}/bin/prozzie" kafka --help > /dev/null
-	set +e
 }
 
 ##
@@ -140,7 +136,6 @@ assert_no_kafka_server_parameter () {
 ## @brief Invalid kafka parameters tests
 ##
 test_kafka_invalid_action_parameter () {
-	set -e
 	tmp_fd out
 	tmp_fd errout
 
@@ -157,7 +152,6 @@ test_kafka_invalid_action_parameter () {
 		done
 	done
 
-	set +e
 }
 
 . test_run.sh

@@ -7,6 +7,10 @@ declare -r kafkacat_base_args='-b localhost:9092'
 declare -r kafkacat_produce_cmd="${kafkacat_base_args} -P -t "
 declare -r kafkacat_consume_cmd="${kafkacat_base_args} -d topic -C -t"
 
+new_random_topic () {
+	mktemp ptXXXXXXXXXX
+}
+
 ##
 ## @brief      Wait for a given message in file $1 appear
 ##
@@ -64,7 +68,7 @@ kafka_produce_consume () {
 	# We should be able to produce & consume from kafka
 	declare kafka_topic message COPROC COPROC_PID consumer_stderr_log
 	declare -r expected_message='{"my":"message"}'
-	kafka_topic=$(mktemp ptXXXXXXXXXX)
+	kafka_topic=$(new_random_topic)
 	consumer_stderr_log=$(mktemp plXXXXXXXXXX)
 
 	# Need to retry because of kafkacat sometimes miss messages
@@ -152,6 +156,33 @@ test_kafka_invalid_action_parameter () {
 		done
 	done
 
+}
+
+##
+## @brief Test kafka topics command
+##
+test_kafka_topics () {
+	declare topic
+	topic=$(new_random_topic)
+
+	# Check that topic does not exists
+	! "${PROZZIE_PREFIX}/bin/prozzie" kafka topics --list | grep -- "$topic"
+
+	# Create topic with two partitions
+	"${PROZZIE_PREFIX}/bin/prozzie" kafka topics --create \
+	    --replication-factor 1 --partitions 2 --topic "$topic"
+
+	# It exists and it have 2 partitions
+	"${PROZZIE_PREFIX}/bin/prozzie" kafka topics --list | grep -- "$topic"
+	"${PROZZIE_PREFIX}/bin/prozzie" kafka topics --describe \
+	    | grep -- '^Topic:'"$topic"$'\tPartitionCount:2'
+
+	# We are able to produce to each partition
+	printf '%s\n' '{"p":0}' | kafkacat -b localhost:9092 -t "$topic" -p 0
+	printf '%s\n' '{"p":1}' | kafkacat -b localhost:9092 -t "$topic" -p 1
+
+	# And unable to produce to inexistent partition
+	! printf '%s\n' '{"p":1}' | kafkacat -b localhost:9092 -t "$topic" -p 2
 }
 
 . test_run.sh

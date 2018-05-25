@@ -46,7 +46,7 @@ declare -r env_file="${PREFIX}/etc/prozzie/.env"
 # Out
 #  UX message
 #
-ux_print_help_options () {
+ux_err_print_help_options () {
     declare -r -a omit_parameters_arr=(
         zookeeper broker-list bootstrap-server new-consumer)
 
@@ -77,7 +77,7 @@ ux_print_help_options () {
 # Out
 #  UX message
 #
-ux_print_java_exception () {
+ux_err_print_java_exception () {
     grep 'Exception in thread\|Caused by' | cut -d ':' -f 2-
 }
 
@@ -89,26 +89,33 @@ ux_print_java_exception () {
 #
 # Out
 #  UX message
-ux_print () {
-    declare first_character first_line print_callback
-    read -r -n 1 first_character
-    if [[ "$first_character" == '>' ]]; then
-        # We are waiting for user input, so just print every character until end
-        printf '%s' "$first_character"
-        cat -
-        return
+ux_err_print () {
+    declare first_line print_callback
+
+    # Skip docker-compose errors
+    while IFS= read -r first_line; do
+        if [[ "$first_line" == \
+                     'The '*' variable is not set. Defaulting to '* ]]; then
+                break;
+        fi
+    done
+
+    first_line="$(head -n 1 -)"
+    if [[ -z "$first_line" ]]; then
+        # stdin SIGPIPE, or very strange empty line. Continue will cause a
+        # spurious newline printed
+        return 0
     fi
 
-    first_line="${first_character}$(head -n 1 -)"
     case "$first_line" in
         'Command must include exactly one action:'*| \
         'Exactly one of whitelist/topic is required.'*| \
         'Missing required argument'*| \
         *'is not a recognized option'*)
-            print_callback=ux_print_help_options
+            print_callback=ux_err_print_help_options
             ;;
         'Exception in thread'*)
-            print_callback=ux_print_java_exception
+            print_callback=ux_err_print_java_exception
             ;;
         *)
             # Last resort
@@ -148,7 +155,7 @@ container_kafka_exec () (
 
     "${PREFIX}/bin/prozzie" compose exec -T kafka \
             "/opt/kafka/bin/${container_bin}" "${prozzie_params[@]}" "$@" \
-            | ux_print
+            2> >(ux_err_print >&2)
 )
 
 # Prepare kafka container command server parameter.

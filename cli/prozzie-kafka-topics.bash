@@ -177,7 +177,7 @@ prepare_cmd_default_server () {
     shift 1
 
     if ! array_contains "${server_parameter}" "$@"; then
-        if [[ "${server_parameter}" == zookeeper ]]; then
+        if [[ "${server_parameter}" == --zookeeper ]]; then
             server_host=zookeeper:2181
         else
             server_host="$("${PREFIX}/bin/prozzie" config base INTERFACE_IP):9092"

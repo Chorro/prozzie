@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+. "${PROZZIE_PREFIX}/share/prozzie/cli/include/common.bash"
+
 declare -r kafkacat_cmd='kafkacat'
 declare -r kafkacat_base_args='-b localhost:9092'
 declare -r kafkacat_produce_cmd="${kafkacat_base_args} -P -t "
@@ -107,6 +109,36 @@ test_external_kafka () {
 						  "${kafkacat_produce_cmd}" \
 						  "${kafkacat_consume_cmd}" \
 						  wait_for_kafkacat_consumer_ready
+}
+
+##
+## @brief Kafka help should give us a zero exit code, and each of subcommands
+##        help
+##
+test_kafka_help () {
+	# Only execute kafka should return OK and show help
+	set -e
+	"${PROZZIE_PREFIX}/bin/prozzie" kafka > /dev/null
+	"${PROZZIE_PREFIX}/bin/prozzie" kafka --help > /dev/null
+	set +e
+}
+
+##
+## @brief Invalid kafka command should return error and show help via stderr
+##
+test_kafka_invalid_action () {
+	set -e
+	tmp_fd out
+	tmp_fd errout
+
+	# Execute an invalid subcommand should return error and proper errors
+	# messages
+	! "${PROZZIE_PREFIX}/bin/prozzie" kafka invalid  > "/dev/fd/${out}" \
+	                                                 2> "/dev/fd/${errout}"
+
+	assertEquals '0' "$(wc -c < /dev/fd/${out})"
+	assertNotEquals '0' "$(wc -c < /dev/fd/${errout})"
+	set +e
 }
 
 . test_run.sh

@@ -13,6 +13,10 @@ services:
       ZOO_MY_ID: 1
       ZOO_SERVERS: server.1=zookeeper:2888:3888
   kafka:
+    networks:
+      default:
+        aliases:
+          - ${INTERFACE_IP}
     image: wurstmeister/kafka:0.11.0.0
     restart: always
     depends_on:

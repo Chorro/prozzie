@@ -38,17 +38,16 @@ printHelp() {
     printf "\t\t%-40s%s\n" "-s, --setup <module>" "Configure module with setup assistant"
     printf "\t\t%-40s%s\n" "--describe-all" "Describe all modules vars"
     printf "\t\t%-40s%s\n" "-h, --help" "Show this help"
-
-    exit 0
 }
 
 describeModule () {
     if [[ -f "$PROZZIE_CLI_CONFIG/$1.bash" ]]; then
         . "$PROZZIE_CLI_CONFIG/$1.bash"
         showVarsDescription
-        exit 0
+        return 0
     fi
-    exit 1
+    printf "Module '%s' not found!\n" "$2" >&2
+    return 1
 }
 
 # Show help if option is not present
@@ -60,9 +59,11 @@ if [[ $1 ]]; then
     case $1 in
         --shorthelp)
             printShortHelp
+            exit 0
         ;;
         -h|--help)
             printHelp
+            exit 0
         ;;
         -w|--wizard)
             wizard "$src_env_file"
@@ -71,17 +72,22 @@ if [[ $1 ]]; then
         -d|--describe)
             if [[ $2 ]]; then
                 printf "Module ${2}: \n"
-                describeModule "$2"
-                printf "Module '%s' not found!\n" "$2"
-                exit 1
+                describeModule "$2" || exit 1
             else
                 printHelp
+                exit 1
             fi
         ;;
         --describe-all)
+            declare -r prefix="*/cli/config/"
+            declare -r suffix=".bash"
+
             for config_module in "$PROZZIE_CLI_CONFIG"/*.bash; do
                 . "$config_module"
-                printf "Module ${config_module:36:-5}: \n"
+
+                config_module=${config_module#$prefix}
+                printf "Module ${config_module%$suffix}: \n"
+
                 showVarsDescription
             done
             exit 0
@@ -102,6 +108,7 @@ if [[ $1 ]]; then
                 exit 0
             fi
             printHelp
+            exit 1
         ;;
         *)
             declare -r option="$PROZZIE_CLI_CONFIG/$1.bash"
@@ -133,13 +140,12 @@ if [[ $1 ]]; then
                 ;;
                 2)
                     if [[ "$module" =~ ^(mqtt|syslog)$ ]]; then
-                        printf "Please use next commands in order to configure ${module}:\n"
-                        printf "prozzie kcli rm <connector>\n"
-                        printf "prozzie config -s ${module}\n"
-                        exit 0
+                        printf "Please use next commands in order to configure ${module}:\n" >&2
+                        printf "prozzie kcli rm <connector>\n" >&2
+                        printf "prozzie config -s ${module}\n" >&2
+                        exit 1
                     fi
-                    zz_set_var "$src_env_file" "$@"
-                    exit 0
+                    zz_set_var "$src_env_file" "$@" || exit 1
                 ;;
             esac
         ;;

@@ -163,35 +163,6 @@ zz_variables_ask () {
     done
 }
 
-zz_describe_variables () {
-    declare key value
-    for key in "${!module_envs[@]}"; do
-        value=${module_envs[$key]}
-        IFS='|' read value _ <<< "${value}" # Using '_' as ignore symbol
-        printf '%s: %s' "$key" "$value"
-    done
-}
-
-show_variables() {
-    declare src_env_file value
-
-    if [[ -v ENV_FILE ]]; then
-        src_env_file="${ENV_FILE}"
-    else
-        src_env_file="${PREFIX:-${DEFAULT_PREFIX}}/etc/prozzie/.env"
-    fi
-
-    zz_variables_env_update_array "$src_env_file" "/dev/null"
-
-    if [[ $1 ]]; then
-        value="${module_envs[$1]}"
-        IFS='|' read -r value _ <<< "${value}" # Using '_' as ignore symbol
-        printf '%s: %s' "$1" "$value"
-    else
-        zz_describe_variables
-    fi
-}
-
 # Print a warning saying that "$src_env_file" has not been modified.
 # Arguments:
 #  -
@@ -267,7 +238,8 @@ zz_get_vars () {
 #  -
 #
 # Exit status:
-#  Always 0
+#  0 - Variable is set without error
+#  1 - An error has ocurred while set a variable (variable not found or mispelled)
 zz_set_var () {
     if [[ ! -z "$3" ]]; then
         if [[ "${module_envs[$2]+1}" == 1 ]]; then
@@ -282,9 +254,9 @@ zz_set_var () {
             sed -i '/'"$2"'.*/c\'"$new_value" "$1"
         else
             printf "Variable '%s' not recognized! No changes made to %s\n" "$2" "$1" >&2
-	    return 1
+        return 1
         fi
-	return 0
+    return 0
     fi
     printf "Variable '%s' can't be empty" "$2" >&2
     return 1
@@ -298,6 +270,9 @@ zz_set_var () {
 #  3 - (Optional) list of modules to configure
 wizard () {
     declare -r PS3='Do you want to configure modules? (Enter for quit): '
+    declare -r prefix="*/cli/config/"
+    declare -r suffix=".bash"
+
     declare -a modules config_modules
     declare reply
     read -r -a config_modules <<< "$3"
@@ -308,7 +283,8 @@ wizard () {
         fi
 
         # Parameter expansion deletes '../cli/config/' and '.bash'
-        modules[${#modules[@]}]="${module:36:-5}"
+        module="${module#$prefix}"
+        modules[${#modules[@]}]="${module%$suffix}"
     done
 
     while :; do

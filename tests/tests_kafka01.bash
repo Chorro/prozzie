@@ -86,7 +86,7 @@ kafka_produce_consume () {
 
 	assertEquals "${expected_message}" "${message}"
 
-	rkill "$COPROC_PID" >/dev/null
+	rkill "$COPROC_PID" >/dev/null || true
 }
 
 ##

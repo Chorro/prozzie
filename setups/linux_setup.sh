@@ -182,7 +182,7 @@ stop_prozzie_install_rollback () {
 # Exit status:
 #  Always 0
 create_directory_tree () {
-    declare -r directories=("${PREFIX}/"{share/prozzie/cli,bin,etc/prozzie})
+    declare -r directories=("${PREFIX}/"{share/prozzie/{cli,compose},bin,etc/prozzie})
     declare mkdir_out
     mkdir_out=$(mkdir -vp "${directories[@]}")
     if [[ $? != 0 ]]; then
@@ -457,7 +457,7 @@ function app_setup () {
   log ok "Installed: $DOCKER_COMPOSE_VERSION\n\n"
 
   declare -r src_env_file="${PREFIX}/etc/prozzie/.env"
-  declare -r docker_compose_file="${PREFIX}/share/prozzie/docker-compose.yml"
+  declare -r prozzie_compose_dir="${PREFIX}/share/prozzie/compose"
   create_directory_tree
   trap install_rollback EXIT
 
@@ -471,8 +471,7 @@ function app_setup () {
   fi
 
   log info "Installing ${PROZZIE_VERSION} release of Prozzie...\n"
-  cp -- "${installer_directory}/../docker-compose.yml" \
-        "${docker_compose_file}"
+  cp -R -- "${installer_directory}/../compose/"*.yaml "${prozzie_compose_dir}"
 
   if [[ -z $INTERFACE_IP ]] && \
                       read_yn_response \

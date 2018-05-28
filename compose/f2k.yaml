@@ -1,0 +1,15 @@
+version: '3'
+services:
+  f2k:
+    image: gcr.io/wizzie-registry/prozzie-f2k:1.1.0
+    restart: always
+    depends_on:
+      - kafka
+    ports:
+      - "${NETFLOW_COLLECTOR_PORT:-2055}:${NETFLOW_COLLECTOR_PORT:-2055}/udp"
+    environment:
+      F2K_NTHREADS: 3
+      KAFKA_TOPIC: "${NETFLOW_KAFKA_TOPIC:-flow}"
+      COLLECTOR_PORT: "${NETFLOW_COLLECTOR_PORT:-2055}"
+      NETFLOW_PROBES: "${NETFLOW_PROBES}"
+      RDKAFKA_QUEUE_BUFFERING_MAX_MS: 1000

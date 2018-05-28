@@ -1,0 +1,15 @@
+version: '3'
+services:
+  sfacctd:
+    image: gcr.io/wizzie-registry/prozzie-sfacctd:1.6.2
+    restart: always
+    depends_on:
+      - kafka
+    ports:
+      - "${SFLOW_COLLECTOR_PORT:-6343}:${SFLOW_COLLECTOR_PORT:-6343}/udp"
+    environment:
+      KAFKA_BROKERS: "kafka"
+      KAFKA_TOPIC: "${SFLOW_KAFKA_TOPIC:-pmacct}"
+      COLLECTOR_PORT: "${SFLOW_COLLECTOR_PORT:-6343}"
+      SFACCTD_RENORMALIZE: "${SFLOW_RENORMALIZE:-true}"
+      AGGREGATE: "${SFLOW_AGGREGATE:-src_host}"

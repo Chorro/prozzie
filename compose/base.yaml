@@ -1,7 +1,4 @@
 version: '3'
-volumes:
-  # Empty volume as placeholder in case that no custom mibs specified
-  "monitor_custom_mibs":
 
 services:
   zookeeper:
@@ -30,27 +27,6 @@ services:
       KAFKA_BROKER_ID: 0
       KAFKA_LOG_DIRS: /kafka/kafka-logs
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-  http2k:
-    image: gcr.io/wizzie-registry/n2kafka:1.99-10
-    restart: always
-    depends_on:
-      - kafka
-    ports:
-      - 7980:7980
-    environment:
-      KAFKA_BROKERS: kafka
-  meraki:
-    image: gcr.io/wizzie-registry/n2kafka:1.99-10
-    restart: always
-    depends_on:
-      - kafka
-    ports:
-      - 2057:2057
-    environment:
-      KAFKA_BROKERS: kafka
-      DECODER: meraki
-      LISTENER_PORT: 2057
-      DEFAULT_TOPIC: meraki
 
   kafka-connect:
     image: gcr.io/wizzie-registry/wizzie-kc:0.1.0
@@ -106,45 +82,3 @@ services:
       HTTP_INSECURE: "false"
       KAFKA_TOPICS: "*"
       KAFKA_VERSION: "0_10_2_0"
-  f2k:
-    image: gcr.io/wizzie-registry/prozzie-f2k:1.1.0
-    restart: always
-    depends_on:
-      - kafka
-    ports:
-      - "${NETFLOW_COLLECTOR_PORT:-2055}:${NETFLOW_COLLECTOR_PORT:-2055}/udp"
-    environment:
-      F2K_NTHREADS: 3
-      KAFKA_TOPIC: "${NETFLOW_KAFKA_TOPIC:-flow}"
-      COLLECTOR_PORT: "${NETFLOW_COLLECTOR_PORT:-2055}"
-      NETFLOW_PROBES: "${NETFLOW_PROBES}"
-      RDKAFKA_QUEUE_BUFFERING_MAX_MS: 1000
-  sfacctd:
-    image: gcr.io/wizzie-registry/prozzie-sfacctd:1.6.2
-    restart: always
-    depends_on:
-      - kafka
-    ports:
-      - "${SFLOW_COLLECTOR_PORT:-6343}:${SFLOW_COLLECTOR_PORT:-6343}/udp"
-    environment:
-      KAFKA_BROKERS: "kafka"
-      KAFKA_TOPIC: "${SFLOW_KAFKA_TOPIC:-pmacct}"
-      COLLECTOR_PORT: "${SFLOW_COLLECTOR_PORT:-6343}"
-      SFACCTD_RENORMALIZE: "${SFLOW_RENORMALIZE:-true}"
-      AGGREGATE: "${SFLOW_AGGREGATE:-src_host}"
-  monitor:
-    image: gcr.io/wizzie-registry/prozzie-monitor:1.2.0
-    restart: always
-    depends_on:
-      - kafka
-    ports:
-      - "${MONITOR_TRAPS_PORT:-162}:${MONITOR_TRAPS_PORT:-162}/udp"
-    environment:
-      REQUESTS_TIMEOUT: ${MONITOR_REQUEST_TIMEOUT:-25}
-      KAFKA_BROKERS: 'kafka'
-      KAFKA_TOPIC: "${MONITOR_KAFKA_TOPIC:-monitor}"
-      SENSORS_ARRAY: "${MONITOR_SENSORS_ARRAY:-''}"
-      TRAPS_PORT: "${MONITOR_TRAPS_PORT:-''}"
-
-    volumes:
-      - "${MONITOR_CUSTOM_MIB_PATH:-monitor_custom_mibs}:/root/.snmp/mibs:ro"

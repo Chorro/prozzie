@@ -29,6 +29,7 @@
 # Exit status:
 #  -
 
+set -o pipefail
 declare -r script_name=$(basename -s '.bash' "$0")
 
 if [[ $# -gt 0 && ($1 == '--shorthelp' || $1 == '--help' ) ]]; then
@@ -62,8 +63,13 @@ if [[ $action == 'compose' ]]; then
     unset -v action
 fi
 
+declare compose_files=()
+for yaml in "${PREFIX}/share/prozzie/compose/"*.yaml; do
+    compose_files+=(--file "$yaml")
+done
+
 # Needed for .env file location
 cd "${PREFIX}/etc/prozzie" # TODO test docker-compose --project-directory
 docker-compose \
     --project-name prozzie \
-    --file "${PREFIX}/share/prozzie/docker-compose.yml" ${action} "$@"
+    "${compose_files[@]}" ${action} "$@"

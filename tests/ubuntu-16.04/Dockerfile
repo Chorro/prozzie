@@ -30,11 +30,23 @@ RUN make -j 2 kcov
 FROM ubuntu:16.04
 
 RUN apt update && apt install --no-install-recommends -y \
+	ca-certificates \
+	curl \
 	kafkacat \
 	libdw1 \
 	make \
+	patch \
 	pslist \
 	shunit2 \
 	socat
+
+# Patch socat to not to fail in AssertTrue
+RUN [ "/bin/bash", "-c", \
+	"set -o pipefail && patch=$(mktemp) && \
+    curl -L https://storage.googleapis.com/google-code-attachments/shunit2/issue-37/comment-1/assertTrue_assertFalse_error.patch \
+        >\"$patch\" && \
+    md5sum -c --status <(printf '%s  %s' '65f8947f5f43c577f110db915c7801d6' \"$patch\") && \
+    patch -d /usr/bin < \"$patch\" && \
+    rm -f \"$patch\"" ]
 
 COPY --from=builder /kcov/kcov-35/build/src/kcov /usr/local/bin/kcov

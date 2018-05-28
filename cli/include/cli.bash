@@ -37,7 +37,7 @@ zz_cli_case () {
     fi
     shift  2  # Prefix & subcommand
 
-    (export PREFIX; "$subcommand" "$@")
+    (export PREFIX PROZZIE_CLI; "$subcommand" "$@")
 }
 
 # Return a newline separated array with available commands.

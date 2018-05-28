@@ -364,12 +364,6 @@ app_setup () {
     src_env_file="${PREFIX:-${DEFAULT_PREFIX}}/etc/prozzie/.env"
   fi
 
-  while [[ ! -f "$src_env_file" ]]; do
-    zz_read_path src_env_file \
-        ".env file not found. Please provide .env path" \
-        "$src_env_file"
-  done
-
   declare mod_tmp_env
   tmp_fd mod_tmp_env
   trap print_not_modified_warning EXIT

@@ -89,13 +89,6 @@ function install {
     printf "Done!\n"
 }
 
-# Uninstall a program
-function uninstall {
-    log info "Uninstalling $1 dependency..."
-    $sudo $PKG_MANAGER remove -y $1 &> /dev/null
-    printf "Done!\n"
-}
-
 # Update repository
 function update {
 

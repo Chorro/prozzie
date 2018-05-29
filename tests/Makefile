@@ -9,9 +9,12 @@ tests_sh := $(wildcard tests_*.bash)
 tests_out := $(tests_sh:.bash=.out)
 coverages := $(tests_sh:.bash=.cov)
 
-docker-images: $(patsubst %/,%,$(dir $(wildcard */Dockerfile)))
+dockerfiles := $(wildcard */Dockerfile)
+docker_images := $(patsubst %/,%,$(dir $(dockerfiles)))
 
-.PHONY : all clean docker-images check coverage
+.PHONY : all clean docker-images $(docker_images) check coverage
+
+docker-images: $(docker_images)
 
 check: $(tests_out)
 
@@ -29,5 +32,8 @@ $(COVERAGE_OUT): $(coverages)
 clean:
 	rm -rfv $(tests_out) $(coverages) $(COVERAGE_OUT)
 
-%: %/Dockerfile
-	$(DOCKER) build -t gcr.io/wizzie-registry/prozzie-test-env:$(@) -f $(@)/Dockerfile .
+$(docker_images): %: %/Dockerfile
+	$(strip $(DOCKER) build --build-arg \
+		BASE_DOCKER_IMAGE=$(subst -,:,$@) \
+		-t gcr.io/wizzie-registry/prozzie-test-env:$(@) \
+		-f $(@)/Dockerfile .)

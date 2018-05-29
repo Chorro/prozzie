@@ -1,4 +1,6 @@
-FROM ubuntu:16.04 AS builder
+ARG BASE_DOCKER_IMAGE
+
+FROM ${BASE_DOCKER_IMAGE} AS builder
 
 # Get kcov dependencies
 RUN apt update && apt install --no-install-recommends -y \
@@ -41,16 +43,18 @@ RUN [ "/bin/bash", "-c", \
 #
 # Actual run container
 #
-FROM ubuntu:16.04
+FROM ${BASE_DOCKER_IMAGE}
 
 RUN apt update && env DEBIAN_FRONTEND=noninteractive \
 	apt install --no-install-recommends -y \
+	ca-certificates \
 	expect \
 	kafkacat \
 	libdw1 \
 	make \
 	procps \
 	pslist \
+	rsync \
 	shunit2 \
 	socat \
 	tcl8.6 \

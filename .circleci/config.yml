@@ -1,44 +1,94 @@
 version: 2
 
+# Prozzie installation & test execution template
+P_tests: &P_tests
+  environment:
+    PROZZIE_PREFIX: /opt/prozzie
+    KCOV_FLAGS: --include-path=/opt/prozzie,/root/project/setups
+    KCOV_OUT: /tmp/coverage
+  steps:
+    - setup_remote_docker
+    - checkout
+    - run:
+        name: Install prozzie & dependencies
+        environment:
+          CLIENT_API_KEY: prozzieapi
+          ZZ_HTTP_ENDPOINT: localhost
+        # yes will fail
+        command: >
+          set +o pipefail;
+          yes |
+          env PREFIX="${PROZZIE_PREFIX}" INTERFACE_IP=${HOSTNAME}
+          kcov ${KCOV_FLAGS} install_cov setups/linux_setup.sh
+    # Circleci forbids us to communicate with remote docker host, so we need
+    # to simulate external kafka port forwarding
+    - run:
+        name: Expose kafka port
+        background: true
+        # Need to use docker -e because a socat parsing error
+        command: >-
+            socat TCP-LISTEN:9092,reuseaddr,fork
+            EXEC:'docker run --network prozzie_default -i alpine/socat
+            STDIO TCP\:prozzie_kafka_1\:9092'
+    - run:
+        name: Run actual tests
+        command: cd tests; make -j 6 coverage
+    - run: mkdir -p /tmp/coverage
+    - run:
+        name: Merge all coverage
+        command: kcov --merge ${KCOV_OUT}/${CIRCLE_JOB} install_cov tests/coverage.html
+    - run:
+        name: Save prozzie installation for future use
+        command: |
+          mkdir -p /tmp/prozzie/${CIRCLE_JOB}
+          rsync -a /opt/prozzie /tmp/prozzie/${CIRCLE_JOB}/
+    - store_artifacts:
+        path: '/tmp/coverage'
+    - persist_to_workspace:
+        root: /tmp
+        paths:
+          - coverage
+          - prozzie
+
 jobs:
-  # Check source format
   ubuntu16.04:
+    <<: *P_tests
     docker:
       - image: gcr.io/wizzie-registry/prozzie-test-env:ubuntu-16.04
-    environment:
-      PROZZIE_PREFIX: /opt/prozzie
-      KCOV_FLAGS: --include-path=/opt/prozzie,/root/project/setups
-      KCOV_OUT: /tmp/coverage
+
+  ubuntu17.10:
+    <<: *P_tests
+    docker:
+      - image: gcr.io/wizzie-registry/prozzie-test-env:ubuntu-17.10
+
+  ubuntu18.04:
+    <<: *P_tests
+    docker:
+      - image: gcr.io/wizzie-registry/prozzie-test-env:ubuntu-18.04
+
+  debian9:
+    <<: *P_tests
+    docker:
+      - image: gcr.io/wizzie-registry/prozzie-test-env:debian-9
+
+  debianbuster:
+    <<: *P_tests
+    docker:
+      - image: gcr.io/wizzie-registry/prozzie-test-env:debian-buster
+
+  coverage:
+    docker:
+      - image: gcr.io/wizzie-registry/prozzie-test-env:ubuntu-18.04
     steps:
-      - setup_remote_docker
       - checkout
+      - attach_workspace:
+          at: /tmp/workspace
       - run:
-          name: Install prozzie & dependencies
-          environment:
-            CLIENT_API_KEY: prozzieapi
-            ZZ_HTTP_ENDPOINT: localhost
-          # yes will fail
-          command: >
-            set +o pipefail;
-            yes |
-            env PREFIX="${PROZZIE_PREFIX}" INTERFACE_IP=${HOSTNAME}
-            kcov ${KCOV_FLAGS} install_cov setups/linux_setup.sh
-      # Circleci forbids us to communicate with remote docker host, so we need
-      # to simulate external kafka port forwarding
-      - run:
-          name: Expose kafka port
-          background: true
-          # Need to use docker -e because a socat parsing error
-          command: >-
-              socat TCP-LISTEN:9092,reuseaddr,fork
-              EXEC:'docker run --network prozzie_default -i alpine/socat
-              STDIO TCP\:prozzie_kafka_1\:9092'
-      - run:
-          name: Run actual tests
-          command: cd tests; make -j 6 coverage
+          name: Recover prozzie installation
+          command: ln -s /tmp/workspace/prozzie/ubuntu16.04/prozzie/ /opt/prozzie
       - run:
           name: Merge all coverage
-          command: kcov --merge ${KCOV_OUT} install_cov tests/coverage.html
+          command: kcov --merge /tmp/coverage /tmp/workspace/coverage/*
       - store_artifacts:
           path: '/tmp/coverage'
 
@@ -47,3 +97,14 @@ workflows:
   tests:
     jobs:
       - ubuntu16.04
+      - ubuntu17.10
+      - ubuntu18.04
+      - debian9
+      - debianbuster
+      - coverage:
+          requires:
+            - ubuntu16.04
+            - ubuntu17.10
+            - ubuntu18.04
+            - debian9
+            - debianbuster

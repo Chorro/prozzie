@@ -21,6 +21,9 @@ ENV KCOV_VERSION 35
 RUN curl -L "https://github.com/SimonKagstrom/kcov/archive/v${KCOV_VERSION}.tar.gz" | tar xz
 # trick for PS4 to work
 RUN sed -i "/set -x/i PS4='kcov@\${BASH_SOURCE}@\${LINENO}@'" "./kcov-${KCOV_VERSION}/src/engines/bash-helper.sh"
+# Patch for not to account `fn ()` like lines in coverage
+RUN [ "/bin/bash", "-c", \
+	"patch <(curl -L https://github.com/SimonKagstrom/kcov/pull/258.patch)" ]
 RUN mkdir -p "kcov-${KCOV_VERSION}/build"
 WORKDIR "/kcov/kcov-${KCOV_VERSION}/build"
 RUN cmake ..

@@ -9,8 +9,10 @@ RUN apt update && apt install --no-install-recommends -y \
 	libdw-dev \
 	libz-dev \
 	make \
+	patch \
 	pkg-config \
-	python
+	python \
+	shunit2
 
 WORKDIR /kcov
 ENV KCOV_VERSION 35
@@ -24,24 +26,7 @@ WORKDIR "/kcov/kcov-${KCOV_VERSION}/build"
 RUN cmake ..
 RUN make -j 2 kcov
 
-#
-# Actual run container
-#
-FROM ubuntu:16.04
-
-RUN apt update && apt install --no-install-recommends -y \
-	ca-certificates \
-	curl \
-	expect \
-	kafkacat \
-	libdw1 \
-	make \
-	patch \
-	pslist \
-	shunit2 \
-	socat
-
-# Patch socat to not to fail in AssertTrue
+# Patch shunit to not to fail in AssertTrue
 RUN [ "/bin/bash", "-c", \
 	"set -o pipefail && patch=$(mktemp) && \
     curl -L https://storage.googleapis.com/google-code-attachments/shunit2/issue-37/comment-1/assertTrue_assertFalse_error.patch \
@@ -50,4 +35,20 @@ RUN [ "/bin/bash", "-c", \
     patch -d /usr/bin < \"$patch\" && \
     rm -f \"$patch\"" ]
 
+#
+# Actual run container
+#
+FROM ubuntu:16.04
+
+RUN apt update && env DEBIAN_FRONTEND=noninteractive \
+	apt install --no-install-recommends -y \
+	expect \
+	kafkacat \
+	libdw1 \
+	make \
+	pslist \
+	shunit2 \
+	socat
+
 COPY --from=builder /kcov/kcov-35/build/src/kcov /usr/local/bin/kcov
+COPY --from=builder /usr/bin/shunit2 /usr/bin/

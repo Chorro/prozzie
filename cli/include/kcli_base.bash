@@ -86,36 +86,6 @@ kcli_update_properties_file () {
     inline_awk "$1" -F '=' -v OFS="=" '{ gsub(/__/, ".", $1); }1-2'
 }
 
-# Search prozzie cli that contains "prozzie kcli" command
-# Arguments:
-#  -
-#
-# Environment:
-#  PREFIX - If PROZZIE_CLI env is not defined, it will search
-#           ${PREFIX}/bin/prozzie. If it does not exists, it will try with
-#           common.bash ${DEFAULT_PREFIX}/bin/prozzie. If it does not exist, it
-#           will ask the user for prozzie location.
-#
-# Out:
-#  User interface
-#
-# Exit status:
-#  Regular
-search_prozzie () {
-    if [[ ! -v PROZZIE_CLI ]]; then
-        if [[ ! -v "${PREFIX}" ]]; then
-            PREFIX="${DEFAULT_PREFIX}"
-        fi
-        declare -g PROZZIE_CLI="${PREFIX}/bin/prozzie"
-    fi
-
-    while [[ ! -x $(realpath "${PROZZIE_CLI}") ]]; do
-        log error "Couldn't find \"${PROZZIE_CLI}\""'\n'
-        read -e -r -i "${PROZZIE_CLI}" \
-            -p 'Please introduce prozzie cli path: ' PROZZIE_CLI
-    done
-}
-
 # Base setup for prozzie apps configured by kafka connect cli (kcli).
 # Arguments:
 #  1 - properties file to update
@@ -135,6 +105,5 @@ kcli_setup () {
     log info "These changes will be applied at the end of app setup\n"
     kcli_update_properties_file "$1"
     declare -r module_name="${module_envs['name']-${module_hidden_envs['name']}}"
-    search_prozzie
     "${PROZZIE_CLI}" kcli create "${module_name}" < "$1"
 }

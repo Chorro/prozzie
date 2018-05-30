@@ -17,8 +17,8 @@
 
 declare -A module_envs=(
 	[mqtt.server_uris]="|MQTT brokers"
-	[kafka.topic]='|MQTT Topics to consume'
-	[mqtt.topic]='|Topic to produce MQTT consumed messages')
+	[kafka.topic]="|Kafka's topic to produce MQTT consumed messages"
+	[mqtt.topic]="|MQTT Topics to consume")
 
 declare -A module_hidden_envs=(
 	[name]='mqtt'
@@ -36,8 +36,8 @@ declare -A module_hidden_envs=(
 
 showVarsDescription () {
     printf "\t%-40s%s\n" "mqtt.server_uris" "MQTT brokers"
-    printf "\t%-40s%s\n" "kafka.topic" "MQTT's topics to consume"
-    printf "\t%-40s%s\n" "mqtt.topic" "Kafka's topic to produce MQTT consumed messages"
+    printf "\t%-40s%s\n" "kafka.topic" "Kafka's topic to produce MQTT consumed messages"
+    printf "\t%-40s%s\n" "mqtt.topic" "MQTT's topics to consume"
     printf "\t%-40s%s\n" "name" "MQTT client's name"
     printf "\t%-40s%s\n" "connector.class" "MQTT connector"
     printf "\t%-40s%s\n" "tasks.max" "Max number of tasks"

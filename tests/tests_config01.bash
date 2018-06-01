@@ -100,20 +100,106 @@ testSfacctdModule() {
 # TEST BASE MODULE
 #--------------------------------------------------------
 
+##
+## @brief      Spawn a process and answer it
+##             2,4,... Question to expect
+##             3,5,... Answers to question $#-1. Use '{ans1} {ans2}' to provide
+##             many answers.
+##
+## @return     Always true
+##
+## @return     { description_of_the_return_value }
+##
+genericSpawnQuestionAnswer() {
+    declare question_answers_str=''
+    declare -r spawn_cmd="$1"
+    shift
+
+    # Fill expect variables, questions and answers
+    declare argv=("$@")
+    for i in "${!argv[@]}"; do
+        # Make a tcl list
+        argv[i]="{${argv[i]}}"
+    done
+
+    # Questions/answers dictionary
+    # Format responses as a valid tcl list and add delete previous buffer
+    # content (with \025, prozzie offers default response in this buffer)
+    # and return carriage
+    declare tcl_answers_declare
+    tcl_answers_declare=$(cat <<-EOF
+        set answers [dict map {q ans_list} [dict create ${argv[@]}] {
+            set ans_list [lmap ans \$ans_list {
+                set ans "\\025\$ans\\r"
+            }]
+        }]
+		EOF
+        )
+
+    # Build expect answers
+    # If the line is too long, prozzie readline interface will write the
+    # question again, even if it has been already answered. The user will not
+    # notice it because of tty tricks, but expect will do, so expect is only
+    # allowed to answer one time. Because of that, expect will do nothing except
+    # consume the buffer if it founds the same question again and we are out of
+    # responses. This happens in sfacct aggregation variable.
+    declare -r question_answers_str="$(tclsh <<-EOF
+        $tcl_answers_declare
+        foreach question [dict keys \$answers] {
+              puts "\\"\$question\\" \\{"
+              puts "  set answers_list \\[dict get \\\$answers \\"\$question\\"\\]"
+              puts "  send \\"\\[struct::list shift answers_list\\]\\""
+              puts "  dict set answers \\"\$question\\" \\\$answers_list"
+              puts "  exp_continue"
+              puts "\\}"
+        }
+		EOF
+        )"
+
+    # If readline detects few columns, it will add newlines to the output.
+    # TODO: Delete all newlines in spawned process output buffer, so
+    # COLUMNS=2000 hack is not needed.
+    env COLUMNS=2000 expect <<-EOF
+        package require struct::list
+        $tcl_answers_declare
+        set timeout 120
+        spawn ${spawn_cmd}
+        expect {
+            $question_answers_str
+            timeout {
+                exit 1
+            }
+            eof
+        }
+		EOF
+}
+
+##
+## @brief      Execute a module setup
+##
+## @param      1 - Module name
+##             2,4,... Question to expect
+##             3,5,... Answers to question $#-1. Use '{ans1} {ans2}' to provide
+##             many answers.
+##
+## @return     Always true
+##
+genericSetupQuestionAnswer() {
+    genericSpawnQuestionAnswer "${PROZZIE_PREFIX}/bin/prozzie config -s $1" \
+                                                                        "${@:2}"
+}
+
 testSetupBaseModuleVariables() {
     declare -g ENV_BACKUP=$(<"${PROZZIE_CLI_ETC}"/.env)
 
-    expect -c \
-        "
-         spawn "${PROZZIE_PREFIX}"/bin/prozzie config -s base
-         expect \"Data HTTPS endpoint URL (use http://.. for plain HTTP): \"
-         send \"\025my.test.endpoint\r\"
-         expect \"Interface IP address : \"
-         send \"\025${INTERFACE_IP}\r\"
-         expect \"Client API key : \"
-         send \"\025myApiKey\r\"
-         expect eof
-        " >/dev/null 2>&1
+    # Try to change via setup
+    genericSetupQuestionAnswer base \
+        'Data HTTPS endpoint URL (use http://.. for plain HTTP)' \
+            'my.test.endpoint' \
+        "Interface IP address" \
+            "${INTERFACE_IP}" \
+        'Client API key' \
+            'myApiKey'
 
     ${_ASSERT_TRUE_} '"prozzie config -s base must done with no failure"' $?
 }
@@ -143,19 +229,13 @@ testSetBaseModuleVariables() {
 testSetupF2kModuleVariables() {
     declare -g ENV_BACKUP=$(<"${PROZZIE_CLI_ETC}"/.env)
 
-    expect -c \
-        "
-         spawn "${PROZZIE_PREFIX}"/bin/prozzie config -s f2k
-         expect \"In what port do you want to listen for netflow traffic? :\"
-         send \"\0252055\r\"
-         expect \"JSON object of NF probes (It's recommend to use env var) :\"
-         send \"\025{}\r\"
-         expect \"Topic to produce netflow traffic? : \"
-         send \"\025flow\r\"
-         expect eof
-        " >/dev/null 2>&1
-
-    ${_ASSERT_TRUE_} '"prozzie config -s f2k must done with no failure"' $?
+    genericSetupQuestionAnswer f2k \
+        'In what port do you want to listen for netflow traffic?' \
+            '2055' \
+        "JSON object of NF probes (It's recommend to use env var)" \
+            '\{\}' \
+        'Topic to produce netflow traffic?' \
+            'flow'
 }
 
 testGetF2kModuleVariables() {
@@ -183,23 +263,13 @@ testSetF2kModuleVariables() {
 testSetupMonitorModuleVariables() {
     declare -g ENV_BACKUP=$(<"${PROZZIE_CLI_ETC}"/.env)
 
-    expect -c \
-        "
-         spawn "${PROZZIE_PREFIX}"/bin/prozzie config -s monitor
-         expect \"monitor custom mibs path (use monitor_custom_mibs for no custom mibs):\"
-         send \"\025my_custom_mibs\r\"
-         expect \"Port to listen for SNMP traps:\"
-         send \"\025162\r\"
-         expect \"Topic to produce monitor metrics:\"
-         send \"\025monitor\r\"
-         expect \"Seconds between monitor polling:\"
-         send \"\02525\r\"
-         expect \"Monitor agents array:\"
-         send \"\025''\r\"
-         expect eof
-        " >/dev/null 2>&1
-
-    ${_ASSERT_TRUE_} '"prozzie config -s monitor must done with no failure"' $?
+    genericSetupQuestionAnswer monitor \
+       'monitor custom mibs path (use monitor_custom_mibs for no custom mibs)' \
+         'my_custom_mibs' \
+       'Port to listen for SNMP traps' '162' \
+       'Topic to produce monitor metrics' 'monitor' \
+       'Seconds between monitor polling' '25' \
+       'Monitor agents array' "\\'\\'"
 }
 
 testGetMonitorModuleVariables() {
@@ -233,19 +303,11 @@ testSetMonitorModuleVariables() {
 testSetupSfacctdModuleVariables() {
     declare -g ENV_BACKUP=$(<"${PROZZIE_CLI_ETC}"/.env)
 
-    expect -c \
-        "
-         spawn "${PROZZIE_PREFIX}"/bin/prozzie config -s sfacctd
-         expect \"sfacctd aggregation fields:\"
-         send \"\025a,b,c,d\r\"
-         expect \"In what port do you want to listen for sflow traffic:\"
-         send \"\0254363\r\"
-         expect \"Topic to produce sflow traffic:\"
-         send \"\025pmacct\r\"
-         expect \"Normalize sflow based on sampling:\"
-         send \"\025true\r\"
-         expect eof
-        " >/dev/null 2>&1
+    genericSetupQuestionAnswer sfacctd \
+         'sfacctd aggregation fields' 'a,b,c,d' \
+         'In what port do you want to listen for sflow traffic' '4363' \
+         'Topic to produce sflow traffic' 'pmacct' \
+         'Normalize sflow based on sampling' 'true'
 
     ${_ASSERT_TRUE_} '"prozzie config -s sfacctd must done with no failure"' $?
 }
@@ -275,17 +337,10 @@ testSetSfacctdModuleVariables() {
 # TEST MQTT MODULE
 #--------------------------------------------------------
 testSetupMqttModuleVariables() {
-    expect -c \
-        "
-         spawn "${PROZZIE_PREFIX}"/bin/prozzie config -s mqtt
-         expect \"MQTT Topics to consume:\"
-         send \"\025/my/mqtt/topic\r\"
-         expect \"Kafka's topic to produce MQTT consumed messages:\"
-         send \"\025mqtt\r\"
-         expect \"MQTT brokers:\"
-         send \"\025my.broker.mqtt:1883\r\"
-         expect eof
-        " >/dev/null 2>&1
+    genericSetupQuestionAnswer mqtt \
+         'MQTT Topics to consume' '/my/mqtt/topic' \
+         "Kafka's topic to produce MQTT consumed messages" 'mqtt' \
+         'MQTT brokers' 'my.broker.mqtt:1883'
 
     ${_ASSERT_TRUE_} '"prozzie config -s mqtt must done with no failure"' $?
 }
@@ -314,13 +369,8 @@ testGetMqttModuleVariables() {
 #--------------------------------------------------------
 
 testSetupSyslogModuleVariables() {
-    expect -c \
-        "
-         spawn "${PROZZIE_PREFIX}"/bin/prozzie config -s syslog
-         expect eof
-        " >/dev/null 2>&1
-
-    ${_ASSERT_TRUE_} '"prozzie config -s syslog must done with no failure"' $?
+    ${_ASSERT_TRUE_} '"prozzie config -s syslog must done with no failure"' \
+        "'\"${PROZZIE_PREFIX}\"/bin/prozzie config -s syslog'"
 }
 
 testGetSyslogModuleVariables() {
@@ -351,7 +401,7 @@ testDescribeWrongModule() {
 
 testDescribeMustShowHelpIfModuleIsNotPresent() {
     if "${PROZZIE_PREFIX}"/bin/prozzie config --describe; then
-        ${_FAIL_} '"prozzie config --describe must show help with failure"' 
+        ${_FAIL_} '"prozzie config --describe must show help with failure"'
     fi
 }
 
@@ -363,7 +413,7 @@ testDescribeMustShowAnErrorIfModuleDoesNotExist() {
 
 testSetupMustShowHelpIfModuleIsNotPresent() {
     if "${PROZZIE_PREFIX}"/bin/prozzie config --setup; then
-        ${_FAIL_} '"prozzie config --setup must show help with failure"' 
+        ${_FAIL_} '"prozzie config --setup must show help with failure"'
     fi
 }
 
@@ -375,58 +425,40 @@ testConfigMustShowErrorIfModuleIsNotExist() {
 
 testConfigMustShowHelpIfTryToSetMqttAndSyslogModules() {
     if "${PROZZIE_PREFIX}"/bin/prozzie config mqtt kafka.topic myTopic; then
-        ${_FAIL_} '"prozzie config mqtt kafka.topic myTopic must show help"' 
+        ${_FAIL_} '"prozzie config mqtt kafka.topic myTopic must show help"'
     fi
     if "${PROZZIE_PREFIX}"/bin/prozzie config syslog kafka.topic myTopic; then
-        ${_FAIL_} '"prozzie config syslog kafka.topic myTopic must show help"' 
+        ${_FAIL_} '"prozzie config syslog kafka.topic myTopic must show help"'
     fi
 }
 
 testSetupCancellation() {
     ENV_BACKUP=$(<"${PROZZIE_CLI_ETC}"/.env)
 
-    expect -c \
-         "
-         spawn "${PROZZIE_PREFIX}"/bin/prozzie config -s base
-         expect \"Data HTTPS endpoint URL (use http://.. for plain HTTP): \"
-         send \"\025blah.blah.blah\r\"
-         expect \"Interface IP address : \"
-         send \"\025blah.blah.blah.blah\r\"
-         expect \"Client API key : \"
-         send \"\025blahblahblah\r\"
-         expect eof
-         " >/dev/null 2>&1
+    genericSetupQuestionAnswer base \
+        'Data HTTPS endpoint URL (use http://.. for plain HTTP)' \
+            'blah.blah.blah' \
+        'Interface IP address' 'blah.blah.blah.blah' \
+        'Client API key' 'blahblahblah'
 
     md5UselessENVFile=`md5sum "${PROZZIE_PREFIX}"/etc/prozzie/.env|awk '{ print $1 }'`
 
-    expect -c \
-         "
-         spawn "${PROZZIE_PREFIX}"/bin/prozzie config -s base
-         expect \"Data HTTPS endpoint URL (use http://.. for plain HTTP): \"
-         send \"\025https://my.test.endpoint\r\"
-         expect \"Interface IP address : \"
-         send \"\025${INTERFACE_IP}\r\"
-         expect \"Client API key : \"
-         send \"\x03\"
-         expect eof
-         " >/dev/null 2>&1
+    genericSetupQuestionAnswer base \
+        'Data HTTPS endpoint URL (use http://.. for plain HTTP)' \
+            'https://my.test.endpoint' \
+        'Interface IP address' "${INTERFACE_IP}" \
+        'Client API key' '\x03'
 
     md5NewENVFile=`md5sum "${PROZZIE_PREFIX}"/etc/prozzie/.env|awk '{ print $1 }'`
     comp_res=`echo $md5UselessENVFile $md5NewENVFile|awk '{ print ($1==$2) ? 0 : 1 }'`
 
     ${_ASSERT_TRUE_} "\".ENV file mustn\'t be modified\"" '"$comp_res"'
 
-    expect -c \
-         "
-         spawn "${PROZZIE_PREFIX}"/bin/prozzie config -s base
-         expect \"Data HTTPS endpoint URL (use http://.. for plain HTTP): \"
-         send \"\025https://my.test.endpoint\r\"
-         expect \"Interface IP address : \"
-         send \"\025${INTERFACE_IP}\r\"
-         expect \"Client API key : \"
-         send \"\025mySuperApiKey\r\"
-         expect eof
-         " >/dev/null 2>&1
+    genericSetupQuestionAnswer base \
+        'Data HTTPS endpoint URL (use http://.. for plain HTTP)' \
+            'https://my.test.endpoint' \
+        'Interface IP address' "${INTERFACE_IP}" \
+        'Client API key' 'mySuperApiKey'
 
      md5NewENVFile=`md5sum "${PROZZIE_PREFIX}"/etc/prozzie/.env|awk '{ print $1 }'`
      comp_res=`echo $md5UselessENVFile $md5NewENVFile|awk '{ print ($1!=$2) ? 0 : 1 }'`
@@ -443,21 +475,11 @@ testSetupCancellation() {
 testWizard() {
     ENV_BACKUP=$(<"${PROZZIE_CLI_ETC}"/.env)
 
-    expect -c \
-         "
-         spawn "${PROZZIE_PREFIX}"/bin/prozzie config -w
-         expect \"Do you want to configure modules? (Enter for quit): \"
-         send \"f2k\r\"
-         expect \"In what port do you want to listen for netflow traffic? :\"
-         send \"\0255523\r\"
-         expect \"JSON object of NF probes (It's recommend to use env var) :\"
-         send \"\025{}\r\"
-         expect \"Topic to produce netflow traffic? :\"
-         send \"\025wizardFlow\r\"
-         expect \"Do you want to configure modules? (Enter for quit): \"
-         send \"\r\"
-         expect eof
-         " >/dev/null 2>&1
+    genericSpawnQuestionAnswer "${PROZZIE_PREFIX}/bin/prozzie config -w" \
+         'Do you want to configure modules? (Enter for quit)' '{f2k} {}' \
+         'In what port do you want to listen for netflow traffic?' '5523' \
+         'JSON object of NF probes (It'\''s recommend to use env var)' '\{\}' \
+         'Topic to produce netflow traffic?' 'wizardFlow'
 
     genericTestModule 3 f2k 'NETFLOW_COLLECTOR_PORT=5523' \
                             'NETFLOW_KAFKA_TOPIC=wizardFlow' \

@@ -51,7 +51,9 @@ RUN apt update && env DEBIAN_FRONTEND=noninteractive \
 	make \
 	pslist \
 	shunit2 \
-	socat
+	socat \
+	tcl8.6 \
+	tcllib
 
 COPY --from=builder /kcov/kcov-35/build/src/kcov /usr/local/bin/kcov
 COPY --from=builder /usr/bin/shunit2 /usr/bin/

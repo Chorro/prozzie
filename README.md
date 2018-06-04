@@ -1,6 +1,12 @@
-# Prozzie
+<p align="center">
+    <img src="docs/assets/img/prozzie.logo.svg" alt="Prozzie" title="Prozzie" width="250%"/>
+</p>
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
+[![wizzie-io](https://img.shields.io/badge/powered%20by-wizzie.io-F68D2E.svg)](https://github.com/wizzie-io/)
+[![CircleCI](https://circleci.com/gh/wizzie-io/prozzie/tree/master.svg?style=shield&circle-token=0f81b1424c32aa36f1e327701a0cd84dbc0f102b)](https://circleci.com/gh/wizzie-io/prozzie/tree/master) 
+[![Docs](https://img.shields.io/badge/docs-current-brightgreen.svg)](https://wizzie-io.github.io/prozzie/) 
+[![GitHub release](https://img.shields.io/github/release/wizzie-io/prozzie.svg)](https://github.com/wizzie-io/prozzie/releases/latest) 
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
 > Main entry point for the data plane of [Wizzie Data Platform](http://wizzie.io/).
 

@@ -57,10 +57,10 @@ genericTestModule() {
         fi
         # We can ask for that variable
         value=$("${PROZZIE_PREFIX}/bin/prozzie" config "${module_name}" "${key}")
-    if [[ -v expected_value ]]; then
-        ${_ASSERT_EQUALS_} '"Expected ${key} value"' '"$expected_value"' '"$value"'
-    fi
-    unset -v value expected_value
+        if [[ -v expected_value ]]; then
+            ${_ASSERT_EQUALS_} '"Expected ${key} value"' '"$expected_value"' '"$value"'
+        fi
+        unset -v value expected_value
     done
 }
 

@@ -175,6 +175,18 @@ str_join () {
     printf '%s\n' "$ret"
 }
 
+##
+## @brief      Squeeze contiguous blanks and delete escaped ones from stdin
+##
+## @return     Squeezed string via stdout
+##
+squash_spaces () {
+    declare -r squash='s/\\\?[[:space:]]\+/ /g'
+    declare -r trim_end='s/[[:space:]]\+$//'
+    declare -r trim_beg='s/^[[:space:]]\+//'
+    sed -z "$squash;$trim_end;$trim_beg"
+}
+
 # Fallback cp in case that file is deleted.
 # On some systems, copy the temporary file descriptor created by temp_fd will
 # give a 'Stale file handle'. This wrapper will fallback to a file copy if that

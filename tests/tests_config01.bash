@@ -256,28 +256,32 @@ testSetupF2kModuleVariables() {
 
 testSetupMonitorModuleVariables() {
     declare -g ENV_BACKUP=$(<"${PROZZIE_CLI_ETC}"/.env)
+    declare mibs_directory mibs_directory2
+    mibs_directory=$(mktemp -d)
+    mibs_directory2=$(mktemp -d)
+    declare -r mibs_directory mibs_directory2
 
     genericSetupQuestionAnswer monitor \
        'monitor custom mibs path (use monitor_custom_mibs for no custom mibs)' \
-         'my_custom_mibs' \
+         "${mibs_directory}" \
        'Port to listen for SNMP traps' '162' \
        'Topic to produce monitor metrics' 'monitor' \
        'Seconds between monitor polling' '25' \
        'Monitor agents array' "\\'\\'"
 
-    genericTestModule 5 monitor 'MONITOR_CUSTOM_MIB_PATH=my_custom_mibs' \
+    genericTestModule 5 monitor "MONITOR_CUSTOM_MIB_PATH=${mibs_directory}" \
                                 'MONITOR_TRAPS_PORT=162' \
                                 'MONITOR_KAFKA_TOPIC=monitor' \
                                 'MONITOR_REQUEST_TIMEOUT=25' \
                                 "MONITOR_SENSORS_ARRAY=''"
 
-    "${PROZZIE_PREFIX}"/bin/prozzie config monitor MONITOR_CUSTOM_MIB_PATH /other/mibs/path
+    "${PROZZIE_PREFIX}"/bin/prozzie config monitor MONITOR_CUSTOM_MIB_PATH "${mibs_directory2}"
     "${PROZZIE_PREFIX}"/bin/prozzie config monitor MONITOR_TRAPS_PORT 621
     "${PROZZIE_PREFIX}"/bin/prozzie config monitor MONITOR_KAFKA_TOPIC myMonitorTopic
     "${PROZZIE_PREFIX}"/bin/prozzie config monitor MONITOR_REQUEST_TIMEOUT 60
     "${PROZZIE_PREFIX}"/bin/prozzie config monitor MONITOR_SENSORS_ARRAY "'a,b,c,d'"
 
-    genericTestModule 5 monitor 'MONITOR_CUSTOM_MIB_PATH=/other/mibs/path' \
+    genericTestModule 5 monitor "MONITOR_CUSTOM_MIB_PATH=${mibs_directory2}" \
                                 'MONITOR_TRAPS_PORT=621' \
                                 'MONITOR_KAFKA_TOPIC=myMonitorTopic' \
                                 'MONITOR_REQUEST_TIMEOUT=60' \

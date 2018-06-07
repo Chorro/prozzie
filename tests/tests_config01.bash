@@ -202,9 +202,7 @@ testSetupBaseModuleVariables() {
             'myApiKey'
 
     ${_ASSERT_TRUE_} '"prozzie config -s base must done with no failure"' $?
-}
 
-testGetBaseModuleVariables() {
     genericTestModule 3 base 'ZZ_HTTP_ENDPOINT=https://my.test.endpoint/v1/data' \
                              "INTERFACE_IP=${INTERFACE_IP}" \
                              'CLIENT_API_KEY=myApiKey'
@@ -236,15 +234,11 @@ testSetupF2kModuleVariables() {
             '\{\}' \
         'Topic to produce netflow traffic?' \
             'flow'
-}
 
-testGetF2kModuleVariables() {
     genericTestModule 3 f2k 'NETFLOW_COLLECTOR_PORT=2055' \
                             'NETFLOW_KAFKA_TOPIC=flow' \
                             'NETFLOW_PROBES={}'
-}
 
-testSetF2kModuleVariables() {
     "${PROZZIE_PREFIX}"/bin/prozzie config f2k NETFLOW_COLLECTOR_PORT 5502
     "${PROZZIE_PREFIX}"/bin/prozzie config f2k NETFLOW_PROBES '{"keyA":"valueA","keyB":"valueB"}'
     "${PROZZIE_PREFIX}"/bin/prozzie config f2k NETFLOW_KAFKA_TOPIC myFlowTopic
@@ -270,17 +264,13 @@ testSetupMonitorModuleVariables() {
        'Topic to produce monitor metrics' 'monitor' \
        'Seconds between monitor polling' '25' \
        'Monitor agents array' "\\'\\'"
-}
 
-testGetMonitorModuleVariables() {
     genericTestModule 5 monitor 'MONITOR_CUSTOM_MIB_PATH=my_custom_mibs' \
                                 'MONITOR_TRAPS_PORT=162' \
                                 'MONITOR_KAFKA_TOPIC=monitor' \
                                 'MONITOR_REQUEST_TIMEOUT=25' \
                                 "MONITOR_SENSORS_ARRAY=''"
-}
 
-testSetMonitorModuleVariables() {
     "${PROZZIE_PREFIX}"/bin/prozzie config monitor MONITOR_CUSTOM_MIB_PATH /other/mibs/path
     "${PROZZIE_PREFIX}"/bin/prozzie config monitor MONITOR_TRAPS_PORT 621
     "${PROZZIE_PREFIX}"/bin/prozzie config monitor MONITOR_KAFKA_TOPIC myMonitorTopic
@@ -309,17 +299,11 @@ testSetupSfacctdModuleVariables() {
          'Topic to produce sflow traffic' 'pmacct' \
          'Normalize sflow based on sampling' 'true'
 
-    ${_ASSERT_TRUE_} '"prozzie config -s sfacctd must done with no failure"' $?
-}
+    genericTestModule 4 sfacctd 'SFLOW_AGGREGATE=a,b,c,d' \
+                                'SFLOW_COLLECTOR_PORT=4363' \
+                                'SFLOW_KAFKA_TOPIC=pmacct' \
+                                'SFLOW_RENORMALIZE=true'
 
-testGetSfacctdModuleVariables() {
-        genericTestModule 4 sfacctd 'SFLOW_AGGREGATE=a,b,c,d' \
-                                    'SFLOW_COLLECTOR_PORT=4363' \
-                                    'SFLOW_KAFKA_TOPIC=pmacct' \
-                                    'SFLOW_RENORMALIZE=true'
-}
-
-testSetSfacctdModuleVariables() {
     "${PROZZIE_PREFIX}"/bin/prozzie config sfacctd SFLOW_AGGREGATE "a,b,c,d,e,f,g,h"
     "${PROZZIE_PREFIX}"/bin/prozzie config sfacctd SFLOW_COLLECTOR_PORT 5544
     "${PROZZIE_PREFIX}"/bin/prozzie config sfacctd SFLOW_KAFKA_TOPIC mySflowTopic
@@ -329,7 +313,6 @@ testSetSfacctdModuleVariables() {
                                 'SFLOW_COLLECTOR_PORT=5544' \
                                 'SFLOW_KAFKA_TOPIC=mySflowTopic' \
                                 'SFLOW_RENORMALIZE=false'
-
     echo "${ENV_BACKUP}" > "${PROZZIE_CLI_ETC}"/.env
 }
 
@@ -343,10 +326,9 @@ testSetupMqttModuleVariables() {
          'MQTT brokers' 'my.broker.mqtt:1883'
 
     ${_ASSERT_TRUE_} '"prozzie config -s mqtt must done with no failure"' $?
-}
 
-testGetMqttModuleVariables() {
-    while ! docker inspect --format='{{json .State.Health.Status}}' prozzie_kafka-connect_1| grep healthy >/dev/null; do :; done
+    while ! docker inspect --format='{{json .State.Health.Status}}' \
+                    prozzie_kafka-connect_1| grep healthy >/dev/null; do :; done
 
     genericTestModule 14 mqtt 'name=mqtt' \
                               'mqtt.qos=1' \

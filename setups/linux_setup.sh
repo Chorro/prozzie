@@ -217,6 +217,24 @@ install_cli () {
     fi
 }
 
+prozzie_postinstall () {
+    log info "Applying post-install\n"
+
+    if [[ ${ID} == centos ]]; then
+        systemctl status firewalld &> /dev/null
+
+        if [[ ! $? -eq 0 ]]; then
+            log warn "You could have a firewall or iptables enable. Docker needs communication between containers so you might need to add iptables or firewall rules\n"
+        else
+            log info "Add new firewall's rule in order to allow communication between docker containers\n"
+            firewall-cmd --permanent --zone=trusted --add-interface=br-+
+            firewall-cmd --reload
+            # We need restart docker after to apply firewall rule!
+            systemctl restart docker
+        fi
+    fi
+}
+
 function app_setup () {
   # Architecture
   local -r ARCH=$(uname -m | sed 's/x86_//;s/i[3-6]86/32/')
@@ -296,16 +314,11 @@ function app_setup () {
     printf "Done!\n\n"
 
     if read_yn_response "Do you want that docker to start on boot?"; then
-      case $ID in
-        debian|ubuntu)
-          $sudo systemctl enable docker &> /dev/null
-        ;;
-        fedora|centos)
-          $sudo systemctl start docker &> /dev/null
-        ;;
-      esac
+      $sudo systemctl enable docker &> /dev/null
       log ok "Configured docker to start on boot!\n"
     fi # Check if user response {Y}es
+
+    $sudo systemctl start docker &> /dev/null
 
   fi # Check if docker is installed
 
@@ -375,6 +388,9 @@ function app_setup () {
 
   log ok "Prozzie installation is finished!\n"
   trap '' EXIT # No need for file cleanup anymore
+
+  prozzie_postinstall
+
   log info "Starting Prozzie...\n\n"
 
   "${PREFIX}/bin/prozzie" start

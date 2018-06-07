@@ -419,6 +419,11 @@ testConfigMustShowHelpIfTryToSetMqttAndSyslogModules() {
 }
 
 testSetupCancellation() {
+    declare md5sum_file temp_file=$(mktemp)
+    exec {md5sum_file}>"${temp_file}"
+    rm "${temp_file}"
+
+
     ENV_BACKUP=$(<"${PROZZIE_CLI_ETC}"/.env)
 
     genericSetupQuestionAnswer base \
@@ -427,7 +432,7 @@ testSetupCancellation() {
         'Interface IP address' 'blah.blah.blah.blah' \
         'Client API key' 'blahblahblah'
 
-    md5UselessENVFile=`md5sum "${PROZZIE_PREFIX}"/etc/prozzie/.env|awk '{ print $1 }'`
+    md5sum "${PROZZIE_PREFIX}"/etc/prozzie/.env > "/dev/fd/${md5sum_file}"
 
     genericSetupQuestionAnswer base \
         'Data HTTPS endpoint URL (use http://.. for plain HTTP)' \
@@ -435,10 +440,8 @@ testSetupCancellation() {
         'Interface IP address' "${INTERFACE_IP}" \
         'Client API key' '\x03'
 
-    md5NewENVFile=`md5sum "${PROZZIE_PREFIX}"/etc/prozzie/.env|awk '{ print $1 }'`
-    comp_res=`echo $md5UselessENVFile $md5NewENVFile|awk '{ print ($1==$2) ? 0 : 1 }'`
-
-    ${_ASSERT_TRUE_} "\".ENV file mustn\'t be modified\"" '"$comp_res"'
+    ${_ASSERT_TRUE_} "\".ENV file mustn\'t be modified\"" \
+                                            "'md5sum -c \"/dev/fd/${md5sum_file}\"'"
 
     genericSetupQuestionAnswer base \
         'Data HTTPS endpoint URL (use http://.. for plain HTTP)' \
@@ -446,10 +449,9 @@ testSetupCancellation() {
         'Interface IP address' "${INTERFACE_IP}" \
         'Client API key' 'mySuperApiKey'
 
-     md5NewENVFile=`md5sum "${PROZZIE_PREFIX}"/etc/prozzie/.env|awk '{ print $1 }'`
-     comp_res=`echo $md5UselessENVFile $md5NewENVFile|awk '{ print ($1!=$2) ? 0 : 1 }'`
-
-    ${_ASSERT_TRUE_} "\".ENV file must be modified\"" '"$comp_res"'
+    if md5sum -c "/dev/fd/${md5sum_file}"; then
+        ${_FAIL_} "\".ENV file must be modified\""
+    fi
 
     echo "${ENV_BACKUP}" > "${PROZZIE_CLI_ETC}"/.env
 }

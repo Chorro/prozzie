@@ -1,9 +1,20 @@
 #!/usr/bin/env bash
 
 declare -r PROZZIE_PREFIX=/opt/prozzie
-declare -r PROZZIE_CLI_CONFIG="${PROZZIE_PREFIX}"/share/prozzie/cli/config
-declare -r PROZZIE_CLI_ETC="${PROZZIE_PREFIX}"/etc/prozzie/
 declare -r INTERFACE_IP="a.b.c.d"
+
+declare -r env_bak=$(mktemp)
+
+setUp () {
+    if [[ -f "${PROZZIE_PREFIX}/etc/prozzie/.env" ]]; then
+        cp "${PROZZIE_PREFIX}/etc/prozzie/.env" "$env_bak"
+    fi
+}
+
+tearDown () {
+    cp "$env_bak" "${PROZZIE_PREFIX}/etc/prozzie/.env"
+    "${PROZZIE_PREFIX}/bin/prozzie" up -d
+}
 
 #--------------------------------------------------------
 # TEST PROZZIE CONFIG OPTIONS
@@ -190,8 +201,6 @@ genericSetupQuestionAnswer() {
 }
 
 testSetupBaseModuleVariables() {
-    declare -g ENV_BACKUP=$(<"${PROZZIE_CLI_ETC}"/.env)
-
     # Try to change via setup
     genericSetupQuestionAnswer base \
         'Data HTTPS endpoint URL (use http://.. for plain HTTP)' \
@@ -216,8 +225,6 @@ testSetBaseModuleVariables() {
     genericTestModule 3 base 'ZZ_HTTP_ENDPOINT=https://my.super.test.endpoint/v1/data' \
                              "INTERFACE_IP=${INTERFACE_IP}" \
                              'CLIENT_API_KEY=mySuperApiKey'
-
-    echo "${ENV_BACKUP}" > "${PROZZIE_CLI_ETC}"/.env
 }
 
 #--------------------------------------------------------
@@ -225,8 +232,6 @@ testSetBaseModuleVariables() {
 #--------------------------------------------------------
 
 testSetupF2kModuleVariables() {
-    declare -g ENV_BACKUP=$(<"${PROZZIE_CLI_ETC}"/.env)
-
     genericSetupQuestionAnswer f2k \
         'In what port do you want to listen for netflow traffic?' \
             '2055' \
@@ -246,8 +251,6 @@ testSetupF2kModuleVariables() {
     genericTestModule 3 f2k 'NETFLOW_COLLECTOR_PORT=5502' \
                              'NETFLOW_PROBES={"keyA":"valueA","keyB":"valueB"}' \
                              'NETFLOW_KAFKA_TOPIC=myFlowTopic'
-
-    echo "${ENV_BACKUP}" > "${PROZZIE_CLI_ETC}"/.env
 }
 
 #--------------------------------------------------------
@@ -255,7 +258,6 @@ testSetupF2kModuleVariables() {
 #--------------------------------------------------------
 
 testSetupMonitorModuleVariables() {
-    declare -g ENV_BACKUP=$(<"${PROZZIE_CLI_ETC}"/.env)
     declare mibs_directory mibs_directory2
     mibs_directory=$(mktemp -d)
     mibs_directory2=$(mktemp -d)
@@ -286,8 +288,6 @@ testSetupMonitorModuleVariables() {
                                 'MONITOR_KAFKA_TOPIC=myMonitorTopic' \
                                 'MONITOR_REQUEST_TIMEOUT=60' \
                                 "MONITOR_SENSORS_ARRAY='a,b,c,d'"
-
-    echo "${ENV_BACKUP}" > "${PROZZIE_CLI_ETC}"/.env
 }
 
 #--------------------------------------------------------
@@ -295,8 +295,6 @@ testSetupMonitorModuleVariables() {
 #--------------------------------------------------------
 
 testSetupSfacctdModuleVariables() {
-    declare -g ENV_BACKUP=$(<"${PROZZIE_CLI_ETC}"/.env)
-
     genericSetupQuestionAnswer sfacctd \
          'sfacctd aggregation fields' 'a,b,c,d' \
          'In what port do you want to listen for sflow traffic' '4363' \
@@ -317,7 +315,6 @@ testSetupSfacctdModuleVariables() {
                                 'SFLOW_COLLECTOR_PORT=5544' \
                                 'SFLOW_KAFKA_TOPIC=mySflowTopic' \
                                 'SFLOW_RENORMALIZE=false'
-    echo "${ENV_BACKUP}" > "${PROZZIE_CLI_ETC}"/.env
 }
 
 #--------------------------------------------------------
@@ -424,8 +421,6 @@ testSetupCancellation() {
     rm "${temp_file}"
 
 
-    ENV_BACKUP=$(<"${PROZZIE_CLI_ETC}"/.env)
-
     genericSetupQuestionAnswer base \
         'Data HTTPS endpoint URL (use http://.. for plain HTTP)' \
             'blah.blah.blah' \
@@ -452,8 +447,6 @@ testSetupCancellation() {
     if md5sum -c "/dev/fd/${md5sum_file}"; then
         ${_FAIL_} "\".ENV file must be modified\""
     fi
-
-    echo "${ENV_BACKUP}" > "${PROZZIE_CLI_ETC}"/.env
 }
 
 #--------------------------------------------------------
@@ -461,8 +454,6 @@ testSetupCancellation() {
 #--------------------------------------------------------
 
 testWizard() {
-    ENV_BACKUP=$(<"${PROZZIE_CLI_ETC}"/.env)
-
     genericSpawnQuestionAnswer "${PROZZIE_PREFIX}/bin/prozzie config -w" \
          'Do you want to configure modules? (Enter for quit)' '{f2k} {}' \
          'In what port do you want to listen for netflow traffic?' '5523' \
@@ -472,8 +463,6 @@ testWizard() {
     genericTestModule 3 f2k 'NETFLOW_COLLECTOR_PORT=5523' \
                             'NETFLOW_KAFKA_TOPIC=wizardFlow' \
                             'NETFLOW_PROBES={}'
-
-    echo "${ENV_BACKUP}" > "${PROZZIE_CLI_ETC}"/.env
 }
 
 . test_run.sh

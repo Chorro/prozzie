@@ -192,7 +192,7 @@ squash_spaces () {
 # give a 'Stale file handle'. This wrapper will fallback to a file copy if that
 # is needed
 cp () {
-    declare opt_index src_file dst_file dash_options=y
+    declare opt_index src_file='' dst_file dash_options=y
     # Extract first file name
     for ((opt_index=1;opt_index<=$#;opt_index++)); do
 

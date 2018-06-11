@@ -292,132 +292,13 @@ function app_setup () {
   type docker &> /dev/null
 
   if [[ $? -eq 1 ]]; then
-    log warn "Docker is not installed!\n"
-    log info "Initializing docker installation!\n"
-
-    if [[ $ID =~ ^\"?(ubuntu|debian)\"?$ ]]; then
-      log info "Installing packages to allow apt to use repository over HTTPS..."
-      $sudo apt-get install -y \
-        apt-transport-https \
-        ca-certificates &> /dev/null
-      printf "Done!\n"
+    # Install docker
+    log info "Installing the latest version of Docker Community Edition...\\n"
+    if ! curl -fsSL get.docker.com | sh; then
+      log error "This linux distribution is not supported! You need Ubuntu, Debian, Fedora or CentOS linux distribution\n"
+      exit 1
     fi
 
-    # Install docker dependencies
-    case $ID in
-      debian)
-          if [[ $VERSION_ID =~ ^\"?[87].*\"?$ ]]; then
-
-            # Install packages to allow apt to use a repository over HTTPS:
-            if [[ ${VERSION,,} =~ ^\"?.*whezzy.*\"?$ ]]; then
-               install python-software-properties &> /dev/null
-            elif [[ ${VERSION,,} =~ ^\"?.*stretch.*\"?$ || $VERSION =~ ^\"?.*jessie.*\"?$ ]]; then
-               install software-properties-common &> /dev/null
-            fi
-
-            # Add Docker’s official GPG key:
-            log info "Adding Docker's official GPG key..."
-            curl -fsSL https://download.docker.com/linux/debian/gpg | $sudo apt-key add - &> /dev/null
-            printf "Done!\n"
-
-            # Set up the stable repository
-            log info "Setting up Docker's stable repository..."
-            $sudo add-apt-repository \
-              "deb [arch=amd64] https://download.docker.com/linux/debian \
-              $(lsb_release -cs) \
-              stable" &> /dev/null
-            printf "Done!\n"
-
-          else
-            log error "You need Debian 8.0 or 7.7. Your current Debian version is: $VERSION_ID\n"
-            exit 1
-          fi
-      ;;
-      ubuntu)
-          if [[ $VERSION_ID =~ ^\"?1[46].*\"?$ ]]; then
-
-            # Version 14.04 (Trusty)
-            if [[ ${VERSION_ID,,} =~ ^\"?.*trusty.*\"?$  ]]; then
-              $sudo apt-get install -y \
-                linux-image-extra-$(uname -r) \
-                linux-image-extra-virtual &> /dev/null
-            fi
-
-            # Install Docker's dependencies
-            log info "Installing docker dependencies..."
-            install software-properties-common &> /dev/null
-            printf "Done!\n"
-
-            # Add Docker's official GPG key
-            log info "Adding Docker's official GPG key..."
-            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | $sudo apt-key add - &> /dev/null
-            printf "Done!\n"
-
-            # Set up the stable repository
-            log info "Setting up Docker's stable repository..."
-            $sudo add-apt-repository \
-              "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-              $(lsb_release -cs) \
-              stable" &> /dev/null
-            printf "Done!\n"
-
-          else
-            log error "You need Ubuntu 16.10, 16.04 or 14.04. Your current Ubuntu version is: $VERSION_ID\n"
-            exit 1
-          fi
-      ;;
-      centos)
-          if [[ $VERSION_ID =~ ^\"?7.*\"?$ ]]; then
-
-            log info "Installing necessary packages for set up repository..."
-            install yum-utils &> /dev/null
-            printf "Done!\n"
-
-            # Set up the stable repository
-            log info "Setting up Docker's stable repository..."
-            $sudo yum-config-manager \
-                 --add-repo \
-                 https://download.docker.com/linux/centos/docker-ce.repo &> /dev/null
-            printf "Done!\n"
-
-          else
-            log error "You need CentOS 7. Your current CentOS version is: $VERSION_ID\n"
-            exit 1
-          fi
-      ;;
-      fedora)
-          if [[ $VERSION_ID =~ ^\"?2[45]\"?$ ]]; then
-
-            # Update repository
-            update
-
-            log info "Installing necessary packages for set up repository..."
-            install dnf-plugins-core &> /dev/null
-            printf "Done!\n"
-
-            # Set up the stable repository
-            log info "Setting up Docker's stable repository..."
-            $sudo dnf config-manager \
-                 --add-repo \
-                 https://download.docker.com/linux/fedora/docker-ce.repo &> /dev/null
-            printf "Done!\n"
-
-          else
-            log error "You need Fedora 24 or 25. Your current Fedora version is: $VERSION_ID\n"
-            exit 1
-          fi
-      ;;
-      *)
-            log error "This linux distribution is not supported! You need Ubuntu, Debian, Fedora or CentOS linux distribution\n"
-            exit 1
-      ;;
-    esac
-
-    # Update repository
-    update
-
-    log info "Installing the latest version of Docker Community Edition..."
-    $PKG_MANAGER install -y docker-ce &> /dev/null;
     printf "Done!\n\n"
 
     if read_yn_response "Do you want that docker to start on boot?"; then

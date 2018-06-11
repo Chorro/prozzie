@@ -35,7 +35,7 @@ jobs:
               STDIO TCP\:prozzie_kafka_1\:9092'
       - run:
           name: Run actual tests
-          command: cd tests; make coverage
+          command: cd tests; make -j 6 coverage
       - run:
           name: Merge all coverage
           command: kcov --merge ${KCOV_OUT} install_cov tests/coverage.html

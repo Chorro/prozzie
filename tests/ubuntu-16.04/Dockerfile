@@ -49,6 +49,7 @@ RUN apt update && env DEBIAN_FRONTEND=noninteractive \
 	kafkacat \
 	libdw1 \
 	make \
+	procps \
 	pslist \
 	shunit2 \
 	socat \

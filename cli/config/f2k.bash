@@ -16,7 +16,7 @@
 # limitations under the License.
 
 declare -A module_envs=(
-	[NETFLOW_PROBES]="|JSON object of NF probes (It's recommend to use env var) "
+	[NETFLOW_PROBES]="{}|JSON object of NF probes (It's recommend to use env var) "
 	[NETFLOW_KAFKA_TOPIC]='flow|Topic to produce netflow traffic? ')
 
 showVarsDescription () {

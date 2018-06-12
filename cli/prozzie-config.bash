@@ -39,6 +39,8 @@ printHelp() {
     printf "\t\t%-40s%s\n" "-d, --describe <module>" "Describe module vars"
     printf "\t\t%-40s%s\n" "-s, --setup <module>" "Configure module with setup assistant"
     printf "\t\t%-40s%s\n" "--describe-all" "Describe all modules vars"
+    printf "\t\t%-40s%s\n" "--enable <module>" "Enable module"
+    printf "\t\t%-40s%s\n" "--disable <module>" "Disable module"
     printf "\t\t%-40s%s\n" "-h, --help" "Show this help"
 }
 
@@ -95,8 +97,8 @@ if [[ $1 ]]; then
             exit 0
         ;;
       -s|--setup)
-            if [[ -f $PROZZIE_CLI_CONFIG/$2.bash ]]; then
-                module=$PROZZIE_CLI_CONFIG/$2.bash
+            if [[ -f "$PROZZIE_CLI_CONFIG/$2.bash" ]]; then
+                module="$PROZZIE_CLI_CONFIG/$2.bash"
                 . "$module"
                 if [[ $2 == mqtt || $2 == syslog ]]; then
                     . "${BASH_SOURCE%/*}/include/kcli_base.bash"
@@ -113,6 +115,10 @@ if [[ $1 ]]; then
             fi
             printHelp
             exit 1
+        ;;
+        --enable|--disable)
+            zz_link_unlink_module $@
+            exit 0
         ;;
         *)
             declare -r option="$PROZZIE_CLI_CONFIG/$1.bash"

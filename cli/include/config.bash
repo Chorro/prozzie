@@ -263,6 +263,27 @@ zz_set_var () {
     return 1
 }
 
+# Set variable in env file by default
+# Arguments:
+#  1 - Module to set by default
+# Environment:
+#  -
+#
+# Out:
+#  -
+#
+# Exit status:
+# Always true
+zz_set_default () {
+    declare -a default_config=( "#Default configuration" )
+
+    for var_key in "${!module_envs[@]}"; do
+        printf -v new_value "%s=%s" "${var_key}" "${module_envs[$var_key]%|*}"
+        default_config+=($new_value)
+    done
+    printf "%s\n" "${default_config[@]}" > $1
+}
+
 # Search for modules in a specific directory and offers them to the user to
 # setup them
 # Arguments:
@@ -342,6 +363,8 @@ app_setup () {
     src_env_file="${PREFIX:-${DEFAULT_PREFIX}}/etc/prozzie/.env"
   fi
 
+  touch $src_env_file
+
   declare mod_tmp_env
   tmp_fd mod_tmp_env
   trap print_not_modified_warning EXIT
@@ -356,10 +379,96 @@ app_setup () {
   exec {mod_tmp_env}<&-
   trap '' EXIT
 
+  zz_link_compose_file ${1}
+
   # Reload prozzie
   if [[ $reload_prozzie == y ]]; then
     "${src_env_file%etc/prozzie/*}/bin/prozzie" up -d
   fi
 
   unset -v src_env_file
+}
+
+# Create or destroy a symbolic link in prozzie compose directory in order to enable or disable multiple modules.
+# Check if base module is included. Check if a module exists.
+# Arguments:
+#  1 - Enable or disable option
+#  @ - Modules to enable/disable
+# Exit status:
+zz_link_unlink_module() {
+    declare cmd
+
+    case $1 in
+        --enable)
+            cmd=zz_link_compose_file
+        ;;
+        --disable)
+            cmd=zz_unlink_compose_file
+        ;;
+    esac
+
+    shift 1
+
+    for module in "$@"; do
+        if [[ -f $PROZZIE_CLI_CONFIG/$module.bash ]]; then
+            if [[ ! "$module" =~ ^base$ ]]; then
+                . $PROZZIE_CLI_CONFIG/$module.bash
+                $cmd "$module"
+            else
+                printf "Base module cannot be enabled or disabled\n" >&2
+            fi
+        else
+            printf "Module %s doesn't exists\n" "$module" >&2
+        fi
+    done
+}
+
+# Create a symbolic link in prozzie compose directory in order to enable a module
+# Arguments:
+#  [--no-set-default] Don't set default parameters for specific prozzie module
+#  1 - Module to link
+# Exit status:
+#  0 - Module has been linked
+#  1 - An error has ocurred
+zz_link_compose_file () {
+    declare set_default=y
+
+    if [[ $1 == --no-set-default ]]; then
+        set_default=n
+        shift 1
+    fi
+
+    declare -r from="${PREFIX}"/share/prozzie/compose/$1.yaml
+    declare -r to="${PREFIX}"/etc/prozzie/compose/$1.yaml
+    declare -r module="${1}"
+
+    if [[ $set_default == y ]];then
+        if [[ ! -f "${PREFIX}"/etc/prozzie/envs/$module.env ]]; then
+            zz_set_default "${PREFIX}"/etc/prozzie/envs/$module.env
+        fi
+    fi
+
+    if [[ -f "$from" ]]; then
+                ln -s "$from" "$to" 2>/dev/null \
+            && printf "Module %s enabled\n" "$module" >&2 \
+            || printf "Module %s already enabled\n" "$module" >&2
+        return 0
+    else
+        printf "Can't enable module %s: Can't create symlink %s\n" "$module" "$from" >&2
+        return 1
+    fi
+}
+
+# Destroy a symbolic link in prozzie compose directory in order to disable a module
+# Arguments:
+#  1 - Module to unlink
+# Exit status:
+#  Always 0
+zz_unlink_compose_file () {
+    declare -r target="${PREFIX}"/etc/prozzie/compose/$1.yaml
+    declare -r module="${1}"
+
+    rm "$target" 2>/dev/null \
+        && printf "Module %s disabled\n" "$module" >&2 \
+        || printf "Module %s already disabled\n" "$module" >&2
 }

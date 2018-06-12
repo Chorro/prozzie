@@ -349,6 +349,9 @@ function app_setup () {
   log info "Installing ${PROZZIE_VERSION} release of Prozzie...\n"
   cp -R -- "${installer_directory}/../compose/"*.yaml "${prozzie_compose_dir}"
 
+  # Enable base module by default
+  zz_link_compose_file --no-set-default base
+
   if [[ -z $INTERFACE_IP ]] && \
                       read_yn_response \
                         "Do you want discover the IP address automatically?"; \

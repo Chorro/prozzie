@@ -83,6 +83,10 @@ Prozzie config command have next options:
 
 `--describe-all` : Shows all variables of each module.
 
+`--enable <module1, module2, ···, moduleN>` : Enable selected module to run with `prozzie up` command
+
+`--disable <module1, module2, ···, moduleN>` : Disable selected module in order to avoid run it with `prozzie up` command
+
 `-h|--help` : Shows prozzie help.
 
 ### Prozzie service operation

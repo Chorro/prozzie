@@ -64,7 +64,7 @@ if [[ $action == 'compose' ]]; then
 fi
 
 declare compose_files=()
-for yaml in "${PREFIX}/share/prozzie/compose/"*.yaml; do
+for yaml in "${PREFIX}/etc/prozzie/compose/"*.yaml; do
     compose_files+=(--file "$yaml")
 done
 

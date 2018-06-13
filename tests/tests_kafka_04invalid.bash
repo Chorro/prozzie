@@ -4,19 +4,6 @@
 . base_tests_kafka.bash
 
 ##
-## @brief  Checks that there is no broker option in kafka output message (passed
-##         as stdin
-##
-## @return Always true or assert failure
-##
-assert_no_kafka_server_parameter () {
-	declare out
-	if out=$(grep -- '--zookeeper\|--broker-list\|--bootstrap-server\|--new_consumer'); then
-		fail "line [$out] in help message"
-	fi
-}
-
-##
 ## @brief Invalid kafka parameters tests
 ##
 test_kafka_invalid_action_parameter () {

@@ -96,11 +96,12 @@ ux_err_print () {
     while IFS= read -r first_line; do
         if [[ "$first_line" == \
                      'The '*' variable is not set. Defaulting to '* ]]; then
-                break;
+                            printf '%s' "$first_line"
+            else
+                break
         fi
     done
 
-    first_line="$(head -n 1 -)"
     if [[ -z "$first_line" ]]; then
         # stdin SIGPIPE, or very strange empty line. Continue will cause a
         # spurious newline printed

@@ -3,18 +3,7 @@
 declare -r PROZZIE_PREFIX=/opt/prozzie
 declare -r INTERFACE_IP="a.b.c.d"
 
-declare -r env_bak=$(mktemp)
-
-setUp () {
-    if [[ -f "${PROZZIE_PREFIX}/etc/prozzie/.env" ]]; then
-        cp "${PROZZIE_PREFIX}/etc/prozzie/.env" "$env_bak"
-    fi
-}
-
-tearDown () {
-    cp "$env_bak" "${PROZZIE_PREFIX}/etc/prozzie/.env"
-    "${PROZZIE_PREFIX}/bin/prozzie" up -d
-}
+. backupconfig.sh
 
 #--------------------------------------------------------
 # TEST PROZZIE CONFIG OPTIONS

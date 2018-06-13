@@ -175,7 +175,8 @@ stop_prozzie_install_rollback () {
 # Exit status:
 #  Always 0
 create_directory_tree () {
-    declare -r directories=("${PREFIX}/"{share/prozzie/{cli,compose},bin,etc/prozzie})
+    declare -r directories=("${PREFIX}/"{share/prozzie/{cli,compose},bin,etc/prozzie/envs})
+
     declare mkdir_out
     mkdir_out=$(mkdir -vp "${directories[@]}")
     if [[ $? != 0 ]]; then
@@ -333,6 +334,10 @@ function app_setup () {
   declare -r src_env_file="${PREFIX}/etc/prozzie/.env"
   declare -r prozzie_compose_dir="${PREFIX}/share/prozzie/compose"
   create_directory_tree
+
+  # Create placeholder envs files
+  touch  "${PREFIX}/etc/prozzie/envs/"{f2k,monitor,sfacctd}.env
+
   trap install_rollback EXIT
 
   log info "Prozzie will be installed under: [${PREFIX}]\n"

@@ -22,8 +22,10 @@
 
 # Declare prozzie cli config directory path
 declare -r PROZZIE_CLI_CONFIG="${BASH_SOURCE%/*}/config"
+declare -r PROZZIE_ENVS="${PREFIX:-${DEFAULT_PREFIX}}/etc/prozzie/envs"
+
 # .env file path
-declare src_env_file="${PREFIX:-${DEFAULT_PREFIX}}/etc/prozzie/.env"
+declare base_env_file="${PREFIX:-${DEFAULT_PREFIX}}/etc/prozzie/.env"
 
 printShortHelp() {
     printf "Handle prozzie configuration\n"
@@ -102,7 +104,9 @@ if [[ $1 ]]; then
                     kcli_setup "/dev/fd/${properties}" "$2"
                     exec {properties}<&-
                 else
-                    printf "Setup %s configuration:\n" "$2"
+                    ENV_FILE="$PROZZIE_ENVS/$2.env"
+                    printf "Setup %s module:\n" "$2"
+                    shift 1
                     app_setup "$@"
                 fi
                 exit 0
@@ -121,13 +125,18 @@ if [[ $1 ]]; then
             . "$option"
             module=$1
             shift 1
+            declare env_file="$PROZZIE_ENVS/$module.env"
+            # If module is referred to base module then set $env_file to $base_env_file
+            if [[ "$module" =~ ^base$ ]]; then
+                env_file="$base_env_file"
+            fi
             case $# in
                 0)
                     if [[ "$module" =~ ^(mqtt|syslog)$ ]]; then
                         "${PREFIX}"/bin/prozzie kcli get "$module"
                         exit 0
                     fi
-                    zz_get_vars "$src_env_file"
+                    zz_get_vars "$env_file"
                     exit 0
                 ;;
                 1)
@@ -135,7 +144,7 @@ if [[ $1 ]]; then
                         "${PREFIX}"/bin/prozzie kcli get "$module"|grep -P "^${1}=.*$"|sed 's/'"${1}"'=//'
                         exit 0
                     fi
-                    zz_get_var "$src_env_file" "$@"
+                    zz_get_var "$env_file" "$@"
                     exit 0
                 ;;
                 2)
@@ -145,7 +154,7 @@ if [[ $1 ]]; then
                         printf "prozzie config -s ${module}\n" >&2
                         exit 1
                     fi
-                    zz_set_var "$src_env_file" "$@" || exit 1
+                    zz_set_var "$env_file" "$@" || exit 1
                 ;;
             esac
         ;;

@@ -69,12 +69,12 @@ testBaseModule() {
 }
 
 testF2kModule() {
-    genericTestModule 3 f2k NETFLOW_COLLECTOR_PORT NETFLOW_PROBES NETFLOW_KAFKA_TOPIC
+    genericTestModule 2 f2k NETFLOW_PROBES NETFLOW_KAFKA_TOPIC
 }
 
 testMonitorModule() {
-    genericTestModule 5 monitor MONITOR_CUSTOM_MIB_PATH MONITOR_TRAPS_PORT \
-        MONITOR_KAFKA_TOPIC MONITOR_REQUEST_TIMEOUT MONITOR_SENSORS_ARRAY
+    genericTestModule 4 monitor MONITOR_CUSTOM_MIB_PATH MONITOR_KAFKA_TOPIC \
+        MONITOR_REQUEST_TIMEOUT MONITOR_SENSORS_ARRAY
 }
 
 testMqttModule() {
@@ -92,8 +92,8 @@ testSyslogModule() {
 }
 
 testSfacctdModule() {
-    genericTestModule 4 sfacctd SFLOW_KAFKA_TOPIC SFLOW_COLLECTOR_PORT \
-        SFLOW_RENORMALIZE SFLOW_AGGREGATE
+    genericTestModule 3 sfacctd SFLOW_KAFKA_TOPIC SFLOW_RENORMALIZE \
+        SFLOW_AGGREGATE
 }
 
 #--------------------------------------------------------
@@ -222,23 +222,18 @@ testSetBaseModuleVariables() {
 
 testSetupF2kModuleVariables() {
     genericSetupQuestionAnswer f2k \
-        'In what port do you want to listen for netflow traffic?' \
-            '2055' \
         "JSON object of NF probes (It's recommend to use env var)" \
             '\{\}' \
         'Topic to produce netflow traffic?' \
             'flow'
 
-    genericTestModule 3 f2k 'NETFLOW_COLLECTOR_PORT=2055' \
-                            'NETFLOW_KAFKA_TOPIC=flow' \
+    genericTestModule 2 f2k 'NETFLOW_KAFKA_TOPIC=flow' \
                             'NETFLOW_PROBES={}'
 
-    "${PROZZIE_PREFIX}"/bin/prozzie config f2k NETFLOW_COLLECTOR_PORT 5502
     "${PROZZIE_PREFIX}"/bin/prozzie config f2k NETFLOW_PROBES '{"keyA":"valueA","keyB":"valueB"}'
     "${PROZZIE_PREFIX}"/bin/prozzie config f2k NETFLOW_KAFKA_TOPIC myFlowTopic
 
-    genericTestModule 3 f2k 'NETFLOW_COLLECTOR_PORT=5502' \
-                             'NETFLOW_PROBES={"keyA":"valueA","keyB":"valueB"}' \
+    genericTestModule 2 f2k  'NETFLOW_PROBES={"keyA":"valueA","keyB":"valueB"}' \
                              'NETFLOW_KAFKA_TOPIC=myFlowTopic'
 }
 
@@ -255,25 +250,21 @@ testSetupMonitorModuleVariables() {
     genericSetupQuestionAnswer monitor \
        'monitor custom mibs path (use monitor_custom_mibs for no custom mibs)' \
          "${mibs_directory}" \
-       'Port to listen for SNMP traps' '162' \
        'Topic to produce monitor metrics' 'monitor' \
        'Seconds between monitor polling' '25' \
        'Monitor agents array' "\\'\\'"
 
-    genericTestModule 5 monitor "MONITOR_CUSTOM_MIB_PATH=${mibs_directory}" \
-                                'MONITOR_TRAPS_PORT=162' \
+    genericTestModule 4 monitor "MONITOR_CUSTOM_MIB_PATH=${mibs_directory}" \
                                 'MONITOR_KAFKA_TOPIC=monitor' \
                                 'MONITOR_REQUEST_TIMEOUT=25' \
                                 "MONITOR_SENSORS_ARRAY=''"
 
     "${PROZZIE_PREFIX}"/bin/prozzie config monitor MONITOR_CUSTOM_MIB_PATH "${mibs_directory2}"
-    "${PROZZIE_PREFIX}"/bin/prozzie config monitor MONITOR_TRAPS_PORT 621
     "${PROZZIE_PREFIX}"/bin/prozzie config monitor MONITOR_KAFKA_TOPIC myMonitorTopic
     "${PROZZIE_PREFIX}"/bin/prozzie config monitor MONITOR_REQUEST_TIMEOUT 60
     "${PROZZIE_PREFIX}"/bin/prozzie config monitor MONITOR_SENSORS_ARRAY "'a,b,c,d'"
 
-    genericTestModule 5 monitor "MONITOR_CUSTOM_MIB_PATH=${mibs_directory2}" \
-                                'MONITOR_TRAPS_PORT=621' \
+    genericTestModule 4 monitor "MONITOR_CUSTOM_MIB_PATH=${mibs_directory2}" \
                                 'MONITOR_KAFKA_TOPIC=myMonitorTopic' \
                                 'MONITOR_REQUEST_TIMEOUT=60' \
                                 "MONITOR_SENSORS_ARRAY='a,b,c,d'"
@@ -286,22 +277,18 @@ testSetupMonitorModuleVariables() {
 testSetupSfacctdModuleVariables() {
     genericSetupQuestionAnswer sfacctd \
          'sfacctd aggregation fields' 'a,b,c,d' \
-         'In what port do you want to listen for sflow traffic' '4363' \
          'Topic to produce sflow traffic' 'pmacct' \
          'Normalize sflow based on sampling' 'true'
 
-    genericTestModule 4 sfacctd 'SFLOW_AGGREGATE=a,b,c,d' \
-                                'SFLOW_COLLECTOR_PORT=4363' \
+    genericTestModule 3 sfacctd 'SFLOW_AGGREGATE=a,b,c,d' \
                                 'SFLOW_KAFKA_TOPIC=pmacct' \
                                 'SFLOW_RENORMALIZE=true'
 
     "${PROZZIE_PREFIX}"/bin/prozzie config sfacctd SFLOW_AGGREGATE "a,b,c,d,e,f,g,h"
-    "${PROZZIE_PREFIX}"/bin/prozzie config sfacctd SFLOW_COLLECTOR_PORT 5544
     "${PROZZIE_PREFIX}"/bin/prozzie config sfacctd SFLOW_KAFKA_TOPIC mySflowTopic
     "${PROZZIE_PREFIX}"/bin/prozzie config sfacctd SFLOW_RENORMALIZE false
 
-    genericTestModule 4 sfacctd 'SFLOW_AGGREGATE=a,b,c,d,e,f,g,h' \
-                                'SFLOW_COLLECTOR_PORT=5544' \
+    genericTestModule 3 sfacctd 'SFLOW_AGGREGATE=a,b,c,d,e,f,g,h' \
                                 'SFLOW_KAFKA_TOPIC=mySflowTopic' \
                                 'SFLOW_RENORMALIZE=false'
 }
@@ -445,12 +432,10 @@ testSetupCancellation() {
 testWizard() {
     genericSpawnQuestionAnswer "${PROZZIE_PREFIX}/bin/prozzie config -w" \
          'Do you want to configure modules? (Enter for quit)' '{f2k} {}' \
-         'In what port do you want to listen for netflow traffic?' '5523' \
          'JSON object of NF probes (It'\''s recommend to use env var)' '\{\}' \
          'Topic to produce netflow traffic?' 'wizardFlow'
 
-    genericTestModule 3 f2k 'NETFLOW_COLLECTOR_PORT=5523' \
-                            'NETFLOW_KAFKA_TOPIC=wizardFlow' \
+    genericTestModule 2 f2k 'NETFLOW_KAFKA_TOPIC=wizardFlow' \
                             'NETFLOW_PROBES={}'
 }
 

@@ -1,4 +1,4 @@
-version: '3'
+version: '3.6'
 
 volumes:
   # Empty volume as placeholder in case that no custom mibs specified
@@ -11,13 +11,11 @@ services:
     depends_on:
       - kafka
     ports:
-      - "${MONITOR_TRAPS_PORT:-162}:${MONITOR_TRAPS_PORT:-162}/udp"
+      - 162:162
+    env_file:
+      - ${PREFIX}/etc/prozzie/envs/monitor.env
     environment:
-      REQUESTS_TIMEOUT: ${MONITOR_REQUEST_TIMEOUT:-25}
       KAFKA_BROKERS: 'kafka'
-      KAFKA_TOPIC: "${MONITOR_KAFKA_TOPIC:-monitor}"
-      SENSORS_ARRAY: "${MONITOR_SENSORS_ARRAY:-''}"
-      TRAPS_PORT: "${MONITOR_TRAPS_PORT:-''}"
 
     volumes:
       - "${MONITOR_CUSTOM_MIB_PATH:-monitor_custom_mibs}:/root/.snmp/mibs:ro"

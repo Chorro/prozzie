@@ -1,4 +1,5 @@
-version: '3'
+version: '3.6'
+
 services:
   http2k:
     image: gcr.io/wizzie-registry/n2kafka:1.99-10

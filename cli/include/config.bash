@@ -335,8 +335,9 @@ app_setup () {
     shift
   fi
 
-  if [[ -v ENV_FILE ]]; then
+  if [[ -v ENV_FILE  ]] && [[ "${1}" != base ]]; then
     src_env_file="${ENV_FILE}"
+    touch "$src_env_file"
   else
     src_env_file="${PREFIX:-${DEFAULT_PREFIX}}/etc/prozzie/.env"
   fi
@@ -357,7 +358,7 @@ app_setup () {
 
   # Reload prozzie
   if [[ $reload_prozzie == y ]]; then
-    "${src_env_file%etc/prozzie/.env}/bin/prozzie" up -d
+    "${src_env_file%etc/prozzie/*}/bin/prozzie" up -d
   fi
 
   unset -v src_env_file

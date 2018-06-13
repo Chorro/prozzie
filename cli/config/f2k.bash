@@ -17,11 +17,9 @@
 
 declare -A module_envs=(
 	[NETFLOW_PROBES]="|JSON object of NF probes (It's recommend to use env var) "
-	[NETFLOW_COLLECTOR_PORT]='2055|In what port do you want to listen for netflow traffic? '
 	[NETFLOW_KAFKA_TOPIC]='flow|Topic to produce netflow traffic? ')
 
 showVarsDescription () {
     printf "\t%-40s%s\n" "NETFLOW_PROBES" "JSON object of NF probes"
-    printf "\t%-40s%s\n" "NETFLOW_COLLECTOR_PORT" "Port to listen netflow traffic"
     printf "\t%-40s%s\n" "NETFLOW_KAFKA_TOPIC" "Topic to produce netflow traffic"
 }

@@ -22,14 +22,11 @@ declare -A module_envs=(
 	[MONITOR_REQUEST_TIMEOUT]='25|Seconds between monitor polling'
 	[MONITOR_KAFKA_TOPIC]='monitor|Topic to produce monitor metrics'
 	[MONITOR_CUSTOM_MIB_PATH]="monitor_custom_mibs|$monitor_custom_mib_prompt"
-	[MONITOR_SENSORS_ARRAY]="''|Monitor agents array"
-	[MONITOR_TRAPS_PORT]="162|Port to listen for SNMP traps")
+	[MONITOR_SENSORS_ARRAY]="''|Monitor agents array")
 
 showVarsDescription () {
     printf "\t%-40s%s\n" "MONITOR_REQUEST_TIMEOUT" "Monitor polling (seconds)"
     printf "\t%-40s%s\n" "MONITOR_KAFKA_TOPIC" "Topic to produce monitor metrics"
     printf "\t%-40s%s\n" "MONITOR_CUSTOM_MIB_PATH" "Path to monitor custom MIB"
     printf "\t%-40s%s\n" "MONITOR_SENSORS_ARRAY" "Array of monitor agents"
-    printf "\t%-40s%s\n" "MONITOR_TRAPS_PORT" "SNMP port for traps"
-
 }

@@ -346,7 +346,7 @@ wizard () {
     while :; do
         if [[ -z ${3+x} ]]; then
             reply=$(zz_select "${modules[@]}")
-        elif [[ ${#config_modules[@]} > 0 ]]; then
+        elif [[ ${#config_modules[@]} -gt 0 ]]; then
             reply=${config_modules[-1]}
         else
             reply=''

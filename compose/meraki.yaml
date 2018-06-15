@@ -2,7 +2,7 @@ version: '3.6'
 
 services:
   meraki:
-    image: gcr.io/wizzie-registry/n2kafka:1.99-10
+    image: gcr.io/wizzie-registry/n2kafka:2.1.1
     restart: always
     depends_on:
       - kafka

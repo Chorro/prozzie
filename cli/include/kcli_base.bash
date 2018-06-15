@@ -75,7 +75,7 @@ kcli_update_properties_file () {
     for var in "${!module_envs[@]}"; do
         if printf '%s' "$var" | grep '\.' >/dev/null; then
            module_envs["${var//./__}"]="${module_envs[$var]}"
-           unset -v module_envs[$var]
+           unset -v "module_envs[$var]"
        fi
     done
 

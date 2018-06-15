@@ -19,13 +19,13 @@ genericTestModule() {
     declare description key
 
     ${_ASSERT_EQUALS_} '"Incorrect number of arguments"' \
-    ${num_arguments} '$(printf "%s\n" "${describe_out}" | wc -l)'
+        "${num_arguments}" '$(printf "%s\n" "${describe_out}" | wc -l)'
 
     declare key_value_list="$("${PROZZIE_PREFIX}/bin/prozzie" config get "$module_name" \
         | grep -v '#.*')"
 
     ${_ASSERT_EQUALS_} '"Incorrect number of arguments"' \
-    ${num_arguments} '$(printf "%s\n" "${key_value_list}" | wc -l)'
+        "${num_arguments}" '$(printf "%s\n" "${key_value_list}" | wc -l)'
 
     for key in "$@"; do
     declare expected_value value

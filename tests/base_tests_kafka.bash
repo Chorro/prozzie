@@ -53,6 +53,8 @@ kafka_produce_consume () {
 	kafka_topic=$(new_random_topic)
 	consumer_stderr_log=$(mktemp plXXXXXXXXXX)
 
+	# Want to expand arguments, so...
+	# shellcheck disable=SC2086
 	# Need to retry because of kafkacat sometimes miss messages
 	coproc { while timeout 60 \
 	               "${kafka_cmd}" $consume_args "${kafka_topic}" || true; do :
@@ -61,6 +63,8 @@ kafka_produce_consume () {
 
 	"$wait_for_kafka_consumer_ready" "$consumer_stderr_log"
 
+	# Want to expand arguments, so...
+	# shellcheck disable=SC2086
 	printf '%s\n' "$expected_message" | \
 				   "${kafka_cmd}" $produce_args "${kafka_topic}"
 

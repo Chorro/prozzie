@@ -86,7 +86,7 @@ zz_variable () {
   done
 
   if func_exists "$1_sanitize"; then
-    read -r $1 <<< "$($1_sanitize "${!1}")"
+    read -r "$1" <<< "$("$1_sanitize" "${!1}")"
   fi
 
   if [[ $1 != PREFIX ]]; then
@@ -257,12 +257,12 @@ zz_set_var () {
         declare value="$3"
 
         if func_exists "$2_sanitize"; then
-            value="$($2_sanitize "${3}")"
+            value="$("$2_sanitize" "${3}")"
         fi
 
         printf -v new_value "%s=%s" "$2" "$value"
 
-        sed -i '/'"$2"'.*/c\'"$new_value" "$1"
+        sed -i "/$2.*/c$new_value" "$1"
     else
         printf "Variable '%s' not recognized! No changes made to %s\\n" "$2" "$1" >&2
         return 1
@@ -313,9 +313,9 @@ zz_set_default () {
 
     for var_key in "${!module_envs[@]}"; do
         printf -v new_value '%s=%s' "${var_key}" "${module_envs[$var_key]%|*}"
-        default_config+=($new_value)
+        default_config+=("$new_value")
     done
-    printf '%s\n' "${default_config[@]}" > $1
+    printf '%s\n' "${default_config[@]}" > "$1"
 }
 
 # Search for modules in a specific directory and offers them to the user to
@@ -397,7 +397,7 @@ app_setup () {
     src_env_file="${PREFIX:-${DEFAULT_PREFIX}}/etc/prozzie/.env"
   fi
 
-  touch $src_env_file
+  touch "$src_env_file"
 
   declare mod_tmp_env
   tmp_fd mod_tmp_env
@@ -413,8 +413,8 @@ app_setup () {
   exec {mod_tmp_env}<&-
   trap '' EXIT
 
-  if [[ ! "${1}" =~ ^(mqtt|syslog|\/dev\/fd\/.*)$ ]]; then
-    zz_link_compose_file ${1}
+  if [[ ! "${1}" =~ ^(mqtt|syslog|/dev\/fd\/.*)$ ]]; then
+    zz_link_compose_file "${1}"
   fi
 
   # Reload prozzie
@@ -549,7 +549,8 @@ zz_link_compose_file () {
 
     if [[ $set_default == y ]]; then
         if [[ ! -f "${PREFIX}"/etc/prozzie/envs/$module.env ]]; then
-            (. $PROZZIE_CLI_CONFIG/$module.bash; zz_set_default "${PREFIX}"/etc/prozzie/envs/$module.env)
+            (. "$PROZZIE_CLI_CONFIG/$module.bash";
+             zz_set_default "${PREFIX}/etc/prozzie/envs/$module.env")
         fi
     fi
 

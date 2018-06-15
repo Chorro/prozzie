@@ -384,7 +384,7 @@ function app_setup () {
                         "Do you want discover the IP address automatically?"; \
   then
       MAIN_INTERFACE=$(route -n | awk '{printf("%s %s\n", $1, $8)}' | grep 0.0.0.0 | awk '{printf("%s", $2)}')
-      INTERFACE_IP=$(ifconfig ${MAIN_INTERFACE} | grep inet | grep -v inet6 | awk '{printf("%s", $2)}' | sed -E -e 's/(inet|addr)://')
+      INTERFACE_IP=$(ifconfig "${MAIN_INTERFACE}" | grep inet | grep -v inet6 | awk '{printf("%s", $2)}' | sed -E -e 's/(inet|addr)://')
   fi
 
   zz_variables_ask "/dev/fd/${tmp_env}"

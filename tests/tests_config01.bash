@@ -329,7 +329,7 @@ testEnableModule() {
         ${_FAIL_} '"prozzie config enable must link monitor compose file"'
     fi
 
-    if ! snmptrap -v 2c -c public ${HOSTNAME} "" 1.3.6.1.4.1.2021.13.991 .1.3.6.1.2.1.1.6 s "Device in Wizzie"; then
+    if ! snmptrap -v 2c -c public "${HOSTNAME}" "" 1.3.6.1.4.1.2021.13.991 .1.3.6.1.2.1.1.6 s "Device in Wizzie"; then
         ${_FAIL_} '"snmptrap command failed"'
     fi
 
@@ -367,7 +367,7 @@ testDisableModule() {
         ${_FAIL_} '"prozzie config disable must to unlink monitor compose file"'
     fi
 
-    if ! snmptrap -v 2c -c public ${HOSTNAME} "" 1.3.6.1.4.1.2021.13.991 .1.3.6.1.2.1.1.6 s "Device in Wizzie"; then
+    if ! snmptrap -v 2c -c public "${HOSTNAME}" "" 1.3.6.1.4.1.2021.13.991 .1.3.6.1.2.1.1.6 s "Device in Wizzie"; then
         ${_FAIL_} '"snmptrap command failed"'
     fi
 

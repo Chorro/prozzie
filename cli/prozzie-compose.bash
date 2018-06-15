@@ -70,6 +70,9 @@ done
 
 # Needed for .env file location
 cd "${PREFIX}/etc/prozzie" # TODO test docker-compose --project-directory
+
+# Need to not to quote action in order to not to pass empty string argument
+# shellcheck disable=SC2086
 docker-compose \
     --project-name prozzie \
     "${compose_files[@]}" ${action} "$@"

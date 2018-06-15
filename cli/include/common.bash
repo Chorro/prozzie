@@ -132,7 +132,7 @@ zz_select () {
 
         # Input is string
         for arg in "$@"; do
-            if [[ $arg == $index ]]; then
+            if [[ $arg == "$index" ]]; then
                 printf '%s' "$arg"
                 return
             fi

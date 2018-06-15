@@ -47,7 +47,7 @@ function print_envs () {
 
 print_table_header
 
-for setup_script in *$SETUP_FILE_SUFFIX; do
+for setup_script in *"$SETUP_FILE_SUFFIX"; do
 	(print_envs "$setup_script")
 done
 

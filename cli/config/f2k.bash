@@ -20,6 +20,6 @@ declare -A module_envs=(
 	[NETFLOW_KAFKA_TOPIC]='flow|Topic to produce netflow traffic? ')
 
 showVarsDescription () {
-    printf "\t%-40s%s\n" "NETFLOW_PROBES" "JSON object of NF probes"
-    printf "\t%-40s%s\n" "NETFLOW_KAFKA_TOPIC" "Topic to produce netflow traffic"
+    printf '\t%-40s%s\n' 'NETFLOW_PROBES' 'JSON object of NF probes'
+    printf '\t%-40s%s\n' 'NETFLOW_KAFKA_TOPIC' 'Topic to produce netflow traffic'
 }

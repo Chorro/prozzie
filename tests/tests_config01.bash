@@ -284,7 +284,7 @@ testSetupCancellation() {
         'Interface IP address' "${INTERFACE_IP}" \
         'Client API key' '\x03'
 
-    ${_ASSERT_TRUE_} "\".ENV file mustn\'t be modified\"" \
+    ${_ASSERT_TRUE_} "\".ENV file mustn\\'t be modified\"" \
                                             "'md5sum -c \"/dev/fd/${md5sum_file}\"'"
 
     genericSetupQuestionAnswer base \

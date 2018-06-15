@@ -90,7 +90,7 @@ zz_variable () {
   fi
 
   if [[ $1 != PREFIX ]]; then
-    printf "%s=%s\n" "$1" "${!1}" >> "$env_file"
+    printf '%s=%s\n' "$1" "${!1}" >> "$env_file"
   fi
 }
 
@@ -117,7 +117,7 @@ zz_variables_env_update_array () {
       module_envs[$var_key]=$(printf "%s|%s" "$var_val" "$prompt")
     else
       # Copy to output .env file
-      printf "%s=%s\n" "$var_key" "$var_val" >> "$2"
+      printf '%s=%s\n' "$var_key" "$var_val" >> "$2"
     fi
   done < "$1"
 }
@@ -227,7 +227,7 @@ zz_get_vars () {
             for key in "${!module_envs[@]}"; do
                 declare value=${env_content[$key]}
                 if [[ -n  $value ]]; then
-                        printf "%s=%s\n" "$key" "$value"
+                        printf '%s=%s\n' "$key" "$value"
                 fi
             done
         fi
@@ -264,7 +264,7 @@ zz_set_var () {
 
         sed -i '/'"$2"'.*/c\'"$new_value" "$1"
     else
-        printf "Variable '%s' not recognized! No changes made to %s\n" "$2" "$1" >&2
+        printf "Variable '%s' not recognized! No changes made to %s\\n" "$2" "$1" >&2
         return 1
     fi
 }
@@ -292,7 +292,7 @@ zz_set_vars () {
             val="${pair#*=}"
             zz_set_var "$env_file" "$key" "$val"
         else
-            printf "The argument '%s' isn't a valid key-value pair and won't be applied\n" "$pair" >&2
+            printf "The argument '%s' isn't a valid key-value pair and won't be applied\\n" "$pair" >&2
         fi
     done
 }
@@ -309,13 +309,13 @@ zz_set_vars () {
 # Exit status:
 # Always true
 zz_set_default () {
-    declare -a default_config=( "#Default configuration" )
+    declare -a default_config=( '#Default configuration' )
 
     for var_key in "${!module_envs[@]}"; do
-        printf -v new_value "%s=%s" "${var_key}" "${module_envs[$var_key]%|*}"
+        printf -v new_value '%s=%s' "${var_key}" "${module_envs[$var_key]%|*}"
         default_config+=($new_value)
     done
-    printf "%s\n" "${default_config[@]}" > $1
+    printf '%s\n' "${default_config[@]}" > $1
 }
 
 # Search for modules in a specific directory and offers them to the user to
@@ -326,8 +326,8 @@ zz_set_default () {
 #  3 - (Optional) list of modules to configure
 wizard () {
     declare -r PS3='Do you want to configure modules? (Enter for quit): '
-    declare -r prefix="*/cli/config/"
-    declare -r suffix=".bash"
+    declare -r prefix='*/cli/config/'
+    declare -r suffix='.bash'
 
     declare -a modules config_modules
     declare reply
@@ -356,7 +356,7 @@ wizard () {
             break
         fi
 
-        log info "Configuring ${reply} module\n"
+        log info "Configuring ${reply} module\\n"
 
         set +m  # Send SIGINT only to child
         "${PREFIX}"/bin/prozzie config setup ${reply}
@@ -437,13 +437,13 @@ zz_enable_disable_modules() {
     for module in "$@"; do
         # Check if module exists
         if [[ ! -f $PROZZIE_CLI_CONFIG/$module.bash ]]; then
-            printf "Module '%s' doesn't exist\n" "$module" >&2
+            printf 'Module %s doesn'\''t exist\n' "$module" >&2
             exit 1
         fi
 
         # Check if modules is base
         if [[ "$module" =~ ^base$ ]]; then
-            printf "Base module cannot be enabled or disabled\n" >&2
+            printf 'Base module cannot be enabled or disabled\n' >&2
         fi
 
         case $module in
@@ -475,28 +475,28 @@ zz_pause_resume_kc_connector() {
             case $connector_status in
                 PAUSED)
                     "${PREFIX}"/bin/prozzie kcli resume "$module" >/dev/null
-                    printf "Module %s enabled\n" "$module" >&2
+                    printf 'Module %s enabled\n' "$module" >&2
                 ;;
                 RUNNING)
-                    printf "Module %s already enabled\n" "$module" >&2
+                    printf 'Module %s already enabled\n' "$module" >&2
                 ;;
                 *)
                     "${PREFIX}"/bin/prozzie config setup "$module"
-                    printf "Module %s enabled\n" "$module" >&2
+                    printf 'Module %s enabled\n' "$module" >&2
                 ;;
             esac
         ;;
         disable)
             case $connector_status in
                 PAUSED)
-                    printf "Module %s already disabled\n" "$module" >&2
+                    printf 'Module %s already disabled\n' "$module" >&2
                 ;;
                 RUNNING)
                     "${PREFIX}"/bin/prozzie kcli pause "$module" >/dev/null
-                    printf "Module %s disabled\n" "$module" >&2
+                    printf 'Module %s disabled\n' "$module" >&2
                 ;;
                 *)
-                    printf "Module %s doesn't exist: connector isn't created\n" "$module" >&2
+                    printf "Module %s doesn't exist: connector isn't created"'\n' "$module" >&2
                     exit 1
                 ;;
             esac
@@ -554,13 +554,13 @@ zz_link_compose_file () {
     fi
 
     if [[ ! -f "$from" ]]; then
-        printf "Can't enable module %s: Can't create symlink %s\n" "$module" "$from" >&2
+        printf "Can't enable module %s: Can't create symlink %s"'\n' "$module" "$from" >&2
         exit 1
     fi
 
     ln -s "$from" "$to" 2>/dev/null \
-        && printf "Module %s enabled\n" "$module" >&2 \
-        || printf "Module %s already enabled\n" "$module" >&2
+        && printf 'Module %s enabled\n' "$module" >&2 \
+        || printf 'Module %s already enabled\n' "$module" >&2
 }
 
 # Destroy a symbolic link in prozzie compose directory in order to disable a module
@@ -573,8 +573,8 @@ zz_unlink_compose_file () {
     declare -r module="${1}"
 
     rm "$target" 2>/dev/null \
-        && printf "Module %s disabled\n" "$module" >&2 \
-        || printf "Module %s already disabled\n" "$module" >&2
+        && printf 'Module %s disabled\n' "$module" >&2 \
+        || printf 'Module %s already disabled\n' "$module" >&2
 }
 
 # List enable modules
@@ -583,18 +583,19 @@ zz_unlink_compose_file () {
 # Exit status:
 #  Always 0
 zz_list_enabled_modules() {
-    printf "Enabled modules: \n" >&2
-    declare -r prefix="*/compose/"
-    declare -r suffix=".yaml"
+    printf 'Enabled modules: \n' >&2
+    declare -r prefix='*/compose/'
+    declare -r suffix='.yaml'
 
     # Yaml modules
     for module in "${PREFIX}"/etc/prozzie/compose/*.yaml; do
         module=${module#$prefix}
-        printf "%s\n" "${module%$suffix}" >&2
+        printf '%s\n' "${module%$suffix}" >&2
     done
 
     # Kafka connect modules
     for module in $("${PREFIX}"/bin/prozzie kcli ps); do
-        ${PREFIX}/bin/prozzie kcli status "$module" | head -n 1 | grep 'RUNNING' >/dev/null && printf "%s\n" "$module" >&2
+        "${PREFIX}/bin/prozzie" kcli status "$module" | head -n 1 | \
+                        grep 'RUNNING' >/dev/null && printf '%s\n' "$module" >&2
     done
 }

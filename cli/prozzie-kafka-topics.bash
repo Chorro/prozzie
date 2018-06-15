@@ -54,11 +54,16 @@ ux_err_print_help_options () {
     omit_parameters=$(str_join '|' "${omit_parameters_arr[@]}")
     declare -r omit_parameters
 
-    declare -r print_headers_awk="NR==2 {RS=\"\\n--\"} NR<=3 {print \$0; next}"
+    #shellcheck disable=SC2016
+    # In the next string we want bash to not expand $0, but awk
+    declare -r print_headers_awk='NR==2 {RS="\n--"} NR<=3 {print $0; next}'
     # Set this record separator   ^^^^^^^^^^^^^^^^^^^
     # only after the 3rd line
     # Skip help and table header                       ^^^^^^^^^^^^^^^^^^^^^^^
-    declare -r print_arguments_awk="!/^(${omit_parameters})/ {print \"--\"\$0}"
+
+    #shellcheck disable=SC2016
+    # In the next string we want bash to not expand $0, but awk
+    declare -r print_arguments_awk="!/^(${omit_parameters})/"' {print "--"$0}'
     # Filter out the unwanted help    ^^^^^^^^^^^^^^
     # parameters
 

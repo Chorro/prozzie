@@ -28,6 +28,8 @@ declare -r cli_filename="${installer_directory}/../cli/include/cli.bash"
 if [[ ! -f "${common_filename}" ]]; then
     # We are probably being called from download. Need to download prozzie
     declare -r tmp_dir=$(mktemp -d)
+    # shellcheck disable=SC2064
+    # We want tmp_dir to expand here, not when trap is signaled
     trap "rm -rf $(printf '%q' "${tmp_dir}")" EXIT
     declare -r tarball_endpoint="wizzie-io/prozzie/archive/${PROZZIE_VERSION}.tar.gz"
     (cd "$tmp_dir";
@@ -70,11 +72,11 @@ function ZZ_HTTP_ENDPOINT_sanitize() {
 
 # Wizzie Prozzie banner! :D
 show_banner () {
-    cat<<-EOF
+    cat<<-'EOF'
 	__          ___         _        _____                  _
 	\ \        / (_)       (_)      |  __ \                (_)
 	 \ \  /\  / / _ _________  ___  | |__) | __ ___ _________  ___
-	  \ \/  \/ / | |_  /_  / |/ _ \ |  ___/ '__/ _ \_  /_  / |/ _ \\
+	  \ \/  \/ / | |_  /_  / |/ _ \ |  ___/ '__/ _ \_  /_  / |/ _ \
 	   \  /\  /  | |/ / / /| |  __/ | |   | | | (_) / / / /| |  __/
 	    \/  \/   |_/___/___|_|\___| |_|   |_|  \___/___/___|_|\___|
 
@@ -84,8 +86,8 @@ show_banner () {
 # Install a program
 function install {
     log info "Installing $1 dependency..."
-    $sudo $PKG_MANAGER install -y $1 # &> /dev/null
-    printf "Done!\n"
+    $sudo "${PKG_MANAGER}" install -y "$1" # &> /dev/null
+    printf 'Done!\n'
 }
 
 # Update repository
@@ -94,21 +96,21 @@ function update {
   case $PKG_MANAGER in
     apt-get) # Ubuntu/Debian
       log info "Updating apt package index..."
-      $sudo $PKG_MANAGER update &> /dev/null
-      printf "Done!\n"
+      $sudo "${PKG_MANAGER}" update &> /dev/null
+      printf 'Done!\n'
     ;;
     yum) # CentOS
       log info "Updating yum package index..."
-      $sudo $PKG_MANAGER makecache fast &> /dev/null
-      printf "Done!\n"
+      $sudo "${PKG_MANAGER}" makecache fast &> /dev/null
+      printf 'Done!\n'
     ;;
     dnf) # Fedora
       log info "Updating dnf package index..."
-      $sudo $PKG_MANAGER makecache fast &> /dev/null
-      printf "Done!\n"
+      $sudo "${PKG_MANAGER}" makecache fast &> /dev/null
+      printf 'Done!\n'
     ;;
     *)
-      log error "Usage: update\n"
+      log error $'Usage: update\n'
     ;;
   esac
 
@@ -217,15 +219,24 @@ install_cli () {
 }
 
 prozzie_postinstall () {
-    log info "Applying post-install\n"
+    log info $'Applying post-install\n'
 
     if [[ ${ID} == centos ]]; then
         systemctl status firewalld &> /dev/null
 
         if [[ ! $? -eq 0 ]]; then
-            log warn "You could have a firewall or iptables enable. Docker needs communication between containers so you might need to add iptables or firewall rules\n"
+            log warn "$(cat <<-EOF
+				You could have a firewall or iptables enabled. Prozzie needs
+				communication between containers and host so you might need to
+				add iptables or firewall rules
+			EOF
+			)"$'\n'
         else
-            log info "Add new firewall's rule in order to allow communication between docker containers\n"
+            log info "$(cat <<-EOF
+                Add new firewall's rule in order to allow communication between
+                docker containers and host
+			EOF
+			)"$'\n'
             firewall-cmd --permanent --zone=trusted --add-interface=br-+
             firewall-cmd --reload
             # We need restart docker after to apply firewall rule!
@@ -236,6 +247,9 @@ prozzie_postinstall () {
 
 function app_setup () {
   # Architecture
+  declare not_supported_distro_msg='This linux distribution is not supported!'$'\n'
+  not_supported_distro_msg="$not_supported_distro_msg"' You need Ubuntu, Debian, Fedora or CentOS linux distribution'$'\n'
+  declare -r not_supported_distro_msg
   local -r ARCH=$(uname -m | sed 's/x86_//;s/i[3-6]86/32/')
 
   # List of needed depedencies for prozzie
@@ -255,8 +269,8 @@ function app_setup () {
   show_banner
 
   # Print user system information
-  printf "System information: \n\n"
-  printf "  OS: $PRETTY_NAME\n  Architecture: $ARCH\n\n"
+  printf 'System information: \n\n'
+  printf '  OS: %s\n  Architecture: $%s\n\n' "$PRETTY_NAME" "$ARCH"
 
   # Check architecture
   if [[ $ARCH -ne 64 ]]; then
@@ -280,7 +294,7 @@ function app_setup () {
       PKG_MANAGER="dnf"
     ;;
     *)
-      log error "This linux distribution is not supported! You need Ubuntu, Debian, Fedora or CentOS linux distribution\n"
+      log error "$not_supported_distro_msg"
       exit 1
     ;;
   esac
@@ -292,10 +306,10 @@ function app_setup () {
   for DEPENDENCY in $NEEDED_DEPENDENCIES; do
 
     # Check if dependency is installed in current OS
-    type $DEPENDENCY &> /dev/null
+    type "$DEPENDENCY" &> /dev/null
 
     if [[ $? -eq 1 ]]; then
-      install $DEPENDENCY
+      install "$DEPENDENCY"
     fi
   done
 
@@ -304,17 +318,17 @@ function app_setup () {
 
   if [[ $? -eq 1 ]]; then
     # Install docker
-    log info "Installing the latest version of Docker Community Edition...\\n"
+    log info 'Installing the latest version of Docker Community Edition...'$'\n'
     if ! curl -fsSL get.docker.com | sh; then
-      log error "This linux distribution is not supported! You need Ubuntu, Debian, Fedora or CentOS linux distribution\n"
+      log error "${not_supported_distro_msg}"
       exit 1
     fi
 
-    printf "Done!\n\n"
+    printf 'Done!\n\n'
 
     if read_yn_response "Do you want that docker to start on boot?"; then
       $sudo systemctl enable docker &> /dev/null
-      log ok "Configured docker to start on boot!\n"
+      log ok 'Configured docker to start on boot!'$'\n'
     fi # Check if user response {Y}es
 
     $sudo systemctl start docker &> /dev/null
@@ -323,25 +337,25 @@ function app_setup () {
 
   # Installed docker version
   DOCKER_VERSION=$(docker -v) 2> /dev/null
-  log ok "Installed: $DOCKER_VERSION\n"
+  log ok "Installed: $DOCKER_VERSION"$'\n'
 
   # Check if docker-compose is installed in current OS
   type docker-compose &> /dev/null
 
   if [[ $? -eq 1 ]]; then
-    log warn "Docker-Compose is not installed!\n"
-    log info "Initializing Docker-Compose installation\n"
+    log warn $'Docker-Compose is not installed!\n'
+    log info $'Initializing Docker-Compose installation\n'
     # Download latest release (Not for production)
     log info "Downloading latest release of Docker Compose..."
     $sudo curl -s -L "https://github.com/docker/compose/releases/download/1.21.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/bin/docker-compose &> /dev/null
     # Add permissions
     $sudo chmod +x /usr/bin/docker-compose &> /dev/null
-    printf "Done!\n"
+    printf 'Done!\n'
   fi
 
   # Get installed docker-compose version
   DOCKER_COMPOSE_VERSION=$(docker-compose --version) 2> /dev/null
-  log ok "Installed: $DOCKER_COMPOSE_VERSION\n\n"
+  log ok "Installed: ${DOCKER_COMPOSE_VERSION}"$'\n\n'
 
   declare -r src_env_file="${PREFIX}/etc/prozzie/.env"
   declare -r prozzie_compose_dir="${PREFIX}/share/prozzie/compose"
@@ -350,7 +364,7 @@ function app_setup () {
 
   trap install_rollback EXIT
 
-  log info "Prozzie will be installed under: [${PREFIX}]\n"
+  log info "Prozzie will be installed under: [${PREFIX}]"$'\n'
 
   declare tmp_env
   tmp_fd tmp_env
@@ -359,7 +373,7 @@ function app_setup () {
     zz_variables_env_update_array "$src_env_file" "/dev/fd/$tmp_env"
   fi
 
-  log info "Installing ${PROZZIE_VERSION} release of Prozzie...\n"
+  log info "Installing ${PROZZIE_VERSION} release of Prozzie..."$'\n'
   cp -R -- "${installer_directory}/../compose/"*.yaml "${prozzie_compose_dir}"
 
   # Enable base module by default
@@ -384,14 +398,14 @@ function app_setup () {
 
   "${PREFIX}/bin/prozzie" config wizard
 
-  printf "Done!\n\n"
+  printf 'Done!\n\n'
 
-  log ok "Prozzie installation is finished!\n"
+  log ok $'Prozzie installation is finished!\n'
   trap '' EXIT # No need for file cleanup anymore
 
   prozzie_postinstall
 
-  log info "Starting Prozzie...\n\n"
+  log info "Starting Prozzie..."$'\n\n'
 
   "${PREFIX}/bin/prozzie" start
 }

@@ -15,35 +15,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-readonly DEFAULT_PREFIX="/usr/local"
+readonly DEFAULT_PREFIX='/usr/local'
 
 # log function
 log () {
     # Text colors definition
-    declare -r red='\e[1;31m'
-    declare -r green='\e[1;32m'
-    declare -r yellow='\e[1;33m'
-    declare -r white='\e[1;37m'
-    declare -r normal='\e[m'
+    declare -r red=$'\e[1;31m'
+    declare -r green=$'\e[1;32m'
+    declare -r yellow=$'\e[1;33m'
+    declare -r white=$'\e[1;37m'
+    declare -r normal=$'\e[m'
 
     case $1 in
         e|error|erro) # ERROR
-            printf "[ ${red}ERRO${normal} ] $2"
+            printf '[ %sERRO%s ] %s' "${red}" "${normal}" "$2"
         ;;
         i|info) # INFORMATION
-            printf "[ ${white}INFO${normal} ] $2"
+            printf '[ %sINFO%s ] %s' "${white}" "${normal}" "$2"
         ;;
         w|warn) # WARNING
-            printf "[ ${yellow}WARN${normal} ] $2"
+            printf '[ %sWARN%s ] %s' "${yellow}" "${normal}" "$2"
         ;;
         f|fail) # FAIL
-            printf "[ ${red}FAIL${normal} ] $2"
+            printf '[ %sFAIL%s ] %s' "${red}" "${normal}" "$2"
         ;;
         o|ok) # OK
-            printf "[  ${green}OK${normal}  ] $2"
+            printf '[  %sOK%s  ] %s' "${green}" "${normal}" "$2"
         ;;
         *) # USAGE
-            printf "Usage: log [i|e|w|f] <message>"
+            printf 'Usage: log [i|e|w|f] <message>'
         ;;
     esac
 }
@@ -107,7 +107,7 @@ array_contains () {
 # Pass the choices as individual arguments.
 # Output is the chosen item, or "", if the user just pressed ENTER.
 zz_select () {
-    declare -r invalid_selection_message="Invalid selection. Please try again.\n"
+    declare -r invalid_selection_message='Invalid selection. Please try again.\n'
     local item i=0 numItems=$#
 
     # Print numbered menu items, based on the arguments passed.
@@ -133,7 +133,7 @@ zz_select () {
         # Input is string
         for arg in "$@"; do
             if [[ $arg == $index ]]; then
-                printf "%s" "$arg"
+                printf '%s' "$arg"
                 return
             fi
         done

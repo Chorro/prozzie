@@ -22,12 +22,12 @@ declare -r sfacctd_aggregate='cos, etype, src_mac, dst_mac, vlan, src_host, \
 	export_proto_version, timestamp_arrival'
 
 declare -A module_envs=(
-	[SFLOW_KAFKA_TOPIC]="pmacct|Topic to produce sflow traffic"
-	[SFLOW_RENORMALIZE]="true|Normalize sflow based on sampling"
-	[SFLOW_AGGREGATE]="$sfacctd_aggregate|sfacctd aggregation fields")
+	[SFLOW_KAFKA_TOPIC]='pmacct|Topic to produce sflow traffic'
+	[SFLOW_RENORMALIZE]='true|Normalize sflow based on sampling'
+	[SFLOW_AGGREGATE]="$sfacctd_aggregate"'|sfacctd aggregation fields')
 
 showVarsDescription () {
-    printf "\t%-40s%s\n" "SFLOW_KAFKA_TOPIC" "Topic to produce sflow traffic"
-    printf "\t%-40s%s\n" "SFLOW_RENORMALIZE" "Normalize sflow based on sampling"
-    printf "\t%-40s%s\n" "SFLOW_AGGREGATE" "Aggregation fields"
+    printf '\t%-40s%s\n' 'SFLOW_KAFKA_TOPIC' 'Topic to produce sflow traffic'
+    printf '\t%-40s%s\n' 'SFLOW_RENORMALIZE' 'Normalize sflow based on sampling'
+    printf '\t%-40s%s\n' 'SFLOW_AGGREGATE' 'Aggregation fields'
 }

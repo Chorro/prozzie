@@ -126,5 +126,5 @@ exists_key_in_module_envs () {
 # Return code
 #  Always 0
 apply_help_command_format () {
-    printf "\t%-45s%s\n" "$1" "$2"
+    printf '\t%-45s%s\n' "$1" "$2"
 }

@@ -16,12 +16,12 @@
 # limitations under the License.
 
 declare -A module_envs=(
-	[ZZ_HTTP_ENDPOINT]="|Data HTTPS endpoint URL (use http://.. for plain HTTP)"
+	[ZZ_HTTP_ENDPOINT]='|Data HTTPS endpoint URL (use http://.. for plain HTTP)'
 	[INTERFACE_IP]='|Interface IP address '
 	[CLIENT_API_KEY]='|Client API key ')
 
 showVarsDescription () {
-    printf "\t%-40s%s\n" "ZZ_HTTP_ENDPOINT" "HTTPS endpoint URL"
-    printf "\t%-40s%s\n" "INTERFACE_IP" "Interface IP address"
-    printf "\t%-40s%s\n" "CLIENT_API_KEY" "Client API key"
+    printf '\t%-40s%s\n' 'ZZ_HTTP_ENDPOINT' 'HTTPS endpoint URL'
+    printf '\t%-40s%s\n' 'INTERFACE_IP' 'Interface IP address'
+    printf '\t%-40s%s\n' 'CLIENT_API_KEY' 'Client API key'
 }

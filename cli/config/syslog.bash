@@ -32,15 +32,15 @@ declare -A module_hidden_envs=(
 )
 
 showVarsDescription () {
-    printf "\t%-40s%s\n" "name" "Syslog client's name"
-    printf "\t%-40s%s\n" "connector.class" "Connector Java class"
-    printf "\t%-40s%s\n" "tasks.max" "Max number of tasks"
-    printf "\t%-40s%s\n" "key.converter" "Key converter Java class"
-    printf "\t%-40s%s\n" "value.converter" "Value converter Java class"
-    printf "\t%-40s%s\n" "key.converter.schemas.enable" "Enable key schema conversion "
-    printf "\t%-40s%s\n" "value.converter.schemas.enable" "Value converter Enable value schema conversion"
-    printf "\t%-40s%s\n" "kafka.topic" "Kafka's topic"
-    printf "\t%-40s%s\n" "syslog.host" "Syslog's host"
-    printf "\t%-40s%s\n" "syslog.port" "Syslog's port"
-    printf "\t%-40s%s\n" "syslog.structured.data" "Enable structured data"
+    printf '\t%-40s%s\n' 'name' "Syslog client's name"
+    printf '\t%-40s%s\n' 'connector.class' 'Connector Java class'
+    printf '\t%-40s%s\n' 'tasks.max' 'Max number of tasks'
+    printf '\t%-40s%s\n' 'key.converter' 'Key converter Java class'
+    printf '\t%-40s%s\n' 'value.converter' 'Value converter Java class'
+    printf '\t%-40s%s\n' 'key.converter.schemas.enable' 'Enable key schema conversion '
+    printf '\t%-40s%s\n' 'value.converter.schemas.enable' 'Value converter Enable value schema conversion'
+    printf '\t%-40s%s\n' 'kafka.topic' "Kafka's topic"
+    printf '\t%-40s%s\n' 'syslog.host' "Syslog's host"
+    printf '\t%-40s%s\n' 'syslog.port' "Syslog's port"
+    printf '\t%-40s%s\n' 'syslog.structured.data' 'Enable structured data'
 }

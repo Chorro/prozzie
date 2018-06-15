@@ -32,9 +32,9 @@
 #
 
 if [[ $# -gt 0 && $1 == '--shorthelp' ]]; then
-	printf '%s\n' "Handle kafka connectors"
+	printf '%s\n' 'Handle kafka connectors'
 	exit 0
 fi
 
-docker run --network=prozzie_default --rm -i -e KAFKA_CONNECT_REST="http://kafka-connect:8083" \
+docker run --network=prozzie_default --rm -i -e KAFKA_CONNECT_REST='http://kafka-connect:8083' \
     gcr.io/wizzie-registry/kafka-connect-cli:1.0.3 sh -c "kcli $*"

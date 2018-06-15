@@ -18,5 +18,5 @@
 declare -A module_envs=()
 
 showVarsDescription () {
-    printf "\tNo vars description\n"
+    printf '\tNo vars description\n'
 }

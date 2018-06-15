@@ -16,9 +16,9 @@
 # limitations under the License.
 
 declare -A module_envs=(
-	[mqtt.server_uris]="|MQTT brokers"
+	[mqtt.server_uris]='|MQTT brokers'
 	[kafka.topic]="|Kafka's topic to produce MQTT consumed messages"
-	[mqtt.topic]="|MQTT Topics to consume")
+	[mqtt.topic]='|MQTT Topics to consume')
 
 declare -A module_hidden_envs=(
 	[name]='mqtt'
@@ -35,18 +35,18 @@ declare -A module_hidden_envs=(
 )
 
 showVarsDescription () {
-    printf "\t%-40s%s\n" "mqtt.server_uris" "MQTT brokers"
-    printf "\t%-40s%s\n" "kafka.topic" "Kafka's topic to produce MQTT consumed messages"
-    printf "\t%-40s%s\n" "mqtt.topic" "MQTT's topics to consume"
-    printf "\t%-40s%s\n" "name" "MQTT client's name"
-    printf "\t%-40s%s\n" "connector.class" "MQTT connector"
-    printf "\t%-40s%s\n" "tasks.max" "Max number of tasks"
-    printf "\t%-40s%s\n" "key.converter" "Key converter class"
-    printf "\t%-40s%s\n" "value.converter" "Value converter class"
-    printf "\t%-40s%s\n" "mqtt.client_id" "MQTT client's id"
-    printf "\t%-40s%s\n" "mqtt.clean_session" "Clean session"
-    printf "\t%-40s%s\n" "mqtt.connection_timeout" "Value converter class"
-    printf "\t%-40s%s\n" "mqtt.keep_alive_interval" "Value converter class"
-    printf "\t%-40s%s\n" "mqtt.qosl" "Value converter class"
-    printf "\t%-40s%s\n" "message_processor_class" "Value converter class"
+    printf '\t%-40s%s\n' 'mqtt.server_uris' 'MQTT brokers'
+    printf '\t%-40s%s\n' 'kafka.topic' "Kafka's topic to produce MQTT consumed messages"
+    printf '\t%-40s%s\n' 'mqtt.topic' "MQTT's topics to consume"
+    printf '\t%-40s%s\n' 'name' "MQTT client's name"
+    printf '\t%-40s%s\n' 'connector.class' 'MQTT connector'
+    printf '\t%-40s%s\n' 'tasks.max' 'Max number of tasks'
+    printf '\t%-40s%s\n' 'key.converter' 'Key converter class'
+    printf '\t%-40s%s\n' 'value.converter' 'Value converter class'
+    printf '\t%-40s%s\n' 'mqtt.client_id' "MQTT client's id"
+    printf '\t%-40s%s\n' 'mqtt.clean_session' 'Clean session'
+    printf '\t%-40s%s\n' 'mqtt.connection_timeout' 'Value converter class'
+    printf '\t%-40s%s\n' 'mqtt.keep_alive_interval' 'Value converter class'
+    printf '\t%-40s%s\n' 'mqtt.qosl' 'Value converter class'
+    printf '\t%-40s%s\n' 'message_processor_class' 'Value converter class'
 }

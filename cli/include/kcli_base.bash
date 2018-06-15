@@ -83,7 +83,7 @@ kcli_update_properties_file () {
     ENV_FILE="$1" app_setup --no-reload-prozzie "$@"
 
     # Undo escape
-    inline_awk "$1" -F '=' -v OFS="=" '{ gsub(/__/, ".", $1); }1-2'
+    inline_awk "$1" -F '=' -v OFS='=' '{ gsub(/__/, ".", $1); }1-2'
 }
 
 # Base setup for prozzie apps configured by kafka connect cli (kcli).
@@ -102,7 +102,7 @@ kcli_update_properties_file () {
 # Exit status:
 #  Regular
 kcli_setup () {
-    log info "These changes will be applied at the end of app setup\n"
+    log info 'These changes will be applied at the end of app setup\n'
     kcli_update_properties_file "$1"
     declare -r module_name="${module_envs['name']-${module_hidden_envs['name']}}"
     "${PROZZIE_CLI}" kcli create "${module_name}" < "$1"

@@ -19,13 +19,13 @@ genericTestModule() {
     declare description key
 
     ${_ASSERT_EQUALS_} '"Incorrect number of arguments"' \
-        "${num_arguments}" '$(printf "%s\n" "${describe_out}" | wc -l)'
+        "${num_arguments}" "$(printf '%s\n' "${describe_out}" | wc -l)"
 
     declare key_value_list="$("${PROZZIE_PREFIX}/bin/prozzie" config get "$module_name" \
         | grep -v '#.*')"
 
     ${_ASSERT_EQUALS_} '"Incorrect number of arguments"' \
-        "${num_arguments}" '$(printf "%s\n" "${key_value_list}" | wc -l)'
+        "${num_arguments}" "$(printf '%s\n' "${key_value_list}" | wc -l)"
 
     for key in "$@"; do
     declare expected_value value
@@ -36,16 +36,16 @@ genericTestModule() {
         description=$(printf '%s\n' "${describe_out}" | grep "${key}")
         # Exists key
         if [[ "${description}" != *"${key}"* ]]; then
-                ${_FAIL_} '"key ${key}"'
+                ${_FAIL_} "'key ${key}'"
         fi
         # Exists description
         if [[ "${description}" != *"${key}"* ]]; then
-                ${_FAIL_} '"Description ${key}"'
+                ${_FAIL_} "'Description ${key}'"
         fi
         # We can ask for that variable
         value=$("${PROZZIE_PREFIX}/bin/prozzie" config get "${module_name}" "${key}")
         if [[ -v expected_value ]]; then
-            ${_ASSERT_EQUALS_} '"Expected ${key} value"' '"$expected_value"' '"$value"'
+            ${_ASSERT_EQUALS_} "'Expected ${key} value'" "'$expected_value'" "'$value'"
         fi
         unset -v value expected_value
     done

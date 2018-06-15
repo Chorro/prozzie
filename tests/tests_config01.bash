@@ -334,10 +334,10 @@ testEnableModule() {
     fi
 
     ${_ASSERT_EQUALS_} '"Incorrect number of topics for monitor"' \
-    '1' '$("${PROZZIE_PREFIX}/bin/prozzie" kafka topics --list | grep monitor | wc -w)'
+    '1' "$("${PROZZIE_PREFIX}/bin/prozzie" kafka topics --list | grep monitor | wc -w)"
 
     ${_ASSERT_EQUALS_} '"Incorrect number of messages in topic monitor"' \
-    '1' '$("${PROZZIE_PREFIX}/bin/prozzie" kafka consume monitor --from-beginning --max-messages 1 | grep -o -E "{.+}" | wc -l)'
+    '1' "$("${PROZZIE_PREFIX}/bin/prozzie" kafka consume monitor --from-beginning --max-messages 1 | grep -o -E '{.+}' | wc -l)"
 
     if [[ ! -L "${PROZZIE_PREFIX}/etc/prozzie/compose/http2k.yaml" ]]; then
         ${_FAIL_} '"prozzie config enable must link http2k compose file"'
@@ -348,12 +348,12 @@ testEnableModule() {
     fi
 
     ${_ASSERT_EQUALS_} '"Incorrect number of topics for http2k"' \
-    '1' '$("${PROZZIE_PREFIX}/bin/prozzie" kafka topics --list | grep test_http2k_topic | wc -w)'
+    '1' "$("${PROZZIE_PREFIX}/bin/prozzie" kafka topics --list | grep test_http2k_topic | wc -w)"
 
     declare message=$("${PROZZIE_PREFIX}/bin/prozzie" kafka consume test_http2k_topic --from-beginning --max-messages 1|grep -o -E "{.+}")
 
     ${_ASSERT_EQUALS_} '"Incorrect expected message"' \
-    '"${expected_message}"' '"${message}"'
+    "'${expected_message}'" "'${message}'"
 }
 
 testDisableModule() {
@@ -372,7 +372,7 @@ testDisableModule() {
     fi
 
     ${_ASSERT_EQUALS_} '"Incorrect number of messages in topic monitor"' \
-    '1' '$("${PROZZIE_PREFIX}/bin/prozzie" kafka consume test_http2k_topic --from-beginning --timeout-ms 500 | grep -o -E "{.+}" | wc -l)'
+    '1' "$("${PROZZIE_PREFIX}/bin/prozzie" kafka consume test_http2k_topic --from-beginning --timeout-ms 500 | grep -o -E '{.+}' | wc -l)"
 
     if [[ -L "${PROZZIE_PREFIX}/etc/prozzie/compose/http2k.yaml" ]]; then
         ${_FAIL_} '"prozzie config disable must to unlink http2k compose file"'

@@ -390,7 +390,7 @@ function app_setup () {
   zz_variables_ask "/dev/fd/${tmp_env}"
 
   cp -- "/dev/fd/$tmp_env" "$src_env_file"
-  {tmp_env}<&-
+  exec {tmp_env}<&-
   install_cli
   # Need for kafka connect modules configuration.
   "${PREFIX}/bin/prozzie" up -d kafka-connect

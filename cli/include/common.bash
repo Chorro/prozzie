@@ -74,7 +74,9 @@ read_yn_response () {
 # Arguments:
 #  1 - Variable to save newly created temp file descriptor
 tmp_fd () {
-    declare -r file_name=$(mktemp)
+    declare file_name
+    file_name=$(mktemp)
+    declare -r file_name
     eval "exec {$1}>${file_name}"
     rm "${file_name}"
 }

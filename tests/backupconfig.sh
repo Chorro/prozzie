@@ -3,7 +3,9 @@
 # If you source this file in your tests, it will backup & restore prozzie
 # config in every individual test.
 
-declare -r env_bak=$(mktemp)
+declare env_bak
+env_bak=$(mktemp)
+declare -r env_bak
 
 setUp () {
     if [[ -f "${PROZZIE_PREFIX}/etc/prozzie/.env" ]]; then

@@ -468,7 +468,9 @@ zz_enable_disable_modules() {
 zz_pause_resume_kc_connector() {
     declare -r action="$1"
     declare -r module="$2"
-    declare -r connector_status=$("${PREFIX}"/bin/prozzie kcli status "$module" | head -n 1 | grep -o 'RUNNING\|PAUSED')
+    declare connector_status
+    connector_status=$("${PREFIX}"/bin/prozzie kcli status "$module" | head -n 1 | grep -o 'RUNNING\|PAUSED')
+    declare -r connector_status
 
     case $action in
         enable)

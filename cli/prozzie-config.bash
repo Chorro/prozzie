@@ -164,7 +164,9 @@ main() {
                                 exit 0
                         fi
 
-                        declare -r vars=$(str_join '|' "$@")
+                        declare vars
+                        vars=$(str_join '|' "$@")
+                        declare -r vars
 
                         "${PREFIX}"/bin/prozzie kcli get "$module"|grep -P "^(${vars})=.*$"|while read -r line; do printf '%s\n' "${line#*=}"; done
                         exit 0

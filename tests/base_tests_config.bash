@@ -10,19 +10,23 @@
 ## @return     Always true
 ##
 genericTestModule() {
+    declare description key
     declare -r num_arguments="$1"
     declare -r module_name="$2"
     shift 2
 
-    declare describe_out="$("${PROZZIE_PREFIX}/bin/prozzie" config describe "$module_name" \
+    declare describe_out
+    describe_out="$("${PROZZIE_PREFIX}/bin/prozzie" config describe "$module_name" \
         | grep -v 'Module .*')"
-    declare description key
+    declare -r describe_out
 
     ${_ASSERT_EQUALS_} '"Incorrect number of arguments"' \
         "${num_arguments}" "$(printf '%s\n' "${describe_out}" | wc -l)"
 
-    declare key_value_list="$("${PROZZIE_PREFIX}/bin/prozzie" config get "$module_name" \
+    declare key_value_list
+    key_value_list="$("${PROZZIE_PREFIX}/bin/prozzie" config get "$module_name" \
         | grep -v '#.*')"
+    declare -r key_value_list
 
     ${_ASSERT_EQUALS_} '"Incorrect number of arguments"' \
         "${num_arguments}" "$(printf '%s\n' "${key_value_list}" | wc -l)"
@@ -94,7 +98,8 @@ genericSpawnQuestionAnswer() {
     # allowed to answer one time. Because of that, expect will do nothing except
     # consume the buffer if it founds the same question again and we are out of
     # responses. This happens in sfacct aggregation variable.
-    declare -r question_answers_str="$(tclsh <<-EOF
+    declare question_answers_str
+    question_answers_str="$(tclsh <<-EOF
         $tcl_answers_declare
         foreach question [dict keys \$answers] {
               puts "\\"\$question\\" \\{"
@@ -106,6 +111,7 @@ genericSpawnQuestionAnswer() {
         }
 		EOF
         )"
+    declare -r question_answers_str
 
     # If readline detects few columns, it will add newlines to the output.
     # TODO: Delete all newlines in spawned process output buffer, so

@@ -17,7 +17,8 @@
 
 # We are located in ${PREFIX}/share/prozzie/cli/prozzie.bash, so...
 # Resolve symlinks
-declare -r my_path=$(realpath "${BASH_SOURCE[0]}")
+my_path=$(realpath "${BASH_SOURCE[0]}")
+declare -r my_path
 # Extract prozzie prefix
 declare -r PREFIX=${my_path%/share/prozzie/cli/prozzie.bash}
 declare -r PROZZIE_CLI="${PREFIX}/share/prozzie/cli/prozzie.bash"

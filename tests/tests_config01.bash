@@ -265,7 +265,9 @@ testConfigMustShowHelpIfTryToSetMqttAndSyslogModules() {
 }
 
 testSetupCancellation() {
-    declare md5sum_file temp_file=$(mktemp)
+    declare md5sum_file temp_file
+    temp_file=$(mktemp)
+    declare -r temp_file
     exec {md5sum_file}>"${temp_file}"
     rm "${temp_file}"
 
@@ -350,7 +352,9 @@ testEnableModule() {
     ${_ASSERT_EQUALS_} '"Incorrect number of topics for http2k"' \
     '1' "$("${PROZZIE_PREFIX}/bin/prozzie" kafka topics --list | grep test_http2k_topic | wc -w)"
 
-    declare message=$("${PROZZIE_PREFIX}/bin/prozzie" kafka consume test_http2k_topic --from-beginning --max-messages 1|grep -o -E "{.+}")
+    declare message
+    message=$("${PROZZIE_PREFIX}/bin/prozzie" kafka consume test_http2k_topic --from-beginning --max-messages 1|grep -o -E "{.+}")
+    declare -r message
 
     ${_ASSERT_EQUALS_} '"Incorrect expected message"' \
     "'${expected_message}'" "'${message}'"

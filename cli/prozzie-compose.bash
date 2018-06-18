@@ -30,7 +30,8 @@
 #  -
 
 set -o pipefail
-declare -r script_name=$(basename -s '.bash' "$0")
+script_name=$(basename -s '.bash' "$0")
+declare -r script_name
 
 if [[ $# -gt 0 && ($1 == '--shorthelp' || $1 == '--help' ) ]]; then
     declare message

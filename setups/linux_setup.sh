@@ -20,14 +20,15 @@ declare -r PROZZIE_VERSION=0.5.0
 
 . /etc/os-release
 
-declare -r installer_directory=$(dirname "${BASH_SOURCE[0]}")
+installer_directory=$(dirname "${BASH_SOURCE[0]}")
+declare -r installer_directory
 declare -r common_filename="${installer_directory}/../cli/include/common.bash"
 declare -r config_filename="${installer_directory}/../cli/include/config.bash"
 declare -r cli_filename="${installer_directory}/../cli/include/cli.bash"
 
 if [[ ! -f "${common_filename}" ]]; then
     # We are probably being called from download. Need to download prozzie
-    declare -r tmp_dir=$(mktemp -d)
+    tmp_dir=$(mktemp -d)
     # shellcheck disable=SC2064
     # We want tmp_dir to expand here, not when trap is signaled
     trap "rm -rf $(printf '%q' "${tmp_dir}")" EXIT

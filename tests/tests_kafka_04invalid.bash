@@ -7,6 +7,7 @@
 ## @brief Invalid kafka parameters tests
 ##
 test_kafka_invalid_action_parameter () {
+	declare out errout
 	tmp_fd out
 	tmp_fd errout
 

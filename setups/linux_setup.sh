@@ -254,11 +254,8 @@ function app_setup () {
 
   # List of needed depedencies for prozzie
   local -r NEEDED_DEPENDENCIES="curl net-tools"
-  # List of installed dependencies
-  local INSTALLED_DEPENDENCIES=""
   # Package manager for install, uninstall and update
   local PKG_MANAGER=""
-  local reply  # Variable for user answers
 
   ID=${ID,,}
 

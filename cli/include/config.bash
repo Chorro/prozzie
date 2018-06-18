@@ -137,7 +137,7 @@ zz_variables_env_update_array () {
 # Exit status:
 #  Always 0
 zz_variable_ask () {
-    local var_default var_prompt var
+    local var_default var_prompt
 
     IFS='|' read -r var_default var_prompt < \
                                         <(squash_spaces <<<"${module_envs[$2]}")

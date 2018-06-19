@@ -205,6 +205,9 @@ main () {
     my_name=$(basename -s '.bash' "$0")
     declare -r my_tail="${my_name##*-}"
 
+    # See https://github.com/koalaman/shellcheck/issues/1044
+    #shellcheck disable=SC2221
+    #shellcheck disable=SC2222
     case "${my_tail}" in
     topics)
         container_bin='kafka-topics.sh'

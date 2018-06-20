@@ -33,15 +33,38 @@ printShortHelp() {
 
 printHelp() {
     printShortHelp
+    declare -A commands_and_descriptions=(
+        ["-w, --wizard"]="Start modules wizard"
+        ["-d, --describe <module>"]="Describe module vars"
+        ["-s, --setup <module>"]="Configure module with setup assistant"
+        ["--describe-all"]="Describe all modules vars"
+        ["--enable <modules-list>"]="Enable modules"
+        ["--disable <modules-list>"]="Disable modules"
+        ["-h, --help"]="Show this help"
+        ["--list-enabled"]="List all enabled modules"
+    )
+        declare -a order=(
+        "-w, --wizard"
+        "-d, --describe <module>"
+        "-s, --setup <module>"
+        "--describe-all"
+        "--enable <modules-list>"
+        "--disable <modules-list>"
+        "--list-enabled"
+        "-h, --help"
+    )
+
     printf "\tusage: prozzie config [<options>] [<module>] [<key>] [<value>]\n"
     printf "\t\tOptions:\n"
-    printf "\t\t%-40s%s\n" "-w, --wizard" "Start modules wizard"
-    printf "\t\t%-40s%s\n" "-d, --describe <module>" "Describe module vars"
-    printf "\t\t%-40s%s\n" "-s, --setup <module>" "Configure module with setup assistant"
-    printf "\t\t%-40s%s\n" "--describe-all" "Describe all modules vars"
-    printf "\t\t%-40s%s\n" "--enable <module>" "Enable module"
-    printf "\t\t%-40s%s\n" "--disable <module>" "Disable module"
-    printf "\t\t%-40s%s\n" "-h, --help" "Show this help"
+
+    for comm in "${order[@]}"
+    do
+        help_command_format "$comm" "${commands_and_descriptions[$comm]}"
+    done
+}
+
+help_command_format() {
+    printf "\t\t%-40s%s\n" "$1" "$2"
 }
 
 describeModule () {
@@ -118,6 +141,10 @@ if [[ $1 ]]; then
         ;;
         --enable|--disable)
             zz_enable_disable_modules $@
+            exit 0
+        ;;
+        --list-enabled)
+            zz_list_enabled_modules
             exit 0
         ;;
         *)

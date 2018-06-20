@@ -539,3 +539,25 @@ zz_unlink_compose_file () {
         && printf "Module %s disabled\n" "$module" >&2 \
         || printf "Module %s already disabled\n" "$module" >&2
 }
+
+# List enable modules
+# Arguments:
+#  None
+# Exit status:
+#  Always 0
+zz_list_enabled_modules() {
+    printf "Enabled modules: \n" >&2
+    declare -r prefix="*/compose/"
+    declare -r suffix=".yaml"
+
+    # Yaml modules
+    for module in "${PREFIX}"/etc/prozzie/compose/*.yaml; do
+        module=${module#$prefix}
+        printf "%s\n" "${module%$suffix}" >&2
+    done
+
+    # Kafka connect modules
+    for module in $("${PREFIX}"/bin/prozzie kcli ps); do
+        ${PREFIX}/bin/prozzie kcli status "$module" | head -n 1 | grep 'RUNNING' >/dev/null && printf "%s\n" "$module" >&2
+    done
+}

@@ -340,4 +340,8 @@ testDisableModule() {
     fi
 }
 
+testListEnabledModules() {
+    "${PROZZIE_PREFIX}/bin/prozzie" config --list-enabled
+}
+
 . test_run.sh

@@ -379,7 +379,9 @@ app_setup () {
   exec {mod_tmp_env}<&-
   trap '' EXIT
 
-  zz_link_compose_file ${1}
+  if [[ ! "${1}" =~ ^(mqtt|syslog|\/dev\/fd\/.*)$ ]]; then
+    zz_link_compose_file ${1}
+  fi
 
   # Reload prozzie
   if [[ $reload_prozzie == y ]]; then
@@ -389,16 +391,95 @@ app_setup () {
   unset -v src_env_file
 }
 
-# Create or destroy a symbolic link in prozzie compose directory in order to enable or disable multiple modules.
-# Check if base module is included. Check if a module exists.
+# Enable or disable modules. Check if base module is included. Check if a module exists.
 # Arguments:
-#  1 - Enable or disable option
+#  1 - Enable or disable action
 #  @ - Modules to enable/disable
 # Exit status:
+zz_enable_disable_modules() {
+    declare -r action=$1
+    shift
+
+    for module in "$@"; do
+        # Check if module exists
+        if [[ ! -f $PROZZIE_CLI_CONFIG/$module.bash ]]; then
+            printf "Module %s doesn't exist\n" "$module" >&2
+            exit 1
+        fi
+
+        # Check if modules is base
+        if [[ "$module" =~ ^base$ ]]; then
+            printf "Base module cannot be enabled or disabled\n" >&2
+        fi
+
+        case $module in
+            mqtt|syslog)
+                zz_pause_resume_kc_connector "$action" "$module"
+            ;;
+            *)
+                zz_link_unlink_module "$action" "$module"
+            ;;
+        esac
+    done
+}
+
+# Resume or pause a kafka-connect connector. Check connector status
+# Arguments:
+#  1 - Enable or disable action
+#  2 - Module to resume/pause
+# Exit status:
+zz_pause_resume_kc_connector() {
+    declare -r action="$1"
+    declare -r module="$2"
+    declare -r connector_status=$("${PREFIX}"/bin/prozzie kcli status "$module" | head -n 1 | grep -o 'RUNNING\|PAUSED')
+
+    case $action in
+        --enable)
+            case $connector_status in
+                PAUSED)
+                    "${PREFIX}"/bin/prozzie kcli resume "$module" >/dev/null
+                    printf "Module %s enabled\n" "$module" >&2
+                ;;
+                RUNNING)
+                    printf "Module %s already enabled\n" "$module" >&2
+                ;;
+                *)
+                    "${PREFIX}"/bin/prozzie config -s "$module"
+                    printf "Module %s enabled\n" "$module" >&2
+                ;;
+            esac
+        ;;
+        --disable)
+            case $connector_status in
+                PAUSED)
+                    printf "Module %s already disabled\n" "$module" >&2
+                ;;
+                RUNNING)
+                    "${PREFIX}"/bin/prozzie kcli pause "$module" >/dev/null
+                    printf "Module %s disabled\n" "$module" >&2
+                ;;
+                *)
+                    printf "Module %s doesn't exist: connector isn't created\n" "$module" >&2
+                    exit 1
+                ;;
+            esac
+        ;;
+    esac
+}
+
+# Create or destroy a symbolic link in prozzie compose directory in order to enable or disable multiple modules.
+# Arguments:
+#  1 - Enable or disable action
+#  2 - Module to enable/disable
+# Exit status:
 zz_link_unlink_module() {
+    # Get action type
+    declare -r action="$1"
+    declare -r module="$2"
+    # Command to execute
     declare cmd
 
-    case $1 in
+    case $action in
         --enable)
             cmd=zz_link_compose_file
         ;;
@@ -406,21 +487,8 @@ zz_link_unlink_module() {
             cmd=zz_unlink_compose_file
         ;;
     esac
-
-    shift 1
-
-    for module in "$@"; do
-        if [[ -f $PROZZIE_CLI_CONFIG/$module.bash ]]; then
-            if [[ ! "$module" =~ ^base$ ]]; then
-                . $PROZZIE_CLI_CONFIG/$module.bash
-                $cmd "$module"
-            else
-                printf "Base module cannot be enabled or disabled\n" >&2
-            fi
-        else
-            printf "Module %s doesn't exists\n" "$module" >&2
-        fi
-    done
+    # Run selected command
+    "$cmd" "$module"
 }
 
 # Create a symbolic link in prozzie compose directory in order to enable a module
@@ -435,28 +503,27 @@ zz_link_compose_file () {
 
     if [[ $1 == --no-set-default ]]; then
         set_default=n
-        shift 1
+        shift
     fi
 
     declare -r from="${PREFIX}"/share/prozzie/compose/$1.yaml
     declare -r to="${PREFIX}"/etc/prozzie/compose/$1.yaml
     declare -r module="${1}"
 
-    if [[ $set_default == y ]];then
+    if [[ $set_default == y ]]; then
         if [[ ! -f "${PREFIX}"/etc/prozzie/envs/$module.env ]]; then
-            zz_set_default "${PREFIX}"/etc/prozzie/envs/$module.env
+            (. $PROZZIE_CLI_CONFIG/$module.bash; zz_set_default "${PREFIX}"/etc/prozzie/envs/$module.env)
         fi
     fi
 
-    if [[ -f "$from" ]]; then
-                ln -s "$from" "$to" 2>/dev/null \
-            && printf "Module %s enabled\n" "$module" >&2 \
-            || printf "Module %s already enabled\n" "$module" >&2
-        return 0
-    else
+    if [[ ! -f "$from" ]]; then
         printf "Can't enable module %s: Can't create symlink %s\n" "$module" "$from" >&2
-        return 1
+        exit 1
     fi
+
+    ln -s "$from" "$to" 2>/dev/null \
+        && printf "Module %s enabled\n" "$module" >&2 \
+        || printf "Module %s already enabled\n" "$module" >&2
 }
 
 # Destroy a symbolic link in prozzie compose directory in order to disable a module

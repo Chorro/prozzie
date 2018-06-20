@@ -117,7 +117,7 @@ if [[ $1 ]]; then
             exit 1
         ;;
         --enable|--disable)
-            zz_link_unlink_module $@
+            zz_enable_disable_modules $@
             exit 0
         ;;
         *)

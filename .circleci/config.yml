@@ -76,6 +76,11 @@ jobs:
     docker:
       - image: gcr.io/wizzie-registry/prozzie-test-env:debian-buster
 
+  centos7:
+    <<: *P_tests
+    docker:
+      - image: gcr.io/wizzie-registry/prozzie-test-env:centos-7
+
   coverage:
     docker:
       - image: gcr.io/wizzie-registry/prozzie-test-env:ubuntu-18.04
@@ -99,6 +104,7 @@ workflows:
       - ubuntu16.04
       - ubuntu17.10
       - ubuntu18.04
+      - centos7
       - debian9
       - debianbuster
       - coverage:
@@ -106,5 +112,6 @@ workflows:
             - ubuntu16.04
             - ubuntu17.10
             - ubuntu18.04
+            - centos7
             - debian9
             - debianbuster

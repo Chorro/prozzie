@@ -20,7 +20,8 @@ wait_for_kafkacat_consumer_ready () {
 	declare grep_msg
 	grep_msg=$(str_join '\|' \
 		'Fetch topic .* at offset .*' \
-		'Added .* to fetch list .*')
+		'Added .* to fetch list .*' \
+		'partition count is zero: should refresh metadata')
 
 	wait_for_message "${grep_msg}" "$1"
 }

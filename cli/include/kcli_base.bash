@@ -67,7 +67,9 @@ kcli_update_properties_file () {
     done < "$1"
 
     # Write variables not present in file
+    # shellcheck disable=SC2154
     for var in "${!module_hidden_envs[@]}"; do
+        # shellcheck disable=SC2154
         printf '%s=%s\n' "${var}" "${module_hidden_envs["${var}"]}" >> "$1"
     done
 

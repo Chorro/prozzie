@@ -178,6 +178,8 @@ main() {
             esac
         ;;
         wizard)
+            # src_env_file is passed as parameter
+            # shellcheck disable=SC2154
             wizard "$src_env_file"
             exit 0
         ;;

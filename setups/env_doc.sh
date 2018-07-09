@@ -36,6 +36,8 @@ function print_envs () {
 
 	echo "<tr><th colspan=\"3\" align=\"center\">$MODULE_NAME</th></tr>"
 
+	# module_envs is imported
+	# shellcheck disable=SC2154
 	for env in "${!module_envs[@]}"; do
 		IFS='|' read env_default env_description <<< "${module_envs[$env]}"
 		if [[ -z "$env_default" ]]; then

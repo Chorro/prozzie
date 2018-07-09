@@ -112,6 +112,9 @@ zz_cli_subcommand_help () {
 ##
 exists_key_in_module_envs () {
     needle="$1"
+
+    # module_envs have to be created
+    # shellcheck disable=SC2154
     [[ "${module_envs[$needle]+_}" ]]
 }
 

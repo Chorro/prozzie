@@ -413,7 +413,7 @@ app_setup () {
   exec {mod_tmp_env}<&-
   trap '' EXIT
 
-  if [[ ! "${1}" =~ ^(mqtt|syslog|/dev\/fd\/.*)$ ]]; then
+  if [[ ! "${1}" =~ ^(mqtt|syslog|/dev/fd/.*)$ ]]; then
     zz_link_compose_file "${1}"
   fi
 

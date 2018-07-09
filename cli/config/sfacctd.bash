@@ -15,9 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Want a literal linefeed here
+#shellcheck disable=SC1004
 declare -r sfacctd_aggregate='cos, etype, src_mac, dst_mac, vlan, src_host, \
 	dst_host, src_mask, dst_mask, src_net, dst_net, proto, tos, src_port, \
-	dst_port, tcpflags, src_as, dst_as, as_path, src_as_path,
+	dst_port, tcpflags, src_as, dst_as, as_path, src_as_path, \
 	src_host_country, dst_host_country, in_iface, out_iface, sampling_rate, \
 	export_proto_version, timestamp_arrival'
 

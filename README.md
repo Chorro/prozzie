@@ -67,7 +67,6 @@ don't want to waste your time messing with git:
 
 ```bash
 bash <(curl -L \
-	--header "Authorization: token 4ea54f05cd7111c2e886f2c26f59b99109245053" \
 	--header 'Accept: application/vnd.github.v3.raw' \
 	'https://api.github.com/repos/wizzie-io/prozzie/contents/setups/linux_setup.sh?ref=0.5.0')
 ```

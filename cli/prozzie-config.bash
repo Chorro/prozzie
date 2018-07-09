@@ -210,6 +210,7 @@ main() {
                 . "$PROZZIE_CLI_CONFIG/$module.bash"
                 if is_kafka_connect_connector "$module"; then
                     . "${BASH_SOURCE%/*}/include/kcli_base.bash"
+                    declare properties
                     tmp_fd properties
                     kcli_setup "/dev/fd/${properties}" "$module"
                     exec {properties}<&-

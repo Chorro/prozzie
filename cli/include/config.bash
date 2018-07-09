@@ -326,7 +326,7 @@ zz_set_default () {
 #  3 - (Optional) list of modules to configure
 wizard () {
     declare -r PS3='Do you want to configure modules? (Enter for quit): '
-    declare -r prefix='*/cli/config/'
+    declare -r search_prefix='*/cli/config/'
     declare -r suffix='.bash'
 
     declare -a modules config_modules
@@ -339,7 +339,7 @@ wizard () {
         fi
 
         # Parameter expansion deletes '../cli/config/' and '.bash'
-        module="${module#$prefix}"
+        module="${module#$search_prefix}"
         modules[${#modules[@]}]="${module%$suffix}"
     done
 
@@ -584,12 +584,12 @@ zz_unlink_compose_file () {
 #  Always 0
 zz_list_enabled_modules() {
     printf 'Enabled modules: \n' >&2
-    declare -r prefix='*/compose/'
+    declare -r search_prefix='*/compose/'
     declare -r suffix='.yaml'
 
     # Yaml modules
     for module in "${PREFIX}"/etc/prozzie/compose/*.yaml; do
-        module=${module#$prefix}
+        module=${module#$search_prefix}
         printf '%s\n' "${module%$suffix}" >&2
     done
 

@@ -91,7 +91,7 @@ kcli_update_properties_file () {
 #  1 - properties file to update
 #
 # Environment:
-#  PROZZIE_CLI - prozzie cli binary
+#  PREFIX - prozzie prefix
 #  module_envs - Variables to ask via app_setup.
 #  module_hidden_envs - Variables to add to base file if it is not defined. If
 #    some variable is already defined, it will NOT be override.
@@ -105,5 +105,5 @@ kcli_setup () {
     log info 'These changes will be applied at the end of app setup\n'
     kcli_update_properties_file "$1"
     declare -r module_name="${module_envs['name']-${module_hidden_envs['name']}}"
-    "${PROZZIE_CLI}" kcli create "${module_name}" < "$1"
+    "${PREFIX}/bin/prozzie" kcli create "${module_name}" < "$1"
 }

@@ -39,7 +39,7 @@ zz_cli_case () {
 
     # Use a subshell to avoid propagate subcommand changes
     # shellcheck disable=SC2030
-    (export PREFIX PROZZIE_CLI; "$subcommand" "$@")
+    (export PREFIX; "$subcommand" "$@")
 }
 
 # Return a newline separated array with available commands.

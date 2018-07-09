@@ -92,6 +92,8 @@ zz_cli_subcommand_help () {
     readarray -t subcommands < <(zz_cli_available_commands "$1")
 
     for subcommand in "${subcommands[@]}"; do
+        # We want PREFIX export only in the subcommand
+        # shellcheck disable=SC2031
         shorthelp=$(export PREFIX; "${1}${subcommand}.bash" --shorthelp)
         printf '\t%s\t%s\n' "${subcommand}" "${shorthelp}"
     done

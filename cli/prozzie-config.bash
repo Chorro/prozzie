@@ -214,10 +214,9 @@ main() {
                     kcli_setup "/dev/fd/${properties}" "$module"
                     exec {properties}<&-
                 else
-                    ENV_FILE="$PROZZIE_ENVS/$module.env"
                     printf 'Setup %s module:\n' "$module"
                     shift
-                    app_setup "$module"
+                    ENV_FILE="$PROZZIE_ENVS/$module.env" app_setup "$module"
                 fi
                 exit 0
             fi

@@ -369,11 +369,9 @@ wizard () {
 #  [--no-reload-prozzie] Don't reload prozzie at the end of `.env` changes
 #
 # Environment:
-#  ENV_FILE - The path of `.env` file to modify
-#  src_env_file - ENV_FILE Backup. Variable will be unset after function call.
-#    See print_not_modified_warning.
-#  DEFAULT_PREFIX - (see common.bash:DEFAULT_PREFIX)
-#  PREFIX - Where to look for the `.env` file. Defaults to DEFAULT_PREFIX
+#  PREFIX - Where to look for the `.env` file.
+#  ENV_FILE - The path of `.env` file to modify. Defaults to
+#    ${PREFIX}/etc/prozzie/.env if not declared
 #  module_envs - The variables to ask for, in form:
 #    ([global_var]="default|description"). See also
 #    `zz_variables_env_update_array` and `zz_variables_ask`
@@ -385,6 +383,7 @@ wizard () {
 #  Always 0
 app_setup () {
   declare reload_prozzie=y
+  declare src_env_file
   if [[ $1 == --no-reload-prozzie ]]; then
     reload_prozzie=n
     shift
@@ -392,9 +391,9 @@ app_setup () {
 
   if [[ -v ENV_FILE  ]] && [[ "${1}" != base ]]; then
     src_env_file="${ENV_FILE}"
-    touch "$src_env_file"
   else
-    src_env_file="${PREFIX:-${DEFAULT_PREFIX}}/etc/prozzie/.env"
+    declare ENV_FILE
+    src_env_file="${PREFIX}/etc/prozzie/.env"
   fi
 
   touch "$src_env_file"
@@ -421,8 +420,6 @@ app_setup () {
   if [[ $reload_prozzie == y ]]; then
     "${src_env_file%etc/prozzie/*}/bin/prozzie" up -d
   fi
-
-  unset -v src_env_file
 }
 
 # Enable or disable modules. Check if base module is included. Check if a module exists.

@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This variable is intended to be imported, so we don't use this variable here
+# shellcheck disable=SC2034
 declare -A module_envs=()
 
 showVarsDescription () {

@@ -18,6 +18,8 @@
 monitor_custom_mib_prompt='monitor custom mibs path (use monitor_custom_mibs'
 monitor_custom_mib_prompt="$monitor_custom_mib_prompt for no custom mibs)"
 
+# This variable is intended to be imported, so we don't use this variable here
+# shellcheck disable=SC2034
 declare -A module_envs=(
 	[MONITOR_REQUEST_TIMEOUT]='25|Seconds between monitor polling'
 	[MONITOR_KAFKA_TOPIC]='monitor|Topic to produce monitor metrics'

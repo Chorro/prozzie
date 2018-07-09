@@ -53,6 +53,8 @@ if command_exists sudo; then
     declare -r sudo=sudo
 fi
 
+# This variable is iused in app_setup, but shellcheck does not feel that way.
+# shellcheck disable=SC2034
 # [env_variable]="default|prompt"
 declare -A module_envs=(
   [PREFIX]="${DEFAULT_PREFIX}|Where do you want install prozzie?"

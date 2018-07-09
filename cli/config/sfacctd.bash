@@ -23,6 +23,8 @@ declare -r sfacctd_aggregate='cos, etype, src_mac, dst_mac, vlan, src_host, \
 	src_host_country, dst_host_country, in_iface, out_iface, sampling_rate, \
 	export_proto_version, timestamp_arrival'
 
+# This variable is intended to be imported, so we don't use this variable here
+# shellcheck disable=SC2034
 declare -A module_envs=(
 	[SFLOW_KAFKA_TOPIC]='pmacct|Topic to produce sflow traffic'
 	[SFLOW_RENORMALIZE]='true|Normalize sflow based on sampling'

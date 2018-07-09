@@ -32,8 +32,6 @@
 . "${BASH_SOURCE%/*}/include/common.bash"
 . "${BASH_SOURCE%/*}/include/cli.bash"
 
-declare -r env_file="${PREFIX}/etc/prozzie/.env"
-
 # Print kafka argument list in a user-friendly way. Use stdin to provide Kafka
 # argument.
 #

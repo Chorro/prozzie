@@ -421,6 +421,9 @@ zz_enable_disable_modules() {
             ;;
         esac
     done
+
+    # Remove unused/orphans containers
+    "${PREFIX}/bin/prozzie" up --remove-orphans -d
 }
 
 # Resume or pause a kafka-connect connector. Check connector status

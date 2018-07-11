@@ -183,9 +183,7 @@ create_directory_tree () {
 
     declare mkdir_out
     mkdir_out=$(mkdir -vp "${directories[@]}")
-    if [[ $? != 0 ]]; then
-        exit $?
-    fi
+    declare -r mkdir_out
 
     readarray -t created_files < <(printf '%s\n' "${mkdir_out}")
 
@@ -225,9 +223,7 @@ prozzie_postinstall () {
     log info $'Applying post-install\n'
 
     if [[ ${ID} == centos ]]; then
-        systemctl status firewalld &> /dev/null
-
-        if [[ ! $? -eq 0 ]]; then
+        if ! systemctl status firewalld &> /dev/null; then
             log warn "$(cat <<-EOF
 				You could have a firewall or iptables enabled. Prozzie needs
 				communication between containers and host so you might need to
@@ -306,17 +302,13 @@ function app_setup () {
   for DEPENDENCY in $NEEDED_DEPENDENCIES; do
 
     # Check if dependency is installed in current OS
-    type "$DEPENDENCY" &> /dev/null
-
-    if [[ $? -eq 1 ]]; then
+    if ! type "$DEPENDENCY" &> /dev/null; then
       install "$DEPENDENCY"
     fi
   done
 
   # Check if docker is installed in current OS
-  type docker &> /dev/null
-
-  if [[ $? -eq 1 ]]; then
+  if ! type docker &> /dev/null; then
     # Install docker
     log info 'Installing the latest version of Docker Community Edition...'$'\n'
     if ! curl -fsSL get.docker.com | sh; then
@@ -340,9 +332,7 @@ function app_setup () {
   log ok "Installed: $DOCKER_VERSION"$'\n'
 
   # Check if docker-compose is installed in current OS
-  type docker-compose &> /dev/null
-
-  if [[ $? -eq 1 ]]; then
+  if ! type docker-compose &> /dev/null; then
     log warn $'Docker-Compose is not installed!\n'
     log info $'Initializing Docker-Compose installation\n'
     # Download latest release (Not for production)

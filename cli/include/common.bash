@@ -51,7 +51,6 @@ log () {
 # Check function $1 existence
 func_exists () {
     declare -f "$1" > /dev/null
-    return $?
 }
 
 command_exists () {

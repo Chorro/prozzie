@@ -321,22 +321,48 @@ testWizard() {
 #--------------------------------------------------------
 
 testEnableModule() {
-    "${PROZZIE_PREFIX}/bin/prozzie" config --enable f2k monitor
+    declare -r expected_message='{"fieldA": "valueA", "fieldB": 12, "fieldC": true}'
 
-    if [[ ! -L "${PROZZIE_PREFIX}/etc/prozzie/compose/f2k.yaml" ]];then
+    "${PROZZIE_PREFIX}/bin/prozzie" config --enable f2k monitor http2k
+
+    if [[ ! -L "${PROZZIE_PREFIX}/etc/prozzie/compose/f2k.yaml" ]]; then
         ${_FAIL_} '"prozzie config --enable must link f2k compose file"'
     fi
 
-    if [[ ! -L "${PROZZIE_PREFIX}/etc/prozzie/compose/monitor.yaml" ]];then
+    if [[ ! -L "${PROZZIE_PREFIX}/etc/prozzie/compose/monitor.yaml" ]]; then
         ${_FAIL_} '"prozzie config --enable must link monitor compose file"'
     fi
+
+    if [[ ! -L "${PROZZIE_PREFIX}/etc/prozzie/compose/http2k.yaml" ]]; then
+        ${_FAIL_} '"prozzie config --enable must link http2k compose file"'
+    fi
+
+    if ! curl -v http://"${HOSTNAME}":7980/v1/data/http2k_topic -H 'X-Consumer-ID:test' -d '{"fieldA": "valueA", "fieldB": 12, "fieldC": true}'; then
+        ${_FAIL_} '"HTTP2K must be enabled and running"'
+    fi
+
+    ${_ASSERT_EQUALS_} '"Incorrect number of topics for http2k"' \
+    '1' '$("${PROZZIE_PREFIX}/bin/prozzie" kafka topics --list | grep test_http2k_topic | wc -w)'
+
+    declare message=$("${PROZZIE_PREFIX}/bin/prozzie" kafka consume test_http2k_topic --from-beginning --max-messages 1|grep -o -E "{.+}")
+
+    ${_ASSERT_EQUALS_} '"Incorrect expected message"' \
+    '"${expected_message}"' '"${message}"'
 }
 
 testDisableModule() {
-    "${PROZZIE_PREFIX}/bin/prozzie" config --disable f2k
+    "${PROZZIE_PREFIX}/bin/prozzie" config --disable f2k http2k
 
-    if [[ -L "${PROZZIE_PREFIX}/etc/prozzie/compose/f2k.yaml" ]];then
+    if [[ -L "${PROZZIE_PREFIX}/etc/prozzie/compose/f2k.yaml" ]]; then
         ${_FAIL_} '"prozzie config --disable must to unlink f2k compose file"'
+    fi
+
+    if [[ -L "${PROZZIE_PREFIX}/etc/prozzie/compose/http2k.yaml" ]]; then
+        ${_FAIL_} '"prozzie config --disable must to unlink http2k compose file"'
+    fi
+
+    if curl -v http://"${HOSTNAME}":7980/v1/data/http2k_topic -H 'X-Consumer-ID:test' -d '{"fieldA":"valueA", "fieldB": 12, "fieldC": true}'; then
+        ${_FAIL_} '"HTTP2K must be disabled and stopped"'
     fi
 }
 

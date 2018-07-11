@@ -31,6 +31,13 @@ P_tests: &P_tests
             EXEC:'docker run --network prozzie_default -i alpine/socat
             STDIO TCP\:prozzie_kafka_1\:9092'
     - run:
+        name: Expose http2k port
+        background: true
+        command: >-
+            socat TCP-LISTEN:7980,reuseaddr,fork
+            EXEC:'docker run --network prozzie_default -i alpine/socat
+            STDIO TCP\:prozzie_http2k_1\:7980'
+    - run:
         name: Run actual tests
         command: cd tests; make -j 6 coverage
     - run: mkdir -p /tmp/coverage

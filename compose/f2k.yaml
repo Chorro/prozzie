@@ -7,7 +7,7 @@ services:
     depends_on:
       - kafka
     ports:
-      - 2055:2055
+      - 2055:2055/udp
     env_file:
       - ${PREFIX}/etc/prozzie/envs/f2k.env
     environment:

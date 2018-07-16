@@ -33,7 +33,7 @@ clean:
 	rm -rfv $(tests_out) $(coverages) $(COVERAGE_OUT)
 
 BUILD_ARGS:=CXX EXPECT IS_CENTOS KAFKACAT LIBDW LIBDW_DEV LIBELF_DEV LIBZ_DEV \
-	PKG_CONFIG PKG_MANAGER_UPDATE PKG_MANAGER_INSTALL PSLIST TCL TCLLIB
+	PKG_CONFIG PKG_MANAGER_UPDATE PKG_MANAGER_INSTALL PSLIST TCL TCLLIB SNMPTRAP
 
 # Debian build arguments
 CXX_debian = g++
@@ -50,6 +50,7 @@ PKG_MANAGER_INSTALL_debian = env DEBIAN_FRONTEND=noninteractive \
 	apt install --no-install-recommends -y
 TCL_debian = tcl8.6
 TCLLIB_debian = tcllib
+SNMPTRAP_debian = snmp
 
 # Ubuntu uses the same arguments as debian
 $(foreach arg, $(BUILD_ARGS), $(eval $(arg)_ubuntu = $($(arg)_debian)))
@@ -63,6 +64,7 @@ LIBELF_DEV_centos = elfutils-devel
 LIBZ_DEV_centos = zlib-devel
 PKG_MANAGER_UPDATE_centos = true # Not needed
 PKG_MANAGER_INSTALL_centos = yum install -y
+SNMPTRAP_centos = net-snmp-utils
 
 # Expand to Dockerfile argument $(1) assignment of distro $(2)
 arg_distro = $(1)='$($(1)_$(firstword $(subst -, ,$2)))'

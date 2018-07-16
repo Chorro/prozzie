@@ -333,6 +333,14 @@ testEnableModule() {
         ${_FAIL_} '"prozzie config --enable must link monitor compose file"'
     fi
 
+    snmptrap -v 2c -c public ${HOSTNAME} "" 1.3.6.1.4.1.2021.13.991 .1.3.6.1.2.1.1.6 s "Device in Wizzie"
+
+    ${_ASSERT_EQUALS_} '"Incorrect number of topics for monitor"' \
+    '1' '$("${PROZZIE_PREFIX}/bin/prozzie" kafka topics --list | grep monitor | wc -w)'
+
+    ${_ASSERT_EQUALS_} '"Incorrect number of messages in topic monitor"' \
+    '1' '$("${PROZZIE_PREFIX}/bin/prozzie" kafka consume monitor --from-beginning --max-messages 1 | grep -o -E "{.+}" | wc -l)'
+
     if [[ ! -L "${PROZZIE_PREFIX}/etc/prozzie/compose/http2k.yaml" ]]; then
         ${_FAIL_} '"prozzie config --enable must link http2k compose file"'
     fi
@@ -351,11 +359,22 @@ testEnableModule() {
 }
 
 testDisableModule() {
-    "${PROZZIE_PREFIX}/bin/prozzie" config --disable f2k http2k
+    "${PROZZIE_PREFIX}/bin/prozzie" config --disable f2k monitor http2k
 
     if [[ -L "${PROZZIE_PREFIX}/etc/prozzie/compose/f2k.yaml" ]]; then
         ${_FAIL_} '"prozzie config --disable must to unlink f2k compose file"'
     fi
+
+    if [[ -L "${PROZZIE_PREFIX}/etc/prozzie/compose/monitor.yaml" ]]; then
+        ${_FAIL_} '"prozzie config --disable must to unlink monitor compose file"'
+    fi
+
+    if ! snmptrap -v 2c -c public ${HOSTNAME} "" 1.3.6.1.4.1.2021.13.991 .1.3.6.1.2.1.1.6 s "Device in Wizzie"; then
+        ${_FAIL_} '"snmptrap command failed"'
+    fi
+
+    ${_ASSERT_EQUALS_} '"Incorrect number of messages in topic monitor"' \
+    '1' '$("${PROZZIE_PREFIX}/bin/prozzie" kafka consume test_http2k_topic --from-beginning --timeout-ms 500 | grep -o -E "{.+}" | wc -l)'
 
     if [[ -L "${PROZZIE_PREFIX}/etc/prozzie/compose/http2k.yaml" ]]; then
         ${_FAIL_} '"prozzie config --disable must to unlink http2k compose file"'

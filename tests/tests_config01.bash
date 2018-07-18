@@ -21,8 +21,8 @@ testConfigCommandHelp() {
 }
 
 testDescribeAll() {
-    # prozzie config --describe-all must describe all modules with no failure
-    "${PROZZIE_PREFIX}"/bin/prozzie config --describe-all
+    # prozzie config describe-all must describe all modules with no failure
+    "${PROZZIE_PREFIX}"/bin/prozzie config describe-all
 }
 
 #--------------------------------------------------------
@@ -75,7 +75,7 @@ testSetupBaseModuleVariables() {
         'Client API key' \
             'myApiKey'
 
-    ${_ASSERT_TRUE_} '"prozzie config -s base must done with no failure"' $?
+    ${_ASSERT_TRUE_} '"prozzie config setup base must done with no failure"' $?
 
     genericTestModule 3 base 'ZZ_HTTP_ENDPOINT=https://my.test.endpoint/v1/data' \
                              "INTERFACE_IP=${INTERFACE_IP}" \
@@ -179,7 +179,7 @@ testSetupMqttModuleVariables() {
          "Kafka's topic to produce MQTT consumed messages" 'mqtt' \
          'MQTT brokers' 'my.broker.mqtt:1883'
 
-    ${_ASSERT_TRUE_} '"prozzie config -s mqtt must done with no failure"' $?
+    ${_ASSERT_TRUE_} '"prozzie config setup mqtt must done with no failure"' $?
 
     while ! docker inspect --format='{{json .State.Health.Status}}' \
                     prozzie_kafka-connect_1| grep healthy >/dev/null; do :; done
@@ -205,8 +205,8 @@ testSetupMqttModuleVariables() {
 #--------------------------------------------------------
 
 testSetupSyslogModuleVariables() {
-    ${_ASSERT_TRUE_} '"prozzie config -s syslog must done with no failure"' \
-        "'\"${PROZZIE_PREFIX}\"/bin/prozzie config -s syslog'"
+    ${_ASSERT_TRUE_} '"prozzie config setup syslog must done with no failure"' \
+        "'\"${PROZZIE_PREFIX}\"/bin/prozzie config setup syslog'"
 }
 
 testGetSyslogModuleVariables() {
@@ -230,26 +230,26 @@ testGetSyslogModuleVariables() {
 #--------------------------------------------------------
 
 testDescribeWrongModule() {
-    if "${PROZZIE_PREFIX}"/bin/prozzie config --describe wrongModule; then
-        ${_FAIL_} '"prozzie config --describe wrongModule must show error"'
+    if "${PROZZIE_PREFIX}"/bin/prozzie config describe wrongModule; then
+        ${_FAIL_} '"prozzie config describe wrongModule must show error"'
     fi
 }
 
 testDescribeMustShowHelpIfModuleIsNotPresent() {
-    if "${PROZZIE_PREFIX}"/bin/prozzie config --describe; then
-        ${_FAIL_} '"prozzie config --describe must show help with failure"'
+    if "${PROZZIE_PREFIX}"/bin/prozzie config describe; then
+        ${_FAIL_} '"prozzie config describe must show help with failure"'
     fi
 }
 
 testDescribeMustShowAnErrorIfModuleDoesNotExist() {
-    if "${PROZZIE_PREFIX}"/bin/prozzie config --describe wrongModule; then
-        ${_FAIL_} '"prozzie config --describe wrongModule must show error"'
+    if "${PROZZIE_PREFIX}"/bin/prozzie config describe wrongModule; then
+        ${_FAIL_} '"prozzie config describe wrongModule must show error"'
     fi
 }
 
 testSetupMustShowHelpIfModuleIsNotPresent() {
-    if "${PROZZIE_PREFIX}"/bin/prozzie config --setup; then
-        ${_FAIL_} '"prozzie config --setup must show help with failure"'
+    if "${PROZZIE_PREFIX}"/bin/prozzie config setup; then
+        ${_FAIL_} '"prozzie config setup must show help with failure"'
     fi
 }
 
@@ -307,7 +307,7 @@ testSetupCancellation() {
 #--------------------------------------------------------
 
 testWizard() {
-    genericSpawnQuestionAnswer "${PROZZIE_PREFIX}/bin/prozzie config -w" \
+    genericSpawnQuestionAnswer "${PROZZIE_PREFIX}/bin/prozzie config wizard" \
          'Do you want to configure modules? (Enter for quit)' '{f2k} {}' \
          'JSON object of NF probes (It'\''s recommend to use env var)' '\{\}' \
          'Topic to produce netflow traffic?' 'wizardFlow'
@@ -323,14 +323,14 @@ testWizard() {
 testEnableModule() {
     declare -r expected_message='{"fieldA": "valueA", "fieldB": 12, "fieldC": true}'
 
-    "${PROZZIE_PREFIX}/bin/prozzie" config --enable f2k monitor http2k
+    "${PROZZIE_PREFIX}/bin/prozzie" config enable f2k monitor http2k
 
     if [[ ! -L "${PROZZIE_PREFIX}/etc/prozzie/compose/f2k.yaml" ]]; then
-        ${_FAIL_} '"prozzie config --enable must link f2k compose file"'
+        ${_FAIL_} '"prozzie config enable must link f2k compose file"'
     fi
 
     if [[ ! -L "${PROZZIE_PREFIX}/etc/prozzie/compose/monitor.yaml" ]]; then
-        ${_FAIL_} '"prozzie config --enable must link monitor compose file"'
+        ${_FAIL_} '"prozzie config enable must link monitor compose file"'
     fi
 
     snmptrap -v 2c -c public ${HOSTNAME} "" 1.3.6.1.4.1.2021.13.991 .1.3.6.1.2.1.1.6 s "Device in Wizzie"
@@ -342,7 +342,7 @@ testEnableModule() {
     '1' '$("${PROZZIE_PREFIX}/bin/prozzie" kafka consume monitor --from-beginning --max-messages 1 | grep -o -E "{.+}" | wc -l)'
 
     if [[ ! -L "${PROZZIE_PREFIX}/etc/prozzie/compose/http2k.yaml" ]]; then
-        ${_FAIL_} '"prozzie config --enable must link http2k compose file"'
+        ${_FAIL_} '"prozzie config enable must link http2k compose file"'
     fi
 
     if ! curl -v http://"${HOSTNAME}":7980/v1/data/http2k_topic -H 'X-Consumer-ID:test' -d '{"fieldA": "valueA", "fieldB": 12, "fieldC": true}'; then
@@ -359,14 +359,14 @@ testEnableModule() {
 }
 
 testDisableModule() {
-    "${PROZZIE_PREFIX}/bin/prozzie" config --disable f2k monitor http2k
+    "${PROZZIE_PREFIX}/bin/prozzie" config disable f2k monitor http2k
 
     if [[ -L "${PROZZIE_PREFIX}/etc/prozzie/compose/f2k.yaml" ]]; then
-        ${_FAIL_} '"prozzie config --disable must to unlink f2k compose file"'
+        ${_FAIL_} '"prozzie config disable must to unlink f2k compose file"'
     fi
 
     if [[ -L "${PROZZIE_PREFIX}/etc/prozzie/compose/monitor.yaml" ]]; then
-        ${_FAIL_} '"prozzie config --disable must to unlink monitor compose file"'
+        ${_FAIL_} '"prozzie config disable must to unlink monitor compose file"'
     fi
 
     if ! snmptrap -v 2c -c public ${HOSTNAME} "" 1.3.6.1.4.1.2021.13.991 .1.3.6.1.2.1.1.6 s "Device in Wizzie"; then
@@ -377,7 +377,7 @@ testDisableModule() {
     '1' '$("${PROZZIE_PREFIX}/bin/prozzie" kafka consume test_http2k_topic --from-beginning --timeout-ms 500 | grep -o -E "{.+}" | wc -l)'
 
     if [[ -L "${PROZZIE_PREFIX}/etc/prozzie/compose/http2k.yaml" ]]; then
-        ${_FAIL_} '"prozzie config --disable must to unlink http2k compose file"'
+        ${_FAIL_} '"prozzie config disable must to unlink http2k compose file"'
     fi
 
     if curl -v http://"${HOSTNAME}":7980/v1/data/http2k_topic -H 'X-Consumer-ID:test' -d '{"fieldA":"valueA", "fieldB": 12, "fieldC": true}'; then
@@ -386,7 +386,7 @@ testDisableModule() {
 }
 
 testListEnabledModules() {
-    "${PROZZIE_PREFIX}/bin/prozzie" config --list-enabled
+    "${PROZZIE_PREFIX}/bin/prozzie" config list-enabled
 }
 
 . test_run.sh

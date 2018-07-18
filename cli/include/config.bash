@@ -325,7 +325,7 @@ wizard () {
         log info "Configuring ${reply} module\n"
 
         set +m  # Send SIGINT only to child
-        "${PREFIX}"/bin/prozzie config -s ${reply}
+        "${PREFIX}"/bin/prozzie config setup ${reply}
         set -m
     done
 }
@@ -437,7 +437,7 @@ zz_pause_resume_kc_connector() {
     declare -r connector_status=$("${PREFIX}"/bin/prozzie kcli status "$module" | head -n 1 | grep -o 'RUNNING\|PAUSED')
 
     case $action in
-        --enable)
+        enable)
             case $connector_status in
                 PAUSED)
                     "${PREFIX}"/bin/prozzie kcli resume "$module" >/dev/null
@@ -447,12 +447,12 @@ zz_pause_resume_kc_connector() {
                     printf "Module %s already enabled\n" "$module" >&2
                 ;;
                 *)
-                    "${PREFIX}"/bin/prozzie config -s "$module"
+                    "${PREFIX}"/bin/prozzie config setup "$module"
                     printf "Module %s enabled\n" "$module" >&2
                 ;;
             esac
         ;;
-        --disable)
+        disable)
             case $connector_status in
                 PAUSED)
                     printf "Module %s already disabled\n" "$module" >&2
@@ -483,10 +483,10 @@ zz_link_unlink_module() {
     declare cmd
 
     case $action in
-        --enable)
+        enable)
             cmd=zz_link_compose_file
         ;;
-        --disable)
+        disable)
             cmd=zz_unlink_compose_file
         ;;
     esac

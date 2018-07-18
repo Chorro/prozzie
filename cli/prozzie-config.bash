@@ -34,23 +34,23 @@ printShortHelp() {
 printHelp() {
     printShortHelp
     declare -A commands_and_descriptions=(
-        ["-w, --wizard"]="Start modules wizard"
-        ["-d, --describe <module>"]="Describe module vars"
-        ["-s, --setup <module>"]="Configure module with setup assistant"
-        ["--describe-all"]="Describe all modules vars"
-        ["--enable <modules-list>"]="Enable modules"
-        ["--disable <modules-list>"]="Disable modules"
+        ["wizard"]="Start modules wizard"
+        ["describe <module>"]="Describe module vars"
+        ["setup <module>"]="Configure module with setup assistant"
+        ["describe-all"]="Describe all modules vars"
+        ["enable <modules-list>"]="Enable modules"
+        ["disable <modules-list>"]="Disable modules"
+        ["list-enabled"]="List all enabled modules"
         ["-h, --help"]="Show this help"
-        ["--list-enabled"]="List all enabled modules"
     )
         declare -a order=(
-        "-w, --wizard"
-        "-d, --describe <module>"
-        "-s, --setup <module>"
-        "--describe-all"
-        "--enable <modules-list>"
-        "--disable <modules-list>"
-        "--list-enabled"
+        "wizard"
+        "describe <module>"
+        "setup <module>"
+        "describe-all"
+        "enable <modules-list>"
+        "disable <modules-list>"
+        "list-enabled"
         "-h, --help"
     )
 
@@ -88,11 +88,11 @@ if [[ $1 ]]; then
             printHelp
             exit 0
         ;;
-        -w|--wizard)
+        wizard)
             wizard "$src_env_file"
             exit 0
         ;;
-        -d|--describe)
+        describe)
             if [[ $2 ]]; then
                 printf "Module ${2}: \n"
                 describeModule "$2" || exit 1
@@ -101,7 +101,7 @@ if [[ $1 ]]; then
                 exit 1
             fi
         ;;
-        --describe-all)
+        describe-all)
             declare -r prefix="*/cli/config/"
             declare -r suffix=".bash"
 
@@ -115,7 +115,7 @@ if [[ $1 ]]; then
             done
             exit 0
         ;;
-      -s|--setup)
+        setup)
             if [[ -f "$PROZZIE_CLI_CONFIG/$2.bash" ]]; then
                 module="$PROZZIE_CLI_CONFIG/$2.bash"
                 . "$module"
@@ -135,11 +135,11 @@ if [[ $1 ]]; then
             printHelp
             exit 1
         ;;
-        --enable|--disable)
+        enable|disable)
             zz_enable_disable_modules $@
             exit 0
         ;;
-        --list-enabled)
+        list-enabled)
             zz_list_enabled_modules
             exit 0
         ;;
@@ -147,7 +147,7 @@ if [[ $1 ]]; then
             declare -r option="$PROZZIE_CLI_CONFIG/$1.bash"
 
             if [[ ! -f "$option" ]]; then
-                printf "Unknow module: %s\nPlease use 'prozzie config --describe-all' to see a complete list of modules and their variables\n" "$1" >&2
+                printf "Unknow module: %s\nPlease use 'prozzie config describe-all' to see a complete list of modules and their variables\n" "$1" >&2
                 exit 1
             fi
 
@@ -180,7 +180,7 @@ if [[ $1 ]]; then
                     if [[ "$module" =~ ^(mqtt|syslog)$ ]]; then
                         printf "Please use next commands in order to configure ${module}:\n" >&2
                         printf "prozzie kcli rm <connector>\n" >&2
-                        printf "prozzie config -s ${module}\n" >&2
+                        printf "prozzie config setup ${module}\n" >&2
                         exit 1
                     fi
                     zz_set_var "$env_file" "$@" || exit 1

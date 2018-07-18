@@ -382,7 +382,7 @@ function app_setup () {
   "${PREFIX}/bin/prozzie" up -d kafka-connect
   trap stop_prozzie_install_rollback EXIT
 
-  "${PREFIX}/bin/prozzie" config --wizard
+  "${PREFIX}/bin/prozzie" config wizard
 
   printf "Done!\n\n"
 

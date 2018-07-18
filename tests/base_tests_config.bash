@@ -14,7 +14,7 @@ genericTestModule() {
     declare -r module_name="$2"
     shift 2
 
-    declare describe_out="$("${PROZZIE_PREFIX}/bin/prozzie" config -d "$module_name" \
+    declare describe_out="$("${PROZZIE_PREFIX}/bin/prozzie" config describe "$module_name" \
         | grep -v 'Module .*')"
     declare description key
 
@@ -130,6 +130,6 @@ genericSpawnQuestionAnswer() {
 ## @return     Always true
 ##
 genericSetupQuestionAnswer() {
-    genericSpawnQuestionAnswer "${PROZZIE_PREFIX}/bin/prozzie config -s $1" \
+    genericSpawnQuestionAnswer "${PROZZIE_PREFIX}/bin/prozzie config setup $1" \
                                                                         "${@:2}"
 }

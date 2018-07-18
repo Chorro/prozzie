@@ -59,12 +59,8 @@ printHelp() {
 
     for comm in "${order[@]}"
     do
-        help_command_format "$comm" "${commands_and_descriptions[$comm]}"
+        apply_help_command_format "$comm" "${commands_and_descriptions[$comm]}"
     done
-}
-
-help_command_format() {
-    printf "\t\t%-40s%s\n" "$1" "$2"
 }
 
 describeModule () {

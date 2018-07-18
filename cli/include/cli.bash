@@ -110,3 +110,21 @@ exists_key_in_module_envs () {
     needle="$1"
     [[ "${module_envs[$needle]+_}" ]]
 }
+
+# Apply a format with 40 spaces between command and its description
+#
+# Arguments
+#  1 - Command to describe
+#  2 - Description of command
+#
+# Environment
+#  -
+#
+# Out:
+#  Formated string
+#
+# Return code
+#  Always 0
+apply_help_command_format () {
+    printf "\t%-45s%s\n" "$1" "$2"
+}

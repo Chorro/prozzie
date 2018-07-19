@@ -199,6 +199,44 @@ testDescribeWrongModule() {
     fi
 }
 
+testWrongOption() {
+    if "${PROZZIE_PREFIX}"/bin/prozzie config --wrongOption; then
+        ${_FAIL_} '"prozzie config --wrongOption must show error"'
+    fi
+}
+
+testWrongAction() {
+    if "${PROZZIE_PREFIX}"/bin/prozzie config wrongAction; then
+        ${_FAIL_} '"prozzie config wrongAction must show error"'
+    fi
+}
+
+testSetWrongVariable() {
+    if "${PROZZIE_PREFIX}"/bin/prozzie config set base CLIENT__API__KEY=1234 INTERFACE_IPV4=1.2.3.4 HTTP_ENDPOINT=my.super.test.endpoint; then
+        ${_FAIL_} '"prozzie config set must show error if keys are not recognized"'
+    fi
+
+    genericTestModule 3 base 'ZZ_HTTP_ENDPOINT=https://localhost/v1/data' \
+                             "INTERFACE_IP=${HOSTNAME}" \
+                             'CLIENT_API_KEY=prozzieapi'
+}
+
+testGetWrongModuleConfiguration() {
+    if "${PROZZIE_PREFIX}"/bin/prozzie config get wrongModule; then
+        ${_FAIL_} '"prozzie config get must show error if module does not have an associated .env file"'
+    fi
+}
+
+testWrongModule() {
+    touch "${PROZZIE_PREFIX}"/etc/prozzie/envs/wrongModule.env
+
+    if "${PROZZIE_PREFIX}"/bin/prozzie config get wrongModule; then
+        ${_FAIL_} '"prozzie config get must show error if module does not have an configuration file"'
+    fi
+
+    rm -rf "${PROZZIE_PREFIX}"/etc/prozzie/envs/wrongModule.env
+}
+
 testDescribeMustShowHelpIfModuleIsNotPresent() {
     if "${PROZZIE_PREFIX}"/bin/prozzie config describe; then
         ${_FAIL_} '"prozzie config describe must show help with failure"'

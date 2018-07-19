@@ -59,7 +59,7 @@ services:
        CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
        CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect
   k2http:
-    image: gcr.io/wizzie-registry/prozzie-k2http:1.4.1
+    image: gcr.io/wizzie-registry/prozzie-k2http:1.5.0
     restart: always
     depends_on:
       - kafka
@@ -69,16 +69,11 @@ services:
       KAFKA_CONSUMER_GROUP: "k2http"
       KAFKA_BROKERS: "kafka:9092"
       HTTP_ENDPOINT: "${ZZ_HTTP_ENDPOINT:-http://localhost:8000/v1/data}"
-      PIPELINE_QUEUE: 1000
-      PIPELINE_BACKOFF: 10
-      PIPELINE_RETRIES: 3
-      LIMITER_MAX_MESSAGES: 5000
+      LIMITER_MAX_MESSAGES: 0
       LIMITER_MAX_BYTES: 0
-      BATCH_WORKERS: 1
-      BATCH_SIZE: 1000
-      BATCH_TIMEOUT_MS: 100
+      BATCH_SIZE: 1000000
+      BATCH_TIMEOUT_MS: 1000
       BATCH_DEFLATE: "false"
-      HTTP_WORKERS: 1
       HTTP_INSECURE: "false"
       KAFKA_TOPICS: "*"
-      KAFKA_VERSION: "0_10_2_0"
+      KAFKA_VERSION: "0_11_0_0"

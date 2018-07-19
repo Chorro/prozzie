@@ -43,7 +43,7 @@ WORKDIR "/kcov/kcov-${KCOV_VERSION}/build"
 RUN env CXX=g++ cmake .. && make -j 2 kcov && cp src/kcov /usr/bin/
 # Centos still doesn't work well with kcov
 RUN ! ${IS_CENTOS} || \
-	{ echo '[[ $1 == '\''--merge'\'' ]] || exec "./$3" "${@:4}"' \
+	{ echo '[[ $1 == '\''--merge'\'' ]] || { mkdir -p "$2"; exec "./$3" "${@:4}"; }' \
 									> /usr/bin/kcov && chmod +x /usr/bin/kcov; }
 
 # Obtain tclsh8.6: Centos has 8.5

@@ -46,7 +46,7 @@ P_tests: &P_tests
             STDIO UDP\:prozzie_monitor_1\:162'
     - run:
         name: Run actual tests
-        command: cd tests; make -j 6 coverage
+        command: cd tests; make tests_config01.cov; make -j 6 coverage
     - run: mkdir -p /tmp/coverage
     - run:
         name: Merge all coverage

@@ -181,7 +181,7 @@ prepare_cmd_default_server () {
         if [[ "${server_parameter}" == --zookeeper ]]; then
             server_host=zookeeper:2181
         else
-            server_host="$("${PREFIX}/bin/prozzie" config base INTERFACE_IP):9092"
+            server_host="$("${PREFIX}/bin/prozzie" config get base INTERFACE_IP):9092"
         fi
         cmd_default_parameters["$server_parameter"]="${server_host}"
     fi

@@ -213,17 +213,28 @@ zz_get_var() {
 # Exit status:
 #  Always 0
 zz_get_vars () {
-        declare -A env_content
+        declare -r env_file="$1"
+        shift
 
-        while IFS='=' read -r key val || [[ -n "$key" ]]; do
+        # If keys list is empty then show all variables
+        if [[ -z $@ ]]; then
+            declare -A env_content
+            # Read from env_file
+            while IFS='=' read -r key val || [[ -n "$key" ]]; do
                 env_content[$key]=$val
-        done < "$1"
-
-        for key in "${!module_envs[@]}"; do
+            done < "$env_file"
+            # Show variables
+            for key in "${!module_envs[@]}"; do
                 declare value=${env_content[$key]}
                 if [[ -n  $value ]]; then
                         printf "%s=%s\n" "$key" "$value"
                 fi
+            done
+        fi
+
+        for key in "$@"; do
+            zz_get_var "$env_file" "$key" || \
+                                           printf "Key '%s' is not valid" "$key"
         done
 }
 
@@ -242,25 +253,48 @@ zz_get_vars () {
 #  0 - Variable is set without error
 #  1 - An error has ocurred while set a variable (variable not found or mispelled)
 zz_set_var () {
-    if [[ ! -z "$3" ]]; then
-        if exists_key_in_module_envs "$2"; then
-            declare value="$3"
+    if exists_key_in_module_envs "$2"; then
+        declare value="$3"
 
-            if func_exists "$2_sanitize"; then
-                value="$($2_sanitize "${3}")"
-            fi
-
-            printf -v new_value "%s=%s" "$2" "$value"
-
-            sed -i '/'"$2"'.*/c\'"$new_value" "$1"
-        else
-            printf "Variable '%s' not recognized! No changes made to %s\n" "$2" "$1" >&2
-        return 1
+        if func_exists "$2_sanitize"; then
+            value="$($2_sanitize "${3}")"
         fi
-    return 0
+
+        printf -v new_value "%s=%s" "$2" "$value"
+
+        sed -i '/'"$2"'.*/c\'"$new_value" "$1"
+    else
+        printf "Variable '%s' not recognized! No changes made to %s\n" "$2" "$1" >&2
+        return 1
     fi
-    printf "Variable '%s' can't be empty" "$2" >&2
-    return 1
+}
+
+# Check and set a list of key-value pairs separated by delimiter
+# Arguments:
+#  1 - File from get variables
+#  2 - List of key-value pairs separated by delimiter
+# Environment:
+#  -
+#
+# Out:
+#  -
+#
+# Exit status:
+#  Always 0
+zz_set_vars () {
+    declare key val
+    declare -r env_file=$1
+    shift
+
+    for pair in "$@"; do
+        if [[ $pair == *=* ]]; then
+            key=${pair%%=*}
+            val="${pair#*=}"
+            zz_set_var "$env_file" "$key" "$val"
+        else
+            printf "The argument '%s' isn't a valid key-value pair and won't be applied\n" "$pair" >&2
+        fi
+    done
 }
 
 # Set variable in env file by default
@@ -403,7 +437,7 @@ zz_enable_disable_modules() {
     for module in "$@"; do
         # Check if module exists
         if [[ ! -f $PROZZIE_CLI_CONFIG/$module.bash ]]; then
-            printf "Module %s doesn't exist\n" "$module" >&2
+            printf "Module '%s' doesn't exist\n" "$module" >&2
             exit 1
         fi
 

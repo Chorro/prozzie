@@ -26,42 +26,6 @@ testDescribeAll() {
 }
 
 #--------------------------------------------------------
-# TEST MODULES VARIABLES AND DESCRIPTIONS
-#--------------------------------------------------------
-
-testBaseModule() {
-    genericTestModule 3 base ZZ_HTTP_ENDPOINT INTERFACE_IP CLIENT_API_KEY
-}
-
-testF2kModule() {
-    genericTestModule 2 f2k NETFLOW_PROBES NETFLOW_KAFKA_TOPIC
-}
-
-testMonitorModule() {
-    genericTestModule 4 monitor MONITOR_CUSTOM_MIB_PATH MONITOR_KAFKA_TOPIC \
-        MONITOR_REQUEST_TIMEOUT MONITOR_SENSORS_ARRAY
-}
-
-testMqttModule() {
-    genericTestModule 14 mqtt mqtt.server_uris kafka.topic mqtt.topic name \
-        connector.class tasks.max key.converter value.converter mqtt.client_id \
-        mqtt.clean_session mqtt.connection_timeout mqtt.keep_alive_interval \
-        mqtt.qosl message_processor_class
-}
-
-testSyslogModule() {
-    genericTestModule 11 syslog name connector.class tasks.max key.converter \
-        value.converter key.converter.schemas.enable \
-        value.converter.schemas.enable kafka.topic syslog.host syslog.port \
-        syslog.structured.data
-}
-
-testSfacctdModule() {
-    genericTestModule 3 sfacctd SFLOW_KAFKA_TOPIC SFLOW_RENORMALIZE \
-        SFLOW_AGGREGATE
-}
-
-#--------------------------------------------------------
 # TEST BASE MODULE
 #--------------------------------------------------------
 
@@ -80,12 +44,11 @@ testSetupBaseModuleVariables() {
     genericTestModule 3 base 'ZZ_HTTP_ENDPOINT=https://my.test.endpoint/v1/data' \
                              "INTERFACE_IP=${INTERFACE_IP}" \
                              'CLIENT_API_KEY=myApiKey'
-}
 
-testSetBaseModuleVariables() {
-    "${PROZZIE_PREFIX}"/bin/prozzie config base ZZ_HTTP_ENDPOINT my.super.test.endpoint
-    "${PROZZIE_PREFIX}"/bin/prozzie config base INTERFACE_IP ${INTERFACE_IP}
-    "${PROZZIE_PREFIX}"/bin/prozzie config base CLIENT_API_KEY mySuperApiKey
+    "${PROZZIE_PREFIX}"/bin/prozzie config set base \
+        ZZ_HTTP_ENDPOINT=my.super.test.endpoint \
+        INTERFACE_IP=${INTERFACE_IP} \
+        CLIENT_API_KEY=mySuperApiKey
 
     genericTestModule 3 base 'ZZ_HTTP_ENDPOINT=https://my.super.test.endpoint/v1/data' \
                              "INTERFACE_IP=${INTERFACE_IP}" \
@@ -106,8 +69,9 @@ testSetupF2kModuleVariables() {
     genericTestModule 2 f2k 'NETFLOW_KAFKA_TOPIC=flow' \
                             'NETFLOW_PROBES={}'
 
-    "${PROZZIE_PREFIX}"/bin/prozzie config f2k NETFLOW_PROBES '{"keyA":"valueA","keyB":"valueB"}'
-    "${PROZZIE_PREFIX}"/bin/prozzie config f2k NETFLOW_KAFKA_TOPIC myFlowTopic
+    "${PROZZIE_PREFIX}"/bin/prozzie config set f2k \
+        NETFLOW_PROBES='{"keyA":"valueA","keyB":"valueB"}' \
+        NETFLOW_KAFKA_TOPIC=myFlowTopic
 
     genericTestModule 2 f2k  'NETFLOW_PROBES={"keyA":"valueA","keyB":"valueB"}' \
                              'NETFLOW_KAFKA_TOPIC=myFlowTopic'
@@ -135,10 +99,11 @@ testSetupMonitorModuleVariables() {
                                 'MONITOR_REQUEST_TIMEOUT=25' \
                                 "MONITOR_SENSORS_ARRAY=''"
 
-    "${PROZZIE_PREFIX}"/bin/prozzie config monitor MONITOR_CUSTOM_MIB_PATH "${mibs_directory2}"
-    "${PROZZIE_PREFIX}"/bin/prozzie config monitor MONITOR_KAFKA_TOPIC myMonitorTopic
-    "${PROZZIE_PREFIX}"/bin/prozzie config monitor MONITOR_REQUEST_TIMEOUT 60
-    "${PROZZIE_PREFIX}"/bin/prozzie config monitor MONITOR_SENSORS_ARRAY "'a,b,c,d'"
+    "${PROZZIE_PREFIX}"/bin/prozzie config set monitor \
+        MONITOR_CUSTOM_MIB_PATH="${mibs_directory2}" \
+        MONITOR_KAFKA_TOPIC=myMonitorTopic \
+        MONITOR_REQUEST_TIMEOUT=60 \
+        MONITOR_SENSORS_ARRAY="'a,b,c,d'" \
 
     genericTestModule 4 monitor "MONITOR_CUSTOM_MIB_PATH=${mibs_directory2}" \
                                 'MONITOR_KAFKA_TOPIC=myMonitorTopic' \
@@ -160,9 +125,10 @@ testSetupSfacctdModuleVariables() {
                                 'SFLOW_KAFKA_TOPIC=pmacct' \
                                 'SFLOW_RENORMALIZE=true'
 
-    "${PROZZIE_PREFIX}"/bin/prozzie config sfacctd SFLOW_AGGREGATE "a,b,c,d,e,f,g,h"
-    "${PROZZIE_PREFIX}"/bin/prozzie config sfacctd SFLOW_KAFKA_TOPIC mySflowTopic
-    "${PROZZIE_PREFIX}"/bin/prozzie config sfacctd SFLOW_RENORMALIZE false
+    "${PROZZIE_PREFIX}"/bin/prozzie config set sfacctd \
+        SFLOW_AGGREGATE="a,b,c,d,e,f,g,h" \
+        SFLOW_KAFKA_TOPIC=mySflowTopic \
+        SFLOW_RENORMALIZE=false \
 
     genericTestModule 3 sfacctd 'SFLOW_AGGREGATE=a,b,c,d,e,f,g,h' \
                                 'SFLOW_KAFKA_TOPIC=mySflowTopic' \
@@ -207,9 +173,7 @@ testSetupMqttModuleVariables() {
 testSetupSyslogModuleVariables() {
     ${_ASSERT_TRUE_} '"prozzie config setup syslog must done with no failure"' \
         "'\"${PROZZIE_PREFIX}\"/bin/prozzie config setup syslog'"
-}
 
-testGetSyslogModuleVariables() {
     while ! docker inspect --format='{{json .State.Health.Status}}' prozzie_kafka-connect_1| grep healthy >/dev/null; do :; done
 
     genericTestModule 11 syslog 'name=syslog' \
@@ -241,12 +205,6 @@ testDescribeMustShowHelpIfModuleIsNotPresent() {
     fi
 }
 
-testDescribeMustShowAnErrorIfModuleDoesNotExist() {
-    if "${PROZZIE_PREFIX}"/bin/prozzie config describe wrongModule; then
-        ${_FAIL_} '"prozzie config describe wrongModule must show error"'
-    fi
-}
-
 testSetupMustShowHelpIfModuleIsNotPresent() {
     if "${PROZZIE_PREFIX}"/bin/prozzie config setup; then
         ${_FAIL_} '"prozzie config setup must show help with failure"'
@@ -254,17 +212,17 @@ testSetupMustShowHelpIfModuleIsNotPresent() {
 }
 
 testConfigMustShowErrorIfModuleIsNotExist() {
-    if "${PROZZIE_PREFIX}"/bin/prozzie config wrongModule; then
-        ${_FAIL_} '"prozzie config wrongModule must show error"'
+    if "${PROZZIE_PREFIX}"/bin/prozzie config get wrongModule; then
+        ${_FAIL_} '"prozzie config get wrongModule must show error"'
     fi
 }
 
 testConfigMustShowHelpIfTryToSetMqttAndSyslogModules() {
-    if "${PROZZIE_PREFIX}"/bin/prozzie config mqtt kafka.topic myTopic; then
-        ${_FAIL_} '"prozzie config mqtt kafka.topic myTopic must show help"'
+    if "${PROZZIE_PREFIX}"/bin/prozzie config set mqtt kafka.topic=myTopic; then
+        ${_FAIL_} '"prozzie config set mqtt kafka.topic=myTopic must show help"'
     fi
-    if "${PROZZIE_PREFIX}"/bin/prozzie config syslog kafka.topic myTopic; then
-        ${_FAIL_} '"prozzie config syslog kafka.topic myTopic must show help"'
+    if "${PROZZIE_PREFIX}"/bin/prozzie config set syslog kafka.topic=myTopic; then
+        ${_FAIL_} '"prozzie config set syslog kafka.topic=myTopic must show help"'
     fi
 }
 
@@ -333,7 +291,9 @@ testEnableModule() {
         ${_FAIL_} '"prozzie config enable must link monitor compose file"'
     fi
 
-    snmptrap -v 2c -c public ${HOSTNAME} "" 1.3.6.1.4.1.2021.13.991 .1.3.6.1.2.1.1.6 s "Device in Wizzie"
+    if ! snmptrap -v 2c -c public ${HOSTNAME} "" 1.3.6.1.4.1.2021.13.991 .1.3.6.1.2.1.1.6 s "Device in Wizzie"; then
+        ${_FAIL_} '"snmptrap command failed"'
+    fi
 
     ${_ASSERT_EQUALS_} '"Incorrect number of topics for monitor"' \
     '1' '$("${PROZZIE_PREFIX}/bin/prozzie" kafka topics --list | grep monitor | wc -w)'

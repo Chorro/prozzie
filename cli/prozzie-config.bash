@@ -24,16 +24,18 @@
 declare -r PROZZIE_CLI_CONFIG="${BASH_SOURCE%/*}/config"
 declare -r PROZZIE_ENVS="${PREFIX:-${DEFAULT_PREFIX}}/etc/prozzie/envs"
 
-# .env file path
+# .env file path
 declare base_env_file="${PREFIX:-${DEFAULT_PREFIX}}/etc/prozzie/.env"
 
 printShortHelp() {
     printf "Handle prozzie configuration\n"
 }
 
-printHelp() {
-    printShortHelp
-    declare -A commands_and_descriptions=(
+printUsage() {
+    declare -A commands_and_options_descriptions=(
+        ["get <module>"]="Get the configuration of the specified module"
+        ["get <module> <key>..."]="Get the configuration of the specified key in specified module"
+        ["set <module> <key>=<value>..."]="Set the configuration of the list of pairs key-value for a specified module"
         ["wizard"]="Start modules wizard"
         ["describe <module>"]="Describe module vars"
         ["setup <module>"]="Configure module with setup assistant"
@@ -43,63 +45,145 @@ printHelp() {
         ["list-enabled"]="List all enabled modules"
         ["-h, --help"]="Show this help"
     )
-        declare -a order=(
-        "wizard"
+
+    declare -a actions_order=(
+        "get <module>"
+        "get <module> <key>..."
+        "set <module> <key>=<value>..."
         "describe <module>"
-        "setup <module>"
-        "describe-all"
         "enable <modules-list>"
         "disable <modules-list>"
+        "setup <module>"
+        "wizard"
+        "describe-all"
         "list-enabled"
+    )
+
+    declare -a options_order=(
         "-h, --help"
     )
 
-    printf "\tusage: prozzie config [<options>] [<module>] [<key>] [<value>]\n"
-    printf "\t\tOptions:\n"
+    printf "usage: prozzie config <action> [args]\n"
+    printf "   or: prozzie config <option>\n"
+    printf "\nAvailable actions are:\n"
 
-    for comm in "${order[@]}"
+    for comm in "${actions_order[@]}"
     do
-        apply_help_command_format "$comm" "${commands_and_descriptions[$comm]}"
+        apply_help_command_format "$comm" "${commands_and_options_descriptions[$comm]}"
+    done
+
+    printf "\nAvailable options are:\n"
+
+    for opt in "${options_order[@]}"
+    do
+        apply_help_command_format "$opt" "${commands_and_options_descriptions[$opt]}"
     done
 }
 
 describeModule () {
-    if [[ -f "$PROZZIE_CLI_CONFIG/$1.bash" ]]; then
-        . "$PROZZIE_CLI_CONFIG/$1.bash"
-        showVarsDescription
-        return 0
+    declare -r module="$1"
+
+    if [[ ! -f "$PROZZIE_CLI_CONFIG/$module.bash" ]]; then
+        printf "Module '%s' not found!\n" "$module" >&2
+        return 1
     fi
-    printf "Module '%s' not found!\n" "$2" >&2
-    return 1
+
+    . "$PROZZIE_CLI_CONFIG/$module.bash"
+    showVarsDescription
+    return 0
 }
 
-# Show help if option is not present
-if [[ $# -eq 0 ]]; then
-    printHelp
-fi
+##
+## @brief      Determines if the connector is managed by kafka connect.
+## @param      1 Connector name
+##
+## @return     True if kafka connect connector, False otherwise.
+##
+is_kafka_connect_connector () {
+    [[ "$1" == mqtt || "$1" == syslog ]]
+}
 
-if [[ $1 ]]; then
-    case $1 in
-        --shorthelp)
-            printShortHelp
-            exit 0
-        ;;
-        -h|--help)
-            printHelp
-            exit 0
+main() {
+    declare action="$1"
+
+    # Show help if options are not present
+    if [[ $# -eq 0 ]]; then
+        printUsage
+        exit 0
+    fi
+
+    shift
+
+    case $action in
+        get|set)
+            # Get module
+            declare -r module="$1"
+            shift
+
+            declare env_file="$PROZZIE_ENVS/$module.env"
+
+            # If module is referred to base module then set $env_file to $base_env_file
+            if [[ "$module" == base ]]; then
+                env_file="$base_env_file"
+            fi
+
+            # Check if env file exists (excluded mqtt and syslog)
+            if ! is_kafka_connect_connector "$module" &&  [[ ! -f "$env_file" ]]; then
+                printf "Module '%s' does not have a defined configuration (*.env file)\n" "$module">&2
+                printf "You can set '%s' module configuration using setup action.\n" "$module">&2
+                printf "For more information see the command help\n" >&2
+                exit 1
+            fi
+
+            declare -r module_config_file="$PROZZIE_CLI_CONFIG/$module.bash"
+            # Check that module's config file exists
+            if [[ ! -f "$module_config_file" ]]; then
+                printf "Unknow module: '%s'\n" "$module" >&2
+                printf "Please use 'prozzie config describe-all' to see a complete list of modules and their variables\n" >&2
+                exit 1
+            fi
+
+            . "$module_config_file"
+            case $action in
+                set)
+                    if is_kafka_connect_connector "$module"; then
+                        printf "Please use next commands in order to configure ${module}:\n" >&2
+                        printf "prozzie kcli rm <connector>\n" >&2
+                        printf "prozzie config setup ${module}\n" >&2
+                        exit 1
+                    fi
+                    zz_set_vars "$env_file" "$@" || exit 1
+                ;;
+                get)
+                    if is_kafka_connect_connector "$module"; then
+                        if [[ -z $@ ]]; then
+                                "${PREFIX}"/bin/prozzie kcli get "$module"
+                                exit 0
+                        fi
+
+                        declare -r vars=$(str_join '|' "$@")
+
+                        "${PREFIX}"/bin/prozzie kcli get "$module"|grep -P "^(${vars})=.*$"|while read -r line; do printf "%s\n" "${line#*=}"; done
+                        exit 0
+                    fi
+
+                    zz_get_vars "$env_file" "$@"
+                    exit 0
+                ;;
+            esac
         ;;
         wizard)
             wizard "$src_env_file"
             exit 0
         ;;
         describe)
-            if [[ $2 ]]; then
-                printf "Module ${2}: \n"
-                describeModule "$2" || exit 1
-            else
-                printHelp
-                exit 1
+            module="$1"
+            if [[ $module ]]; then
+                printf "Module %s: \n" "${module}"
+                describeModule "$module" && exit 0 || exit 1
             fi
+            printUsage
+            exit 1
         ;;
         describe-all)
             declare -r prefix="*/cli/config/"
@@ -116,76 +200,48 @@ if [[ $1 ]]; then
             exit 0
         ;;
         setup)
-            if [[ -f "$PROZZIE_CLI_CONFIG/$2.bash" ]]; then
-                module="$PROZZIE_CLI_CONFIG/$2.bash"
-                . "$module"
-                if [[ $2 == mqtt || $2 == syslog ]]; then
+            module="$1"
+            if [[ -f "$PROZZIE_CLI_CONFIG/$module.bash" ]]; then
+                . "$PROZZIE_CLI_CONFIG/$module.bash"
+                if is_kafka_connect_connector "$module"; then
                     . "${BASH_SOURCE%/*}/include/kcli_base.bash"
                     tmp_fd properties
-                    kcli_setup "/dev/fd/${properties}" "$2"
+                    kcli_setup "/dev/fd/${properties}" "$module"
                     exec {properties}<&-
                 else
-                    ENV_FILE="$PROZZIE_ENVS/$2.env"
-                    printf "Setup %s module:\n" "$2"
-                    shift 1
-                    app_setup "$@"
+                    ENV_FILE="$PROZZIE_ENVS/$module.env"
+                    printf "Setup %s module:\n" "$module"
+                    shift
+                    app_setup "$module"
                 fi
                 exit 0
             fi
-            printHelp
+            printUsage
             exit 1
         ;;
         enable|disable)
-            zz_enable_disable_modules $@
+            zz_enable_disable_modules "$action" "$@"
             exit 0
         ;;
         list-enabled)
             zz_list_enabled_modules
             exit 0
         ;;
+        --shorthelp)
+            printShortHelp
+            exit 0
+        ;;
+        -h|--help)
+            printShortHelp
+            printUsage
+            exit 0
+        ;;
         *)
-            declare -r option="$PROZZIE_CLI_CONFIG/$1.bash"
-
-            if [[ ! -f "$option" ]]; then
-                printf "Unknow module: %s\nPlease use 'prozzie config describe-all' to see a complete list of modules and their variables\n" "$1" >&2
-                exit 1
-            fi
-
-            . "$option"
-            module=$1
-            shift 1
-            declare env_file="$PROZZIE_ENVS/$module.env"
-            # If module is referred to base module then set $env_file to $base_env_file
-            if [[ "$module" =~ ^base$ ]]; then
-                env_file="$base_env_file"
-            fi
-            case $# in
-                0)
-                    if [[ "$module" =~ ^(mqtt|syslog)$ ]]; then
-                        "${PREFIX}"/bin/prozzie kcli get "$module"
-                        exit 0
-                    fi
-                    zz_get_vars "$env_file"
-                    exit 0
-                ;;
-                1)
-                    if [[ "$module" =~ ^(mqtt|syslog)$ ]]; then
-                        "${PREFIX}"/bin/prozzie kcli get "$module"|grep -P "^${1}=.*$"|sed 's/'"${1}"'=//'
-                        exit 0
-                    fi
-                    zz_get_var "$env_file" "$@"
-                    exit 0
-                ;;
-                2)
-                    if [[ "$module" =~ ^(mqtt|syslog)$ ]]; then
-                        printf "Please use next commands in order to configure ${module}:\n" >&2
-                        printf "prozzie kcli rm <connector>\n" >&2
-                        printf "prozzie config setup ${module}\n" >&2
-                        exit 1
-                    fi
-                    zz_set_var "$env_file" "$@" || exit 1
-                ;;
-            esac
+            printf "error: unknown action '%s'\n" "$action"
+            printUsage
+            exit 1
         ;;
     esac
-fi
+}
+
+main "$@"

@@ -347,6 +347,7 @@ function app_setup () {
   declare -r src_env_file="${PREFIX}/etc/prozzie/.env"
   declare -r prozzie_compose_dir="${PREFIX}/share/prozzie/compose"
   create_directory_tree
+  echo $PROZZIE_VERSION > "${PREFIX}/etc/prozzie/.version"
 
   trap install_rollback EXIT
 

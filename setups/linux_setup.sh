@@ -16,7 +16,6 @@
 # limitations under the License.
 
 
-declare -r GITHUB_ACCESS_TOKEN=4ea54f05cd7111c2e886f2c26f59b99109245053
 declare -r PROZZIE_VERSION=0.5.0
 
 . /etc/os-release
@@ -33,7 +32,7 @@ if [[ ! -f "${common_filename}" ]]; then
     declare -r tarball_endpoint="wizzie-io/prozzie/archive/${PROZZIE_VERSION}.tar.gz"
     (cd "$tmp_dir";
         curl -L \
-        "https://${GITHUB_ACCESS_TOKEN}@github.com/${tarball_endpoint}" |
+        "https://github.com/${tarball_endpoint}" |
         tar xzp;
         "./prozzie-${PROZZIE_VERSION}/setups/linux_setup.sh"
         )

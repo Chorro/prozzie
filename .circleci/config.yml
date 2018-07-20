@@ -70,11 +70,6 @@ jobs:
     docker:
       - image: gcr.io/wizzie-registry/prozzie-test-env:ubuntu-16.04
 
-  ubuntu17.10:
-    <<: *P_tests
-    docker:
-      - image: gcr.io/wizzie-registry/prozzie-test-env:ubuntu-17.10
-
   ubuntu18.04:
     <<: *P_tests
     docker:
@@ -116,7 +111,6 @@ workflows:
   tests:
     jobs:
       - ubuntu16.04
-      - ubuntu17.10
       - ubuntu18.04
       - centos7
       - debian9
@@ -124,7 +118,6 @@ workflows:
       - coverage:
           requires:
             - ubuntu16.04
-            - ubuntu17.10
             - ubuntu18.04
             - centos7
             - debian9

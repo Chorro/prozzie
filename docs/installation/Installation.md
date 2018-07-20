@@ -12,9 +12,7 @@ Prozzie will be downloaded & installed if you execute the next command in a
 linux terminal:
 
 ```bash
-bash <(curl -L \
-	--header 'Accept: application/vnd.github.v3.raw' \
-	'https://api.github.com/repos/wizzie-io/prozzie/contents/setups/linux_setup.sh?ref=0.5.0')
+bash -c "$(curl -L --header 'Accept: application/vnd.github.v3.raw' 'https://api.github.com/repos/wizzie-io/prozzie/contents/setups/linux_setup.sh?ref=0.5.0')"
 ```
 
 #### Installation from github repository

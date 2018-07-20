@@ -66,9 +66,7 @@ you through the entire installation. You can also use the next command if you
 don't want to waste your time messing with git:
 
 ```bash
-bash <(curl -L \
-	--header 'Accept: application/vnd.github.v3.raw' \
-	'https://api.github.com/repos/wizzie-io/prozzie/contents/setups/linux_setup.sh?ref=0.5.0')
+bash -c "$(curl -L --header 'Accept: application/vnd.github.v3.raw' 'https://api.github.com/repos/wizzie-io/prozzie/contents/setups/linux_setup.sh?ref=0.5.0')"
 ```
 
 You will be asked for a prozzie installation path. After installation, you can

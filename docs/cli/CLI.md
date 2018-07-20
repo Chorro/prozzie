@@ -19,6 +19,9 @@ internals or advance docker or docker-compose commands.
 `-h|--help`
 : Shows prozzie CLI help
 
+`-v|--version`
+: Shows running prozzie version
+
 ## Commands
 
 ### Prozzie configuration operation

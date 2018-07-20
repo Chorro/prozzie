@@ -61,6 +61,11 @@ main_help () {
 # Exit status:
 #  Subcommand exit status
 main () {
+    if [[ "$1" == '--version' || $1 == '-v' ]]; then
+        printf "Prozzie - Wizzie Data Platform (WDP) main entrypoint\\nVersion: %s\\n" "$(<"${PREFIX}/etc/prozzie/.version")"
+        exit 0
+    fi
+
     declare -r prozzie_cli_prefix="${PREFIX}/share/prozzie/cli/prozzie-"
 
     if [[ $# == 0 || $1 == '-h' || $1 == '--help' ]]; then

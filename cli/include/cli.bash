@@ -94,3 +94,19 @@ zz_cli_subcommand_help () {
         printf '\t%s\t%s\n' "${subcommand}" "${shorthelp}"
     done
 }
+
+##
+## @brief      Determines if it exists key in module_envs associative array.
+## @example    if exists_key_in_module_envs kafka_topic; then echo "T"; fi
+##
+## @note       Can't accept array name as parameters because centos' bash4.2
+##             does not support dereference it that way.
+##
+## @param      Key to find in module_envs array
+##
+## @return     True if exists key, False otherwise.
+##
+exists_key_in_module_envs () {
+    needle="$1"
+    [[ "${module_envs[$needle]+_}" ]]
+}

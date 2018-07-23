@@ -111,7 +111,7 @@ zz_variable () {
 zz_variables_env_update_array () {
   declare prompt var_key var_val
   while IFS='=' read -r var_key var_val || [[ -n "$var_key" ]]; do
-    if [ ${module_envs[$var_key]+_} ]; then
+    if exists_key_in_module_envs "$var_key"; then
       # Update zz variable
       prompt="${module_envs[$var_key]#*|}"
       module_envs[$var_key]=$(printf "%s|%s" "$var_val" "$prompt")
@@ -243,7 +243,7 @@ zz_get_vars () {
 #  1 - An error has ocurred while set a variable (variable not found or mispelled)
 zz_set_var () {
     if [[ ! -z "$3" ]]; then
-        if [[ "${module_envs[$2]+1}" == 1 ]]; then
+        if exists_key_in_module_envs "$2"; then
             declare value="$3"
 
             if func_exists "$2_sanitize"; then

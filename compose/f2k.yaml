@@ -2,7 +2,7 @@ version: '3.6'
 
 services:
   f2k:
-    image: gcr.io/wizzie-registry/prozzie-f2k:1.1.0
+    image: gcr.io/wizzie-registry/prozzie-f2k:1.2.0
     restart: always
     depends_on:
       - kafka

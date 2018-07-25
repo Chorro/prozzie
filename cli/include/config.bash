@@ -217,7 +217,7 @@ zz_get_vars () {
         shift
 
         # If keys list is empty then show all variables
-        if [[ -z $@ ]]; then
+        if [[ $# -eq 0 ]]; then
             declare -A env_content
             # Read from env_file
             while IFS='=' read -r key val || [[ -n "$key" ]]; do

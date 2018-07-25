@@ -159,7 +159,7 @@ main() {
                 ;;
                 get)
                     if is_kafka_connect_connector "$module"; then
-                        if [[ -z $@ ]]; then
+                        if [[ $# -eq 0 ]]; then
                                 "${PREFIX}"/bin/prozzie kcli get "$module"
                                 exit 0
                         fi

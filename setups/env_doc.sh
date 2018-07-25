@@ -39,7 +39,7 @@ function print_envs () {
 	# module_envs is imported
 	# shellcheck disable=SC2154
 	for env in "${!module_envs[@]}"; do
-		IFS='|' read env_default env_description <<< "${module_envs[$env]}"
+		IFS='|' read -r env_default env_description <<< "${module_envs[$env]}"
 		if [[ -z "$env_default" ]]; then
 			env_default='(No default)'
 		fi

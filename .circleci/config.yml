@@ -65,6 +65,15 @@ P_tests: &P_tests
           - prozzie
 
 jobs:
+  shellcheck:
+    docker:
+      - image: koalaman/shellcheck-alpine:v0.5.0
+    steps:
+      - checkout
+      - run: >-
+          find . \( -name '*.bash' -o -name '*.sh' \) \
+              -exec /bin/shellcheck -x -e SC1090,SC1091 {} \+
+
   ubuntu16.04:
     <<: *P_tests
     docker:
@@ -110,6 +119,7 @@ workflows:
   version: 2
   tests:
     jobs:
+      - shellcheck
       - ubuntu16.04
       - ubuntu18.04
       - centos7

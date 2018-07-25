@@ -28,7 +28,6 @@ Please do these checks in PR and delete it from PR message:
       Code coverage should show that tests passed by the code I modified.
 - [ ] New libraries/components have a test to show when they are outdated.
 
-# Automatic tools
-- [ ] Check code changes against these tools:
-  - [ ] https://www.shellcheck.net/
+# Use of tools
+- [ ] Check text changes against these tools:
   - [ ] Grammarly or similar (if available)

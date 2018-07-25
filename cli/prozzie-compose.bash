@@ -70,7 +70,8 @@ for yaml in "${PREFIX}/etc/prozzie/compose/"*.yaml; do
 done
 
 # Needed for .env file location
-cd "${PREFIX}/etc/prozzie" # TODO test docker-compose --project-directory
+# TODO test docker-compose --project-directory
+cd "${PREFIX}/etc/prozzie" || exit 1
 
 # Need to not to quote action in order to not to pass empty string argument
 # shellcheck disable=SC2086

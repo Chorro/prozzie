@@ -33,7 +33,7 @@ if [[ ! -f "${common_filename}" ]]; then
     # We want tmp_dir to expand here, not when trap is signaled
     trap "rm -rf $(printf '%q' "${tmp_dir}")" EXIT
     declare -r tarball_endpoint="wizzie-io/prozzie/archive/${PROZZIE_VERSION}.tar.gz"
-    (cd "$tmp_dir";
+    (cd "$tmp_dir" || exit 1;
         curl -L \
         "https://github.com/${tarball_endpoint}" |
         tar xzp;

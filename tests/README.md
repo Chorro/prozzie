@@ -35,3 +35,16 @@ Currently providing the prozzie cli and installer path, to get useful coverage
 reports
 :KCOV_OUT
 Location of coverage report. `coverage.out` by default.
+
+## Tests
+### tests_config*.bash
+Tests the configuration system. They do changes over the prozzie installation,
+so you can't run these tests in parallel with others.
+
+### tests_prozzie*.bash
+Test basic CLI behavior, like error returning or help. You can run these tests
+in parallel.
+
+### tests_kafka*.bash
+Test kafka behavior. They can only create topics, or destroy topics created in
+the own test, allowing them to run in parallel.

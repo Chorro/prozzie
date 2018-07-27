@@ -2,8 +2,13 @@
 ---
 
 # JSON/kafka
+You can send JSON data over kafka using `prozzie kafka produce` command, and check proper reception with `prozzie kafka produce`.
 
-You can send JSON data over kafka using in-prozzie embedded kafka producer
+Produce a valid JSON message is command user's responsibility; the command will not check that.
+
+For more details please see the [CLI](../cli/CLI) documentation.
+
+You can also send JSON data over kafka using in-prozzie embedded kafka producer
 directly (or similar kafka client) to port 9092, and make sure to use the
 previously exported IP address in prozzie installation to consume from kafka:
 

@@ -366,7 +366,7 @@ function app_setup () {
   log info "Installing ${PROZZIE_VERSION} release of Prozzie..."$'\n'
   cp -R -- "${installer_directory}/../compose/"*.yaml "${prozzie_compose_dir}"
 
-  # Enable base module by default
+  # Enable base module by default
   zz_link_compose_file --no-set-default base
 
   declare -r prozzie_git='https://github.com/wizzie-io/prozzie'

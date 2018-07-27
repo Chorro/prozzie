@@ -18,3 +18,5 @@ $ curl -d \
 '{"test":1,"timestamp":1518086046}{"test":2,"timestamp":1518086047}' \
 localhost:7980/v1/data/testtopic
 ```
+
+You can check that messages are properly delivered using `prozzie kafka consume testtopic`.

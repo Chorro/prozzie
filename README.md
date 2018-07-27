@@ -3,8 +3,9 @@
 </p>
 
 [![wizzie-io](https://img.shields.io/badge/powered%20by-wizzie.io-F68D2E.svg)](https://github.com/wizzie-io/)
-[![CircleCI](https://circleci.com/gh/wizzie-io/prozzie/tree/master.svg?style=shield&circle-token=0f81b1424c32aa36f1e327701a0cd84dbc0f102b)](https://circleci.com/gh/wizzie-io/prozzie/tree/master)
+[![CircleCI](https://circleci.com/gh/wizzie-io/prozzie/tree/master.svg?style=shield)](https://circleci.com/gh/wizzie-io/prozzie/tree/master)
 [![Docs](https://img.shields.io/badge/docs-current-brightgreen.svg)](https://wizzie-io.github.io/prozzie/)
+![Platforms](https://img.shields.io/badge/platforms-Linux-282828.svg?longCache=true&style=flat)
 [![GitHub release](https://img.shields.io/github/release/wizzie-io/prozzie.svg)](https://github.com/wizzie-io/prozzie/releases/latest)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
@@ -63,10 +64,10 @@ example echo server that will receive JSON messages in the demo).
 
 Clone the repo and execute the `setups/linux_setup.sh` script that will guide
 you through the entire installation. You can also use the next command if you
-don't want to waste your time messing with git:
+don't want to waste your time messing with git you can run next command as root user or sudo command:
 
 ```bash
-bash -c "$(curl -L --header 'Accept: application/vnd.github.v3.raw' 'https://api.github.com/repos/wizzie-io/prozzie/contents/setups/linux_setup.sh?ref=0.5.0')"
+sudo bash -c "$(curl -L --header 'Accept: application/vnd.github.v3.raw' 'https://api.github.com/repos/wizzie-io/prozzie/contents/setups/linux_setup.sh?ref=0.5.0')"
 ```
 
 You will be asked for a prozzie installation path. After installation, you can

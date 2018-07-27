@@ -4,18 +4,18 @@
 # MQTT
 
 ## Interactive script
-You can execute `setups/mqtt_setup.sh` to interactively configure one mqtt kafka
+You can run `prozzie config setup mqtt` to interactively configure one mqtt kafka
 connector. You will be asked for the next variables, that can't have any
 default:
 
 mqtt__server_uris
-:MQTT brokers
-
-kafka__topic
-:MQTT Topics to consume
+: MQTT brokers
 
 mqtt__topic
-:Topic to produce MQTT consumed messages
+: MQTT Topics to consume
+
+kafka__topic
+: Topic to produce MQTT consumed messages
 
 However, there are some others "hidden" variables that configure connector.
 They will be output at the end of interactive setup, and you can reuse them
@@ -46,7 +46,7 @@ mqtt.qos=1
 message_processor_class=com.evokly.kafka.connect.mqtt.sample.StringProcessor
 ```
 
-You need to configure the mqtt.properties file with your properties:
+You need to configure a mqtt.properties file with your properties:
 
 mqtt.server_uris
 : The MQTT brokers.
@@ -60,3 +60,5 @@ kafka.topic
 When you configure the `mqtt.properties` you need to create the connector:
 
 `prozzie kcli create mqtt-connector < mqtt.properties`
+
+You can check that messages are properly delivered using `prozzie kafka consume <your-mqtt-topic>`

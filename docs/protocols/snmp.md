@@ -14,6 +14,20 @@ MONITOR_SENSORS_ARRAY='{"sensor_id":1,"timeout":2000,"sensor_name": "my-sensor",
 ```
 
 ## SNMP traps
-To listen for snmp in a specific port you have to use the `MONITOR_TRAPS_PORT`
-variable that will be asked in `monitor_setup.sh`. You can leave it blank for
-no traps listening at all.
+To listen for snmp in a specific port you have to use the `TRAPS_PORT` environment variable. This variable is defined in docker-compose yaml file with port number `162` by default.
+
+You can check that messages are properly delivered using `prozzie kafka consume <your-monitor-topic>`.
+
+## Variables
+
+MONITOR_REQUEST_TIMEOUT
+: Seconds between monitor polling. By default `25`
+
+MONITOR_KAFKA_TOPIC
+: Topic to produce monitor metrics. By default `monitor`
+
+MONITOR_CUSTOM_MIB_PATH
+: Monitor custom MIB path. By default `monitor_custom_mibs`
+
+MONITOR_SENSORS_ARRAY
+: Monitor agents array. By default `''`

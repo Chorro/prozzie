@@ -37,3 +37,5 @@ When you configure the `syslog.properties` you need to create the connector:
 
 ## Warning
 Currently, the only port in what you can expose syslog server is 1514.
+
+You can check that messages are properly delivered using `prozzie kafka consume <your-syslog-topic>`.

@@ -4,6 +4,8 @@
   url: /installation/Installation
 - title: Command Line Interface
   url: /cli/CLI
+- title: Limitations
+  url: /installation/Limitations
 - title: Protocols
   children:
     - title: http

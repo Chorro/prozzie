@@ -587,7 +587,7 @@ zz_list_enabled_modules() {
     declare -r search_prefix='*/compose/'
     declare -r suffix='.yaml'
 
-    # Yaml modules
+    # Yaml modules
     for module in "${PREFIX}"/etc/prozzie/compose/*.yaml; do
         module=${module#$search_prefix}
         printf '%s\n' "${module%$suffix}" >&2

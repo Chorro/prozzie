@@ -4,65 +4,70 @@
 # Prozzie Command Line Interface
 
 ## Description
+
 Prozzie is the main entry point of Wizzie Data Plane (WDP) platform.
 
-Prozzie CLI allows the user (or admin) operate prozzie with no need to know
+Prozzie CLI allows the user (or admin) to operate prozzie with no need to know
 internals or advance docker or docker-compose commands.
 
 ## Synopsis
+
 `prozzie [-h|--help] <command> [<command args>]`
 
 ## Options
+
 `-h|--help`
 : Shows prozzie CLI help
 
 ## Commands
 
 ### Prozzie configuration operation
-You can handle prozzie configuration with `prozzie config` subcommand.
+
+You can handle prozzie components configuration with `prozzie config` command. This command allows you to configure modules with a `wizard` assistant, `get`, `set` and `setup` prozzie components configuration and `enable` or `disable` modules.
+
+#### Checking prozzie configuration with basic actions
+
+You can use `get` and `set` actions to check and list all variables in a specific module.
+
+You can get a complete key-value list of variables for a specified module:
 
 ```bash
-prozzie config [<options>] [<module>] [<key>] [<value>]
-```
-
-#### Checking prozzie configuration
-If you doesn't set any option, you can use next command to check and list all variables in a specific module:
-
-```bash
-prozzie config <module>
-```
-
-i.e:
-
-```bash
-prozzie config base
-```
-
-You can get a specific variable value with next command:
-
-```bash
-prozzie config <module> <key>
+prozzie config get <module>
 ```
 
 i.e:
 
 ```bash
-prozzie config base INTERFACE_IP
+$ prozzie config get base
 ```
 
-You can set a specific variable value with next command:
+You can get a specified variable value with next command:
 
 ```bash
-prozzie config <module> <key> <value>
+prozzie config get <module> <key1> <key2> ··· <keyN>···
 ```
 
 i.e:
 
 ```bash
-prozzie config base INTERFACE_IP 192.168.1.100
+$ prozzie config get base INTERFACE_IP CLIENT_API_KEY
 ```
 
-`prozzie config` command allows you check next modules:
+You can set a specific a list of variables with next action:
+
+```bash
+prozzie config set <module> <key-value-1> <key-value-2> ··· <key-value-N> ···
+```
+
+i.e:
+
+```bash
+$ prozzie config set base INTERFACE_IP=192.168.1.100 CLIENT_API_KEY=myAwesomeAPIKey
+```
+
+As you can see, the format of key-value pairs are <key>=<value>
+
+`prozzie config` command allows you check and handle the configuration in next modules:
 
 - [x] [**base**](https://github.com/wizzie-io/prozzie/blob/master/docs/installation/Installation.md)
 - [x] [**f2K**](https://github.com/wizzie-io/prozzie/blob/master/docs/protocols/flow.md)
@@ -71,23 +76,31 @@ prozzie config base INTERFACE_IP 192.168.1.100
 - [x] [**syslog**](https://github.com/wizzie-io/prozzie/blob/master/docs/protocols/syslog.md)
 - [x] [**mqtt**](https://github.com/wizzie-io/prozzie/blob/master/docs/protocols/mqtt.md)
 
-#### Prozzie config options
+#### Prozzie config actions
 
-Prozzie config command have next options:
+Prozzie config command has next actions:
 
-`-w|--wizard` : Allow you configure all modules with wizard assitant.
+`get`: Allow you get information about prozzie component configuration
 
-`-d|--describe <module>` : Shows what variables have a specific module.
+`set`: Allow you handle prozzie component configuration
 
-`-s|--setup <module>` : Allow you configure a module with setup assistant.
+`wizard`: Allow you configure all available modules with wizard assistant
 
-`--describe-all` : Shows all variables of each module.
+`describe <module>`: Shows what variables have a specific module
 
-`--enable <module1, module2, ···, moduleN>` : Enable selected module to run with `prozzie up` command
+`setup <module>`: Allow you configure a module with setup assistant
 
-`--disable <module1, module2, ···, moduleN>` : Disable selected module in order to avoid run it with `prozzie up` command
+`describe-all`: Shows all variables of each module
 
-`-h|--help` : Shows prozzie help.
+`enable <module1, module2, ···, moduleN>`: Enable selected modules to run with `prozzie up` command
+
+`disable <module1, module2, ···, moduleN>`: Disable selected modules to avoid run it with `prozzie up` command
+
+`list-enabled`: Shows only enabled modules
+
+Prozzie config command has next options:
+
+`-h|--help`: Shows prozzie help
 
 ### Prozzie service operation
 
@@ -108,7 +121,6 @@ You have the next commands for basic prozzie operation:
 `prozzie up`
 : (re)Create and start prozzie services
 
-
 You can start, stop, create or destroy prozzie compose with installed commands
 `prozzie start`, `prozzie stop`, `prozzie up` and `prozzie down`, respectively.
 
@@ -125,6 +137,7 @@ So, `prozzie start`, `prozzie stop`, `prozzie up` and
 `prozzie compose [up|down|...]`, and arguments will be also forwarded.
 
 ### Prozzie components logs
+
 You can use the command `logs` to see the different prozzie components logs:
 
 ```bash
@@ -139,30 +152,36 @@ $ prozzie logs -f
 
 And check only a specific component if you append that component's name. For
 example, to check kafka logs:
+
 ```bash
 $ prozzie logs kafka
 ```
 
 ### Prozzie message queue operation
+
 #### Topic management
+
 You can manage topics with `prozzie kafka topics` subcommand. If you execute
 it, you can check the options it offers to you. Check included examples in
 this document.
 
 ##### Creating topics
+
 ```bash
-prozzie kafka topics --create --topic abc --partitions 1 --replication-factor 1
+$ prozzie kafka topics --create --topic abc --partitions 1 --replication-factor 1
 ```
 
 Note that you don't need to create a topic before produce data. Kafka cluster
 creates it for you at the same moment you produce the first message.
 
 #### List topics
+
 ```bash
-prozzie kafka topics --list
+$ prozzie kafka topics --list
 ```
 
 #### Produce messages
+
 ```bash
 prozzie kafka produce <topic>
 ```
@@ -170,22 +189,26 @@ prozzie kafka produce <topic>
 You can introduce as many messages as you want, separated by a newline.
 
 #### Consume messages
+
 ```bash
 prozzie kafka consume <topic> [<partition>]
 ```
 
 You can consume from many topics using `--whitelist` or `--blacklist`:
+
 ```bash
 prozzie kafka consume --whitelist '<topic1>|<topic2>|...'
 prozzie kafka consume --blacklist '<topic1>|<topic2>|...'
 ```
 
-Or consume from the earlier message in the kafka log
+Or consume from the earlier message in the kafka log:
+
 ```bash
 prozzie kafka consume <topic> [<partition>] --from-beginning
 ```
 
 #### Advanced operation
+
 If you know how to use kafka distributed configuration scripts, you can
 execute them directly using
 `prozzie compose exec kafka /opt/kafka/bin/<you_script>`.
@@ -196,7 +219,7 @@ You can create your own prozzie CLI subcommands just placing it under
 `<installation dir>/share/prozzie/cli/prozzie-<cmd>.bash`. For example, `foo`
 subcommand would be `<installation dir>/share/prozzie/cli/prozzie-foo.bash`.
 This new CLI command has to provide a short guide of what does it do via
-`--shorthelp`, in order to be shown in `prozzie` help. Also, it will be provided
+`--shorthelp`, to be shown in `prozzie` help. Also, it will be provided
 with prozzie installation prefix with `PREFIX` environment variable.
 
 Beyond that, each prozzie CLI subcommand must provide treatment for it's

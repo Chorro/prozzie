@@ -13,19 +13,17 @@ For example, executing linux setup this way:
 NETFLOW_PROBES='{"sensors_networks":{"127.0.0.1":{"observations_id":{"default":{}}}}}' setups/f2k_setup.sh
 ```
 
-To configure netflow probe, please use [f2k_setup.sh](../setups/f2k_setup.sh)
-over a valid prozzie installation. You will be asked for the next questions:
+To configure netflow probe, please use [prozzie config](../cli/CLI) command over a valid prozzie installation.
 
 NETFLOW_PROBES
-:Netflow probes to expect netflow from, following the format described in
+: Netflow probes to expect netflow from, following the format described in
 [f2k readme](https://github.com/wizzie-io/f2k/blob/master/README.md#sensors-config).
 
-NETFLOW_COLLECTOR_PORT
-:Port to listen for netflow traffic. It's 2055 by default.
-
 NETFLOW_KAFKA_TOPIC
-:Topic to produce netflow traffic. If you want flow treatment, it's better to
+: Topic to produce netflow traffic. If you want flow treatment, it's better to
 use the `flow` default.
+
+You can check that messages are properly delivered using `prozzie kafka consume <your-netflow-topic>`.
 
 ### Netflow using nfacctd
 You can use you pmacct nfacctd flow collector if you provide it with a config
@@ -40,14 +38,11 @@ in prozzie using [sfacctd_setup.sh](../setups/sfacctd_setup.sh).
 You will be asked about these variables:
 
 SFLOW_KAFKA_TOPIC
-:Topic to produce sflow traffic. Need to let it by default if you want proper
+: Topic to produce sflow traffic. Need to let it by default if you want proper
 indexing.
 
-SFLOW_COLLECTOR_PORT
-:Ports to listen for sflow traffic.
-
 SFLOW_RENORMALIZE
-:Normalize sflow byte/packet counter based on sflow packet sampling rate. Check
+: Normalize sflow byte/packet counter based on sflow packet sampling rate. Check
 the [pmacct Oficial Config Keys](http://wiki.pmacct.net/OfficialConfigKeys) for
 more info.
 
@@ -58,6 +53,8 @@ memory and CPU will sfacctd use.
 In order to use your own sfacctd outside prozzie, you can configure it to send
 to wizzie prozzie, following a configuration found in [pmacctd](#pmacctd), but
 using `sfacctd_renormalize` instead of `pmacctd_renormalize`, and no interface.
+
+You can check that messages are properly delivered using `prozzie kafka consume <your-sflow-topic>`.
 
 ## [pmacctd](http://www.pmacct.net/)
 You can use your own pmacctd probe installation to avoid sflow/netflow

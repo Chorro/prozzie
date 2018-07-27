@@ -48,3 +48,8 @@ in parallel.
 ### tests_kafka*.bash
 Test kafka behavior. They can only create topics, or destroy topics created in
 the own test, allowing them to run in parallel.
+
+### tests_install_cancel*.bash
+Test that will start the installation process, BUT they are not allowed to
+interact with docker daemon. You can execute these tests in parallel with
+others.

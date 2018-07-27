@@ -74,6 +74,13 @@ jobs:
           find . \( -name '*.bash' -o -name '*.sh' \) \
               -exec /bin/shellcheck -x -e SC1090,SC1091 {} \+
 
+  flake8:
+    docker:
+      - image: alpine/flake8:3.5.0
+    steps:
+      - checkout
+      - run: flake8 .
+
   ubuntu16.04:
     <<: *P_tests
     docker:
@@ -119,6 +126,7 @@ workflows:
   version: 2
   tests:
     jobs:
+      - flake8
       - shellcheck
       - ubuntu16.04
       - ubuntu18.04

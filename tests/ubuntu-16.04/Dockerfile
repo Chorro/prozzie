@@ -2,7 +2,6 @@ ARG BASE_DOCKER_IMAGE
 
 FROM ${BASE_DOCKER_IMAGE} AS builder
 ARG CXX
-ARG INSTALL_EPEL
 ARG IS_CENTOS
 ARG LIBDW_DEV
 ARG LIBZ_DEV
@@ -10,9 +9,7 @@ ARG LIBELF_DEV
 ARG PKG_CONFIG
 ARG PKG_MANAGER_INSTALL
 ARG PKG_MANAGER_UPDATE
-
-# Install epel in centos
-RUN ${INSTALL_EPEL}
+ARG PYTHON3
 
 # Get kcov dependencies
 RUN ${PKG_MANAGER_UPDATE} && ${PKG_MANAGER_INSTALL} \
@@ -21,13 +18,28 @@ RUN ${PKG_MANAGER_UPDATE} && ${PKG_MANAGER_INSTALL} \
 	${LIBELF_DEV} \
 	${LIBZ_DEV} \
 	${PKG_CONFIG} \
+	${PYTHON3} \
 	ca-certificates \
 	cmake \
 	curl \
 	gcc \
 	make \
-	patch \
-	python
+	patch
+
+
+# Use python3 in debian
+RUN ${IS_CENTOS} || ln -s /usr/bin/python3 /usr/bin/python
+
+# Obtain pexpect
+RUN ! ${IS_CENTOS} || ${PKG_MANAGER_INSTALL} epel-release
+RUN ! ${IS_CENTOS} || { \
+	yum install -y python36-setuptools && \
+	easy_install-3.6 --prefix=/usr pexpect; }
+
+# Obtain rkill (Centos don't have pslist)
+RUN ! ${IS_CENTOS} || { curl -o /usr/bin/rkill -L \
+	https://gitlab.com/pslist/pslist/raw/release/1.4.0/pslist && \
+	chmod +x /usr/bin/rkill; }
 
 WORKDIR /kcov
 ENV KCOV_VERSION 35
@@ -99,46 +111,47 @@ RUN ! ${IS_CENTOS} || { tgz=$(mktemp) && curl -L -o "$tgz" \
 		's|^./configure|./configure --prefix=/usr|;s|--enable-json|--disable-json|;/^build libyajl/d' bootstrap.sh && \
 	./bootstrap.sh; make install; }
 
-# Obtain rkill (Centos don't have pslist)
-RUN ! ${IS_CENTOS} || { curl -o /usr/bin/rkill -L \
-	https://gitlab.com/pslist/pslist/raw/release/1.4.0/pslist && \
-	chmod +x /usr/bin/rkill; }
-
 # Pack everything to add to final container. DO NOT use dockerfile COPY, since
 # it will not "rsync" directories, but expant it's content
 WORKDIR /
-RUN ["/bin/bash", "-c", "tar czf boot.tgz /usr/bin/{expect,kafkacat,kcov,rkill,shunit2,tclsh*} /usr/lib/{expect*,{lib,}tcl*} 2>&1 | grep -v 'No such file or directory'"]
+RUN ["/bin/bash", "-c", "tar czf boot.tgz /usr/bin/{expect,kafkacat,kcov,rkill,shunit2,tclsh*} /usr/lib/{python3.6/site-packages/,expect*,{lib,}tcl*} 2>&1 | grep -v 'No such file or directory'"]
 
 #
 # Actual run container
 #
 FROM ${BASE_DOCKER_IMAGE}
+ARG EXPECT
 ARG IS_CENTOS
 ARG KAFKACAT
 ARG LIBDW
 ARG PKG_MANAGER_INSTALL
 ARG PKG_MANAGER_UPDATE
 ARG PSLIST
-ARG TCL
-ARG EXPECT
-ARG TCLLIB
+ARG PYTHON3
+ARG PYTHON3_PEXPECT
 ARG SNMPTRAP
+ARG TCL
+ARG TCLLIB
 
 RUN ! ${IS_CENTOS} || ${PKG_MANAGER_INSTALL} epel-release
 RUN ${PKG_MANAGER_UPDATE} && ${PKG_MANAGER_INSTALL} \
 	${EXPECT} \
 	${KAFKACAT} \
-	${SNMPTRAP} \
 	${LIBDW} \
 	${PSLIST} \
-	${TCL} \
+	${PYTHON3_PEXPECT} \
+	${PYTHON3} \
+	${SNMPTRAP} \
 	${TCLLIB} \
+	${TCL} \
 	ca-certificates \
 	make \
-	rsync \
 	perl \
 	procps \
+	rsync \
 	socat
+
+RUN ! ${IS_CENTOS} || ln -s /usr/bin/python36 /usr/bin/python3
 
 COPY --from=builder /boot.tgz /
 RUN tar -C / -xzf /boot.tgz

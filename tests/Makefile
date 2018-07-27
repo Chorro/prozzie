@@ -33,24 +33,27 @@ clean:
 	rm -rfv $(tests_out) $(coverages) $(COVERAGE_OUT)
 
 BUILD_ARGS:=CXX EXPECT IS_CENTOS KAFKACAT LIBDW LIBDW_DEV LIBELF_DEV LIBZ_DEV \
-	PKG_CONFIG PKG_MANAGER_UPDATE PKG_MANAGER_INSTALL PSLIST TCL TCLLIB SNMPTRAP
+	PKG_CONFIG PKG_MANAGER_INSTALL PKG_MANAGER_UPDATE PSLIST PYTHON3 \
+	PYTHON3_PEXPECT SNMPTRAP TCL TCLLIB
 
 # Debian build arguments
 CXX_debian = g++
 EXPECT_debian = expect
 IS_CENTOS_debian = false
+KAFKACAT_debian = kafkacat
 LIBDW_debian = libdw1
 LIBDW_DEV_debian = libdw-dev
 LIBZ_DEV_debian = libz-dev
-PSLIST_debian = pslist
-KAFKACAT_debian = kafkacat
 PKG_CONFIG_debian = pkg-config
-PKG_MANAGER_UPDATE_debian = apt update
 PKG_MANAGER_INSTALL_debian = env DEBIAN_FRONTEND=noninteractive \
 	apt install --no-install-recommends -y
+PKG_MANAGER_UPDATE_debian = apt update
+PSLIST_debian = pslist
+PYTHON3_debian = python3
+PYTHON3_PEXPECT_debian = python3-pexpect
+SNMPTRAP_debian = snmp
 TCL_debian = tcl8.6
 TCLLIB_debian = tcllib
-SNMPTRAP_debian = snmp
 
 # Ubuntu uses the same arguments as debian
 $(foreach arg, $(BUILD_ARGS), $(eval $(arg)_ubuntu = $($(arg)_debian)))
@@ -64,6 +67,7 @@ LIBELF_DEV_centos = elfutils-devel
 LIBZ_DEV_centos = zlib-devel
 PKG_MANAGER_UPDATE_centos = true # Not needed
 PKG_MANAGER_INSTALL_centos = yum install -y
+PYTHON3_centos = python36
 SNMPTRAP_centos = net-snmp-utils
 
 # Expand to Dockerfile argument $(1) assignment of distro $(2)

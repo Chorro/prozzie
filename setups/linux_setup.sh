@@ -369,8 +369,14 @@ function app_setup () {
   # Enable base module by default
   zz_link_compose_file --no-set-default base
 
+  declare -r prozzie_git='https://github.com/wizzie-io/prozzie'
+  declare -r ip_help_url="${prozzie_git}/blob/master/FAQ.md#kafka-reachability"
+  declare -r ip_help_what='Prozzie'\''s Internal kafka advertised IP'
+  declare -r ip_hint='Introduce an externally reachable prozzie IP address'
+
   if [[ -z $INTERFACE_IP ]] && \
                       read_yn_response \
+                        --help "${ip_help_what}. ${ip_hint}. See ${ip_help_url}" \
                         "Do you want discover the IP address automatically?"; \
   then
       MAIN_INTERFACE=$(route -n | awk '{printf("%s %s\n", $1, $8)}' | grep 0.0.0.0 | awk '{printf("%s", $2)}')

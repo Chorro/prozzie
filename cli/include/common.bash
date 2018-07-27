@@ -57,10 +57,31 @@ command_exists () {
     command -v "$1" 2>/dev/null
 }
 
-# Read a y/n response and returns true if answer is yes
+# Read a y/n response and returns true if answer is yes.
+#
+# @param      [--help] Help text describing what the user is answering (in next
+#             parameter)
+# @param      Prompt text
+#
+# @return     True if answer is yes, else false.
+#
 read_yn_response () {
-    local reply;
-    read -p "$1 [Y/n]: " -n 1 -r reply
+    declare reply help_text='' possible_answers='Y/n'
+    if [[ $# -gt 1 && $1 == '--help' ]]; then
+        possible_answers='Y/n/h'
+        help_text="$2"
+        shift 2
+    fi
+
+    while true; do
+        read -p "$1 [$possible_answers]: " -n 1 -r reply
+        if [[ ! -z $help_text && ( $reply == 'h' || $reply == 'H' ) ]]; then
+            printf '\n%s\n' "$help_text"
+        else
+            break
+        fi
+    done
+
     if [[ ! -z $reply ]]; then
         printf '\n'
     fi

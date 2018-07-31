@@ -77,31 +77,31 @@ jobs:
   ubuntu16.04:
     <<: *P_tests
     docker:
-      - image: gcr.io/wizzie-registry/prozzie-test-env:ubuntu-16.04
+      - image: wizzieio/prozzie-test-env:ubuntu-16.04
 
   ubuntu18.04:
     <<: *P_tests
     docker:
-      - image: gcr.io/wizzie-registry/prozzie-test-env:ubuntu-18.04
+      - image: wizzieio/prozzie-test-env:ubuntu-18.04
 
   debian9:
     <<: *P_tests
     docker:
-      - image: gcr.io/wizzie-registry/prozzie-test-env:debian-9
+      - image: wizzieio/prozzie-test-env:debian-9
 
   debianbuster:
     <<: *P_tests
     docker:
-      - image: gcr.io/wizzie-registry/prozzie-test-env:debian-buster
+      - image: wizzieio/prozzie-test-env:debian-buster
 
   centos7:
     <<: *P_tests
     docker:
-      - image: gcr.io/wizzie-registry/prozzie-test-env:centos-7
+      - image: wizzieio/prozzie-test-env:centos-7
 
   coverage:
     docker:
-      - image: gcr.io/wizzie-registry/prozzie-test-env:ubuntu-18.04
+      - image: wizzieio/prozzie-test-env:ubuntu-18.04
     steps:
       - checkout
       - attach_workspace:

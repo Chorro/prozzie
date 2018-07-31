@@ -55,7 +55,7 @@ stability: included tools will be added and deleted as a convenience, so if you
 want to relay in them to your tests, please use your image.
 
 The testing instruction will be analogous to the previous answer, but using
-`gcr.io/wizzie-registry/prozzie-test-env:ubuntu-16.04` as the image.
+`wizzieio/prozzie-test-env:ubuntu-16.04` as the image.
 
 ## Adding an enhancement/feature
 

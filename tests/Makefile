@@ -80,5 +80,5 @@ $(docker_images): %: %/Dockerfile
 		--build-arg BASE_DOCKER_IMAGE=$(target_base_docker) \
 		$(foreach arg,$(BUILD_ARGS),--build-arg \
 			$(call arg_distro,$(arg),$(distro_family_target))) \
-		-t gcr.io/wizzie-registry/prozzie-test-env:$(@) \
+		-t wizzieio/prozzie-test-env:$(@) \
 		-f $(@)/Dockerfile .)

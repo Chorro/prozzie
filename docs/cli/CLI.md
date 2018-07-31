@@ -58,7 +58,7 @@ prozzie config <module> <key> <value>
 
 i.e:
 
-```bash 
+```bash
 prozzie config base INTERFACE_IP 192.168.1.100
 ```
 
@@ -145,7 +145,7 @@ $ prozzie logs kafka
 
 ### Prozzie message queue operation
 #### Topic management
-You can manage topics with `prozzie kafka topics` subcommand. If you execute 
+You can manage topics with `prozzie kafka topics` subcommand. If you execute
 it, you can check the options it offers to you. Check included examples in
 this document.
 

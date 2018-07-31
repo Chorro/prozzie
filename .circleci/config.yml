@@ -73,6 +73,12 @@ jobs:
       - run: >-
           find . \( -name '*.bash' -o -name '*.sh' \) \
               -exec /bin/shellcheck -x -e SC1090,SC1091 {} \+
+      - run:
+          name: Check for end of line blanks in text files
+          command: >
+            ! find  . \( \
+              -name '*.md' -o -name '*.py' -o -name '*.bash' -o -name '*.sh' \) \
+            -exec grep -n '[[:blank:]]$' {} \+
 
   flake8:
     docker:

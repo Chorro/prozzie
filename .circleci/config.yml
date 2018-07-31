@@ -79,6 +79,12 @@ jobs:
             ! find  . \( \
               -name '*.md' -o -name '*.py' -o -name '*.bash' -o -name '*.sh' \) \
             -exec grep -n '[[:blank:]]$' {} \+
+      - run:
+          name: Check for newline at file's end
+          command: >
+            ! find  . \( \
+              -name '*.md' -o -name '*.py' -o -name '*.bash' -o -name '*.sh' \) \
+            -exec sh -c '[ 'x' != "x$(tail -c 1 "$1")" ]' _ {} \; -print | grep '.*'
 
   flake8:
     docker:

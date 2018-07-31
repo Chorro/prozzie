@@ -9,6 +9,9 @@ Please do these checks in PR and delete it from PR message:
 - [ ] The commit message includes reference to github & Youtrack issue number
 
 # Code checklist
+- [ ] Use `declare <varname>` with the variables, to make them local (check
+      bash `declare --help`). Use `declare -g` if you need them global. Feel
+      free if you need to declare them read-only (`-r`) or integers (`-i`).
 - [ ] The code does NOT contain comments that can be omitted, especially
       comments that you can avoid creating another function.
 - [ ] Validate all user inputs, fail loudly if not used properly.

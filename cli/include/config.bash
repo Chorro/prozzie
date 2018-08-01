@@ -439,7 +439,7 @@ zz_enable_disable_modules() {
         fi
 
         # Check if modules is base
-        if [[ "$module" =~ ^base$ ]]; then
+        if [[ "$module" == base ]]; then
             printf 'Base module cannot be enabled or disabled\n' >&2
         fi
 

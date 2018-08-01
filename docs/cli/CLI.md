@@ -216,6 +216,36 @@ If you know how to use kafka distributed configuration scripts, you can
 execute them directly using
 `prozzie compose exec kafka /opt/kafka/bin/<you_script>`.
 
+### Prozzie upgrade operation
+
+You can check for upgrade your prozzie with `prozzie upgrade` command. If you run `prozzie upgrade` without options, prozzie will check and upgrade (With user confirmation) to latest stable release by default.
+
+Prozzie upgrade with transactional operations. First of all Prozzie create a backup of your current prozzie version, If something go wrong then prozzie will revert all local changes.
+
+Prozzie upgrade command has next options:
+
+`--from-git[=<branch|commit>] [-y, --yes, --assumeyes]`
+: Upgrade prozzie from git to get changes. You can optionally reference a branch or commit. If you don't set any branch or commit, by default, Prozzie will get latest changes from git master branch.
+
+<span style="color:red"><i class="fas fa-exclamation-triangle" /> <span style="font-weight: bold">\-\-from-git</span> operation is dangerous, you could break your prozzie! Use it at your own risk.</span>
+
+`--prerelease [-y, --yes, --assumeyes]`
+: Upgrade prozzie with latest pre-release.
+
+`-y, --yes, --assumeyes`
+: Automatic yes to prompts. Assume "yes" as answer to all prompts and run non-interactively.
+
+`-f, --force`
+: Disable checks and force upgrade to latest release.
+
+<span style="color:red"><i class="fas fa-exclamation-triangle" /> <span style="font-weight: bold">\-\-force</span> operation is dangerous, you could break your prozzie! Use it at your own risk.</span>
+
+`--check-for-upgrades`
+: Checks for avaiable prozzie release.
+
+`-h, --help`
+: Shows `prozzie upgrade` command help.
+
 ## Creating custom subcommands
 
 You can create your own prozzie CLI subcommands just placing it under

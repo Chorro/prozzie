@@ -96,9 +96,11 @@ When you install prozzie first time you must specify a `prefix`, by default It's
 - `${PREFIX}/share/prozzie`: Contains files about prozzie cli and docker compose files.
 - `${PREFIX}/bin`: Contains the symbolic link to prozzie command.
 - `${PREFIX}/etc/prozzie`: Contains information about prozzie modules configuration.
+- `${PREFIX}/var/prozzie/backup`: Contains prozzie backup when upgrade prozzie.
 
 To uninstall prozzie you must follow the next steps:
 
 1. Do `prozzie down` to stop and delete all modules docker container. Keep in mind that prozzie will stop and won't send data to WDP platform.
 2. Remove `${PREFIX}/share/prozzie` and `${PREFIX}/etc/prozzie` folders.
 3. Remove symbolic link named `prozzie` in `${PREFIX}/bin` directory. If `bin` folder It isn't necessary, then you can delete it.
+4. Remove `${PREFIX}/var/prozzie` folder and its content.

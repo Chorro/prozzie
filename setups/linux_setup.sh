@@ -179,7 +179,7 @@ stop_prozzie_install_rollback () {
 # Exit status:
 #  Always 0
 create_directory_tree () {
-    declare -r directories=("${PREFIX}/"{share/prozzie/{cli,compose},bin,etc/prozzie/{envs,compose}})
+    declare -r directories=("${PREFIX}/"{share/prozzie/{cli,compose},bin,etc/prozzie/{envs,compose},var/prozzie/backup})
 
     declare mkdir_out
     mkdir_out=$(mkdir -vp "${directories[@]}")

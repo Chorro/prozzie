@@ -391,4 +391,18 @@ testListEnabledModules() {
     "${PROZZIE_PREFIX}/bin/prozzie" config list-enabled
 }
 
+#--------------------------------------------------------
+# TEST PROZZIE UPGRADE
+#--------------------------------------------------------
+
+testProzzieUpgradeHelp () {
+    # prozzie upgrade --help must show help with no failure
+    "${PROZZIE_PREFIX}/bin/prozzie" upgrade --help
+}
+
+testProzzieCheckForUpgrade () {
+    # prozzie upgrade --check-for-upgrades must show help with no failure
+    "${PROZZIE_PREFIX}/bin/prozzie" upgrade --check-for-upgrades
+}
+
 . test_run.sh

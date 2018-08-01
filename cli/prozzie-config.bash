@@ -207,7 +207,7 @@ main() {
             exit 0
         ;;
         setup)
-            module="$1"
+            declare -r module="$1"
             if [[ -f "$PROZZIE_CLI_CONFIG/$module.bash" ]]; then
                 . "$PROZZIE_CLI_CONFIG/$module.bash"
                 if is_kafka_connect_connector "$module"; then
@@ -218,7 +218,7 @@ main() {
                     exec {properties}<&-
                 else
                     printf 'Setup %s module:\n' "$module"
-                    ENV_FILE="$PROZZIE_ENVS/$module.env" app_setup "$module"
+                    ENV_FILE="$PROZZIE_ENVS/$module.env" app_setup "$@"
                 fi
                 exit 0
             fi

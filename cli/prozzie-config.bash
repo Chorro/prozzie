@@ -218,7 +218,6 @@ main() {
                     exec {properties}<&-
                 else
                     printf 'Setup %s module:\n' "$module"
-                    shift
                     ENV_FILE="$PROZZIE_ENVS/$module.env" app_setup "$module"
                 fi
                 exit 0

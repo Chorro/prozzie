@@ -53,13 +53,28 @@ assert_env_file_exists () {
 }
 
 ##
+## @brief      Acts over env file, asserting that it does exists and forwarding
+##             arguments to a callback function
+##
+## @param      1 - Command callback
+## @param      2 - Module name, and env file name
+## @param      @ - Other parameters
+##
+## @return     { description_of_the_return_value }
+##
+zz_connector_env_handler () {
+	declare -r cmd_callback="$1"
+	declare -r module="$2"
+	assert_env_file_exists "$module"
+	$cmd_callback "$(connector_env_file "$module")" "${@:3}"
+}
+
+##
 ## @brief      Simple wrapper for zz_get_vars, using proper env path. Need
 ##             PREFIX environment variable to know where to find envs file.
 ##
 zz_connector_get_variables () {
-	declare -r module="$1"
-	assert_env_file_exists "$module"
-	zz_get_vars "$(connector_env_file "$module")" "${@:2}"
+	zz_connector_env_handler zz_get_vars "$@"
 }
 
 ##
@@ -67,7 +82,5 @@ zz_connector_get_variables () {
 ##             PREFIX environment variable to know where to find envs file.
 ##
 zz_connector_set_variables () {
-	declare -r module="$1"
-	assert_env_file_exists "$module"
-	zz_set_vars "$(connector_env_file "$module")" "${@:2}"
+	zz_connector_env_handler zz_set_vars "$@"
 }

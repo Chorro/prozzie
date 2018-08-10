@@ -80,19 +80,6 @@ printUsage() {
     done
 }
 
-describeModule () {
-    declare -r module="$1"
-
-    if [[ ! -f "$PROZZIE_CLI_CONFIG/$module.bash" ]]; then
-        printf "Module '%s' not found!\\n" "$module" >&2
-        return 1
-    fi
-
-    . "$PROZZIE_CLI_CONFIG/$module.bash"
-    showVarsDescription
-    return 0
-}
-
 ##
 ## @brief      Determines if the connector is managed by kafka connect.
 ## @param      1 Connector name
@@ -115,7 +102,13 @@ main() {
     shift
 
     case $action in
-        get|set)
+        get|set|describe)
+            # Check that parameters has been passed
+            if [[ $# -eq 0 ]]; then
+                printUsage
+                return
+            fi
+
             # Get module
             declare -r module="$1"
             shift
@@ -137,6 +130,11 @@ main() {
                     zz_connector_get_variables "$module" "$@"
                     return
                 ;;
+                describe)
+                    printf 'Module %s: \n' "${module}"
+                    showVarsDescription
+                    return
+                ;;
             esac
         ;;
         wizard)
@@ -144,15 +142,6 @@ main() {
             # shellcheck disable=SC2154
             wizard "$src_env_file"
             exit 0
-        ;;
-        describe)
-            module="$1"
-            if [[ $module ]]; then
-                printf 'Module %s: \n' "${module}"
-                describeModule "$module" && exit 0 || exit 1
-            fi
-            printUsage
-            exit 1
         ;;
         describe-all)
             declare -r prefix="*/cli/config/"

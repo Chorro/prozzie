@@ -203,6 +203,7 @@ zz_get_var() {
 # Print value of all variables.
 # Arguments:
 #  1 - File from get variables
+#  @ - What variables to get. It will get all module variables if empty.
 #
 # Environment:
 #  module_envs - Array of variables

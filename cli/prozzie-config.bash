@@ -138,7 +138,7 @@ main() {
             declare -r module_config_file="$PROZZIE_CLI_CONFIG/$module.bash"
             # Check that module's config file exists
             if [[ ! -f "$module_config_file" ]]; then
-                printf "Unknow module: '%s'\\n" "$module" >&2
+                printf "Unknown module: '%s'\\n" "$module" >&2
                 printf "Please use 'prozzie config describe-all' to see a complete list of modules and their variables\\n" >&2
                 exit 1
             fi

@@ -30,6 +30,19 @@ Prozzie main component is the docker compose. Under that, prozzie needs to
 difference between connectors based on docker containers and connectors based
 in kafka connect.
 
+To add a new one, you need to create your `cli/config/<module>.bash` file with
+the module_envs associative array variable, that contains module keys->values,
+and the next functions:
+
+showVarsDescription
+: Print all module variable descriptions.
+
+zz_connector_get_variables
+: Obtain module variables. First parameter is module name. If no other
+parameter is passed, it will print all variables. If parameters passed, it
+will print the parameter value. If the parameter does not exists, it will print
+an error via stderr and return error code.
+
 ### Compose based
 To be able to enable/disable docker based components, the compose is formed by
 many `.yaml` files, and they are concatenated in prozzie config command: The

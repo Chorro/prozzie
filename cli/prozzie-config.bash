@@ -158,21 +158,7 @@ main() {
                     zz_set_vars "$env_file" "$@" || exit 1
                 ;;
                 get)
-                    if is_kafka_connect_connector "$module"; then
-                        if [[ $# -eq 0 ]]; then
-                                "${PREFIX}"/bin/prozzie kcli get "$module"
-                                exit 0
-                        fi
-
-                        declare vars
-                        vars=$(str_join '|' "$@")
-                        declare -r vars
-
-                        "${PREFIX}"/bin/prozzie kcli get "$module"|grep -P "^(${vars})=.*$"|while read -r line; do printf '%s\n' "${line#*=}"; done
-                        exit 0
-                    fi
-
-                    zz_get_vars "$env_file" "$@"
+                    zz_connector_get_variables "$module" "$@"
                     exit 0
                 ;;
             esac

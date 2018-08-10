@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+. "${BASH_SOURCE%/*/*}/include/config_compose.bash"
+
 # Want a literal linefeed here
 #shellcheck disable=SC1004
 declare -r sfacctd_aggregate='cos, etype, src_mac, dst_mac, vlan, src_host, \

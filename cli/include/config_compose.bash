@@ -15,15 +15,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-. "${BASH_SOURCE%/*/*}/include/config_compose.bash"
 
-# This variable is intended to be imported, so we don't use this variable here
-# shellcheck disable=SC2034
-declare -A module_envs=(
-	[NETFLOW_PROBES]="{}|JSON object of NF probes (It's recommend to use env var) "
-	[NETFLOW_KAFKA_TOPIC]='flow|Topic to produce netflow traffic? ')
+# This file contains the module functionality to handle compose connectors. If a
+# connector is based on a compose file yaml, should include this file and update
+# functions accordilly
 
-showVarsDescription () {
-    printf '\t%-40s%s\n' 'NETFLOW_PROBES' 'JSON object of NF probes'
-    printf '\t%-40s%s\n' 'NETFLOW_KAFKA_TOPIC' 'Topic to produce netflow traffic'
+# This file handles the connectors based on docker compose, and defines the
+# functions needed to use them.
+
+##
+## @brief      Simple wrapper for zz_get_vars, using proper env path. Need
+##             PREFIX environment variable to know where to find envs file.
+##
+zz_connector_get_variables () {
+	zz_get_vars "${PREFIX}/etc/prozzie/envs/$1.env" "${@:2}"
 }

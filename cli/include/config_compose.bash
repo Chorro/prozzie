@@ -23,10 +23,51 @@
 # This file handles the connectors based on docker compose, and defines the
 # functions needed to use them.
 
+# Return the location of the module env file. Need PREFIX to be declared.
+#
+# @param      Module name
+#
+# @return     Always true
+#
+connector_env_file () {
+	declare -r module="$1"
+	printf '%s/etc/prozzie/envs/%s.env' "${PREFIX}" "$module"
+}
+
+##
+## @brief      Check if env file exists, calling exit if it does not.
+##
+## @param      1 env file
+##
+## @return     Always 0
+##
+assert_env_file_exists () {
+	declare -r env_file="$1"
+
+    if [[ ! -f "$env_file" ]]; then
+        printf "Module '%s' does not have a defined configuration (*.env file)\\n" "$module">&2
+        printf "You can set '%s' module configuration using setup action.\\n" "$module">&2
+        printf 'For more information see the command help\n' >&2
+        exit 1
+    fi
+}
+
 ##
 ## @brief      Simple wrapper for zz_get_vars, using proper env path. Need
 ##             PREFIX environment variable to know where to find envs file.
 ##
 zz_connector_get_variables () {
-	zz_get_vars "${PREFIX}/etc/prozzie/envs/$1.env" "${@:2}"
+	declare -r module="$1"
+	assert_env_file_exists "$module"
+	zz_get_vars "$(connector_env_file "$module")" "${@:2}"
+}
+
+##
+## @brief      Simple wrapper for zz_set_vars, using proper env path. Need
+##             PREFIX environment variable to know where to find envs file.
+##
+zz_connector_set_variables () {
+	declare -r module="$1"
+	assert_env_file_exists "$module"
+	zz_set_vars "$(connector_env_file "$module")" "${@:2}"
 }

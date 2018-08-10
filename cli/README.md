@@ -43,6 +43,11 @@ parameter is passed, it will print all variables. If parameters passed, it
 will print the parameter value. If the parameter does not exists, it will print
 an error via stderr and return error code.
 
+zz_connector_set_variables
+: Obtain module variables. First parameter is module name. If no other
+parameter is passed, it will print usage and exit. If parameters passed, it
+will set that parameter in the module.
+
 ### Compose based
 To be able to enable/disable docker based components, the compose is formed by
 many `.yaml` files, and they are concatenated in prozzie config command: The

@@ -47,3 +47,21 @@ zz_connector_get_variables () {
 
     "${PREFIX}"/bin/prozzie kcli get "$module"|grep -P "^(${vars})=.*$"|while read -r line; do printf '%s\n' "${line#*=}"; done
 }
+
+##
+## @brief      Show a kafka connect message error indicating how to configure
+##             kafka connect modules properly.
+##
+## @return     Always error.
+## @todo       Wrap kcli properly
+##
+zz_connector_set_variables () {
+    {
+        printf 'Please use next commands in order to '
+        printf 'configure %s:\n' "${module}"
+        printf 'prozzie kcli rm %s\n' "${module}"
+        printf 'prozzie config setup %s\n' "${module}"
+    } >&2
+
+    return 1
+}

@@ -35,3 +35,11 @@ showVarsDescription () {
 zz_connector_get_variables () {
 	zz_get_vars "${PREFIX}/etc/prozzie/.env" "${@:2}"
 }
+
+##
+## @brief      Simple wrapper for zz_set_vars, using base env path. Need
+##             PREFIX environment variable to know where to find envs file.
+##
+zz_connector_set_variables () {
+	zz_set_vars "${PREFIX}/etc/prozzie/.env" "${@:2}"
+}

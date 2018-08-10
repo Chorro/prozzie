@@ -120,21 +120,6 @@ main() {
             declare -r module="$1"
             shift
 
-            declare env_file="$PROZZIE_ENVS/$module.env"
-
-            # If module is referred to base module then set $env_file to $base_env_file
-            if [[ "$module" == base ]]; then
-                env_file="$base_env_file"
-            fi
-
-            # Check if env file exists (excluded mqtt and syslog)
-            if ! is_kafka_connect_connector "$module" &&  [[ ! -f "$env_file" ]]; then
-                printf "Module '%s' does not have a defined configuration (*.env file)\\n" "$module">&2
-                printf "You can set '%s' module configuration using setup action.\\n" "$module">&2
-                printf 'For more information see the command help\n' >&2
-                exit 1
-            fi
-
             declare -r module_config_file="$PROZZIE_CLI_CONFIG/$module.bash"
             # Check that module's config file exists
             if [[ ! -f "$module_config_file" ]]; then
@@ -146,20 +131,11 @@ main() {
             . "$module_config_file"
             case $action in
                 set)
-                    if is_kafka_connect_connector "$module"; then
-                        {
-                            printf 'Please use next commands in order to '
-                            printf 'configure %s:\n' "${module}"
-                            printf 'prozzie kcli rm %s\n' "${module}"
-                            printf 'prozzie config setup %s\n' "${module}"
-                        } >&2
-                            exit 1
-                    fi
-                    zz_set_vars "$env_file" "$@" || exit 1
+                    zz_connector_set_variables "$module" "$@"
                 ;;
                 get)
                     zz_connector_get_variables "$module" "$@"
-                    exit 0
+                    return
                 ;;
             esac
         ;;

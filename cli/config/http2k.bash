@@ -19,18 +19,25 @@
 ## @brief      Tries to get variables from http2k, but it fails since module
 ##             does not have any. If you call it with no parameters other than
 ##             module name, it will print a message. If you try to specify a
-##             variable, error message will be shown and
+##             variable, error message will be shown and an exit will be raised.
 ##
 ## @return     0 if no parameter passed, 1 in other case.
 ##
+
+declare -r no_variables_error_msg='http2k module does not have any variables'
 zz_connector_get_variables () {
 	shift  # Module name
-	declare -r error_msg='http2k module does not have any variables'
-	if [[ $# -gt 0 ]]; then
-		printf '%s' "$error_msg" >&2
-		return 1
-	fi
-	printf '%s' "$error_msg"
+	printf '%s' "$no_variables_error_msg" >&2
+	[[ $# -eq 0 ]]
+}
+
+##
+## @brief      Print that http2k does not have any variables to set and return
+## an error.
+##
+zz_connector_set_variables () {
+	printf '%s' "$no_variables_error_msg" >&2
+	return 1
 }
 
 # This variable is intended to be imported, so we don't use this variable here

@@ -31,7 +31,11 @@
 #
 connector_env_file () {
 	declare -r module="$1"
-	printf '%s/etc/prozzie/envs/%s.env' "${PREFIX}" "$module"
+	if [[ "${1}" == base ]]; then
+	  printf "%s/etc/prozzie/.env" "${PREFIX}"
+	else
+	  printf '%s/etc/prozzie/envs/%s.env' "${PREFIX}" "$module"
+	fi
 }
 
 ##
@@ -65,8 +69,12 @@ assert_env_file_exists () {
 zz_connector_env_handler () {
 	declare -r cmd_callback="$1"
 	declare -r module="$2"
-	assert_env_file_exists "$module"
-	$cmd_callback "$(connector_env_file "$module")" "${@:3}"
+	declare env_file
+	env_file=$(connector_env_file "$module")
+	declare -r env_file
+
+	assert_env_file_exists "${env_file}"
+	$cmd_callback "${env_file}" "${@:3}"
 }
 
 ##
@@ -83,4 +91,24 @@ zz_connector_get_variables () {
 ##
 zz_connector_set_variables () {
 	zz_connector_env_handler zz_set_vars "$@"
+}
+
+##
+## @brief      Wrapper for connector_setup, that ask the user for the different
+##             variables needed for the connector.
+##
+zz_connector_setup () {
+	declare -a connector_setup_args
+	if [[ $1 == --no-reload-prozzie ]]; then
+		connector_setup_args+=(--no-reload-prozzie)
+		shift
+	fi
+
+	declare -r module="$1"
+
+	# If no args provided, we want to expand to nothing, not empty string.
+	# shellcheck disable=SC2068
+	connector_setup "$(connector_env_file "$module")" \
+					${connector_setup_args[@]} \
+					zz_link_compose_file "$@"
 }

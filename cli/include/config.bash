@@ -365,9 +365,12 @@ wizard () {
     done
 }
 
-# Set up appliction in prozzie
+# Set up connector in prozzie, asking the user the connector variables and
+# applying them in prozzie.
 # Arguments:
 #  [--no-reload-prozzie] Don't reload prozzie at the end of `.env` changes
+#  1 - env file to modify
+#  n - Callback + arguments before send reload to docker compose. Can be empty.
 #
 # Environment:
 #  PREFIX - Where to look for the `.env` file.
@@ -382,21 +385,14 @@ wizard () {
 #
 # Exit status:
 #  Always 0
-app_setup () {
+connector_setup () {
   declare reload_prozzie=y
-  declare src_env_file
   if [[ $1 == --no-reload-prozzie ]]; then
     reload_prozzie=n
     shift
   fi
 
-  if [[ -v ENV_FILE  ]] && [[ "${1}" != base ]]; then
-    src_env_file="${ENV_FILE}"
-  else
-    declare ENV_FILE
-    src_env_file="${PREFIX}/etc/prozzie/.env"
-  fi
-
+  declare -r src_env_file="$1"
   touch "$src_env_file"
 
   declare mod_tmp_env
@@ -413,13 +409,13 @@ app_setup () {
   exec {mod_tmp_env}<&-
   trap '' EXIT
 
-  if [[ ! "${1}" =~ ^(mqtt|syslog|/dev/fd/.*)$ ]]; then
-    zz_link_compose_file "${1}"
+  if [[ $# -gt 1 ]]; then
+    "$@"
   fi
 
   # Reload prozzie
   if [[ $reload_prozzie == y ]]; then
-    "${src_env_file%etc/prozzie/*}/bin/prozzie" up -d
+    "${PREFIX}/bin/prozzie" up -d
   fi
 }
 

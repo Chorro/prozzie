@@ -22,10 +22,6 @@
 
 # Declare prozzie cli config directory path
 declare -r PROZZIE_CLI_CONFIG="${BASH_SOURCE%/*}/config"
-declare -r PROZZIE_ENVS="${PREFIX:-${DEFAULT_PREFIX}}/etc/prozzie/envs"
-
-# .env file path
-declare base_env_file="${PREFIX:-${DEFAULT_PREFIX}}/etc/prozzie/.env"
 
 printShortHelp() {
     printf 'Handle prozzie configuration\n'
@@ -80,16 +76,6 @@ printUsage() {
     done
 }
 
-##
-## @brief      Determines if the connector is managed by kafka connect.
-## @param      1 Connector name
-##
-## @return     True if kafka connect connector, False otherwise.
-##
-is_kafka_connect_connector () {
-    [[ "$1" == mqtt || "$1" == syslog ]]
-}
-
 main() {
     declare action="$1"
 
@@ -102,11 +88,18 @@ main() {
     shift
 
     case $action in
-        get|set|describe)
+        get|set|describe|setup)
             # Check that parameters has been passed
             if [[ $# -eq 0 ]]; then
                 printUsage
-                return
+                case $action in
+                    describe|setup)
+                        return 1
+                        ;;
+                    *)
+                        return 0
+                        ;;
+                esac
             fi
 
             # Get module
@@ -135,6 +128,11 @@ main() {
                     showVarsDescription
                     return
                 ;;
+                setup)
+                    printf 'Setup %s module:\n' "$module"
+                    zz_connector_setup "$module" "$@"
+                    return
+                ;;
             esac
         ;;
         wizard)
@@ -156,25 +154,6 @@ main() {
                 showVarsDescription
             done
             exit 0
-        ;;
-        setup)
-            declare -r module="$1"
-            if [[ -f "$PROZZIE_CLI_CONFIG/$module.bash" ]]; then
-                . "$PROZZIE_CLI_CONFIG/$module.bash"
-                if is_kafka_connect_connector "$module"; then
-                    . "${BASH_SOURCE%/*}/include/kcli_base.bash"
-                    declare properties
-                    tmp_fd properties
-                    kcli_setup "/dev/fd/${properties}" "$module"
-                    exec {properties}<&-
-                else
-                    printf 'Setup %s module:\n' "$module"
-                    ENV_FILE="$PROZZIE_ENVS/$module.env" app_setup "$@"
-                fi
-                exit 0
-            fi
-            printUsage
-            exit 1
         ;;
         enable|disable)
             zz_enable_disable_modules "$action" "$@"

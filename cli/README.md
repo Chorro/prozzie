@@ -48,6 +48,9 @@ zz_connector_set_variables
 parameter is passed, it will print usage and exit. If parameters passed, it
 will set that parameter in the module.
 
+zz_connector_setup
+: Offers an interactive view where user can specify the variables values.
+
 ### Compose based
 To be able to enable/disable docker based components, the compose is formed by
 many `.yaml` files, and they are concatenated in prozzie config command: The

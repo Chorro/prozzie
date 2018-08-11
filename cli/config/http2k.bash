@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+. "${PREFIX}/share/prozzie/cli/include/config_compose.bash"
+
 ##
 ## @brief      Tries to get variables from http2k, but it fails since module
 ##             does not have any. If you call it with no parameters other than

@@ -366,8 +366,10 @@ function app_setup () {
   log info "Installing ${PROZZIE_VERSION} release of Prozzie..."$'\n'
   cp -R -- "${installer_directory}/../compose/"*.yaml "${prozzie_compose_dir}"
 
-  # Enable base module by default
-  zz_link_compose_file --no-set-default base
+  install_cli
+  # Force enable base module by default. CLI will never offer this path
+  ( . "${PREFIX}/share/prozzie/cli/include/config_compose.bash"
+    zz_connector_enable --no-set-default base)
 
   declare -r prozzie_git='https://github.com/wizzie-io/prozzie'
   declare -r ip_help_url="${prozzie_git}/blob/master/FAQ.md#kafka-reachability"
@@ -387,7 +389,6 @@ function app_setup () {
 
   cp -- "/dev/fd/$tmp_env" "$src_env_file"
   exec {tmp_env}<&-
-  install_cli
   # Need for kafka connect modules configuration.
   "${PREFIX}/bin/prozzie" up -d kafka-connect
   trap stop_prozzie_install_rollback EXIT

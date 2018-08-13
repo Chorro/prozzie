@@ -51,6 +51,14 @@ will set that parameter in the module.
 zz_connector_setup
 : Offers an interactive view where user can specify the variables values.
 
+zz_connector_enable
+: Enable the connector.
+
+zz_connector_disable
+: Disable connector. Prozzie should try to retain all connector config to make
+the enable operation easy, and don't need to introduce all the parameters
+again.
+
 ### Compose based
 To be able to enable/disable docker based components, the compose is formed by
 many `.yaml` files, and they are concatenated in prozzie config command: The

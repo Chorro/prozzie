@@ -46,3 +46,23 @@ zz_connector_get_variables () {
 zz_connector_set_variables () {
 	zz_set_vars "${PREFIX}/etc/prozzie/.env" "${@:2}"
 }
+
+##
+## @brief      Forbids base connector to be enabled or disabled
+##
+## @return     Always error
+##
+zz_connector_enable () {
+    printf 'Base module cannot be enabled or disabled\n' >&2
+    return 1
+}
+
+##
+## @brief      Forbids base connector to be enabled or disabled
+##
+## @return     Always error
+##
+zz_connector_disable () {
+	# Same effect
+	zz_connector_enable
+}

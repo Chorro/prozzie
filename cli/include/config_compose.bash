@@ -48,12 +48,12 @@ connector_env_file () {
 assert_env_file_exists () {
 	declare -r env_file="$1"
 
-    if [[ ! -f "$env_file" ]]; then
-        printf "Module '%s' does not have a defined configuration (*.env file)\\n" "$module">&2
-        printf "You can set '%s' module configuration using setup action.\\n" "$module">&2
-        printf 'For more information see the command help\n' >&2
-        exit 1
-    fi
+	if [[ ! -f "$env_file" ]]; then
+		printf "Module '%s' does not have a defined configuration (*.env file)\\n" "$module">&2
+		printf "You can set '%s' module configuration using setup action.\\n" "$module">&2
+		printf 'For more information see the command help\n' >&2
+		exit 1
+	fi
 }
 
 ##
@@ -111,4 +111,55 @@ zz_connector_setup () {
 	connector_setup "$(connector_env_file "$module")" \
 					${connector_setup_args[@]} \
 					zz_link_compose_file "$@"
+}
+
+# Create a symbolic link in prozzie compose directory in order to enable a module
+# Arguments:
+#  [--no-set-default] Don't set default parameters for specific prozzie module
+#  1 - Module to link
+# Exit status:
+#  0 - Module has been linked
+#  1 - An error has ocurred
+zz_connector_enable () {
+	declare set_default=y
+
+	if [[ $1 == --no-set-default ]]; then
+		set_default=n
+		shift
+	fi
+
+	declare -r module="${1}"
+	declare -r from="${PREFIX}"/share/prozzie/compose/${module}.yaml
+	declare -r to="${PREFIX}"/etc/prozzie/compose/${module}.yaml
+
+	if [[ $set_default == y && \
+						! -f "${PREFIX}"/etc/prozzie/envs/$module.env ]]; then
+		zz_set_default "${PREFIX}/etc/prozzie/envs/$module.env"
+	fi
+
+	if [[ ! -f "$from" ]]; then
+		printf "Can't enable module %s: Can't create symlink %s"'\n' "$module" "$from" >&2
+		return 1
+	fi
+
+	if ln -s "$from" "$to" 2>/dev/null; then
+		printf 'Module %s enabled\n' "$module" >&2
+	else
+		printf 'Module %s already enabled\n' "$module" >&2
+		return 1
+	fi
+}
+
+# Destroy a symbolic link in prozzie compose directory in order to disable a module
+# Arguments:
+#  1 - Module to unlink
+# Exit status:
+#  Always 0
+zz_connector_disable () {
+	declare -r module="${1}"
+	declare -r target="${PREFIX}"/etc/prozzie/compose/${module}.yaml
+
+	rm "$target" 2>/dev/null \
+		&& printf 'Module %s disabled\n' "$module" >&2 \
+		|| printf 'Module %s already disabled\n' "$module" >&2
 }

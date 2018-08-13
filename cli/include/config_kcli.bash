@@ -78,6 +78,51 @@ zz_connector_setup () {
     exec {properties}<&-
 }
 
+zz_connector_enable () {
+	declare -r module="$1"
+	declare connector_status
+    connector_status=$(kafka_connector_status "$module")
+    declare -r connector_status
+	case $connector_status in
+        PAUSED)
+            "${PREFIX}"/bin/prozzie kcli resume "$module" >/dev/null
+            printf 'Module %s enabled\n' "$module" >&2
+        ;;
+        RUNNING)
+            printf 'Module %s already enabled\n' "$module" >&2
+        ;;
+        *)
+            "${PREFIX}"/bin/prozzie config setup "$module"
+            printf 'Module %s enabled\n' "$module" >&2
+        ;;
+    esac
+}
+
+zz_connector_disable () {
+	declare -r module="$1"
+	declare connector_status
+    connector_status=$(kafka_connector_status "$module")
+    declare -r connector_status
+
+	case $connector_status in
+        PAUSED)
+            printf 'Module %s already disabled\n' "$module" >&2
+        ;;
+        RUNNING)
+            "${PREFIX}"/bin/prozzie kcli pause "$module" >/dev/null
+            printf 'Module %s disabled\n' "$module" >&2
+        ;;
+        *)
+            printf "Module %s doesn't exist: connector isn't created"'\n' "$module" >&2
+            exit 1
+        ;;
+    esac
+}
+
+kafka_connector_status () {
+	"${PREFIX}"/bin/prozzie kcli status "$module" | head -n 1 | grep -o 'RUNNING\|PAUSED'
+}
+
 # Calls awk and replace file
 # Arguments:
 #  1 - input/output file

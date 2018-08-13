@@ -76,6 +76,29 @@ printUsage() {
     done
 }
 
+##
+## @brief      Obtain a module config file. If it does not exist, a message will
+##             be printed offering help to the user.
+##
+## @param      1 module name
+##
+## @return     True if the module config file exists, false otherwise.
+##
+module_config_file () {
+    declare -r module="$1"
+
+    declare -r config_file="$PROZZIE_CLI_CONFIG/$module.bash"
+
+    # Check that module's config file exists
+    if [[ ! -f "$config_file" ]]; then
+        printf "Unknown module: '%s'\\n" "$module" >&2
+        printf "Please use 'prozzie config describe-all' to see a complete list of modules and their variables\\n" >&2
+        return 1
+    fi
+
+    printf '%s' "$config_file"
+}
+
 main() {
     declare action="$1"
 
@@ -106,15 +129,11 @@ main() {
             declare -r module="$1"
             shift
 
-            declare -r module_config_file="$PROZZIE_CLI_CONFIG/$module.bash"
-            # Check that module's config file exists
-            if [[ ! -f "$module_config_file" ]]; then
-                printf "Unknown module: '%s'\\n" "$module" >&2
-                printf "Please use 'prozzie config describe-all' to see a complete list of modules and their variables\\n" >&2
-                exit 1
-            fi
+            declare config_file
+            config_file=$(module_config_file "$module") || return
+            declare -r config_file
 
-            . "$module_config_file"
+            . "$config_file"
             case $action in
                 set)
                     zz_connector_set_variables "$module" "$@"
@@ -154,8 +173,27 @@ main() {
             exit 0
         ;;
         enable|disable)
-            zz_enable_disable_modules "$action" "$@"
-            exit 0
+            declare module config_file action_callback return_code=0
+
+            case $action in
+                enable)
+                    action_callback=zz_connector_enable
+                    ;;
+                disable)
+                    action_callback=zz_connector_disable
+                    ;;
+            esac
+            for module in "$@"; do
+                (config_file=$(module_config_file "$module") && {
+                  . "$config_file"
+                  $action_callback "$module"
+                }) || return_code=1
+            done
+
+            # PREFIX must be defined
+            # shellcheck disable=SC2153
+            "${PREFIX}/bin/prozzie" up --remove-orphans -d || return_code=1
+            exit $return_code
         ;;
         list-enabled)
             zz_list_enabled_modules

@@ -66,3 +66,14 @@ zz_connector_disable () {
 	# Same effect
 	zz_connector_enable
 }
+
+## @brief      Print a hint to the user about how to send messages to this
+##             module.
+##
+## @return     Always true
+##
+zz_connector_print_send_message_hint () {
+	printf 'Use "prozzie kafka produce <mytopic>" to produce a test kafka '
+	printf 'message. You can check it'\''s reception with '
+	printf '"prozzie kafka consume <mutopic>"\n'
+}

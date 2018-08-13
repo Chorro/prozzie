@@ -27,3 +27,17 @@ showVarsDescription () {
     printf '\t%-40s%s\n' 'NETFLOW_PROBES' 'JSON object of NF probes'
     printf '\t%-40s%s\n' 'NETFLOW_KAFKA_TOPIC' 'Topic to produce netflow traffic'
 }
+
+##
+## @brief      Print a hint to the user about how to send messages to this
+##             module. INTERFACE_IP and NETFLOW_KAFKA_TOPIC environment
+##             variables must be defined.
+##
+## @return     Always true
+##
+zz_connector_print_send_message_hint () {
+	printf 'Use "%s:2055 (or reachable from probe address) as ' "$INTERFACE_IP"
+	printf 'netflow collector in your probe configuration. '
+	printf 'You can check that messages are produced in topic with '
+	printf '"prozzie kafka consume %s"\n' "$NETFLOW_KAFKA_TOPIC"
+}

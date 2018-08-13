@@ -37,3 +37,17 @@ showVarsDescription () {
     printf '\t%-40s%s\n' 'SFLOW_RENORMALIZE' 'Normalize sflow based on sampling'
     printf '\t%-40s%s\n' 'SFLOW_AGGREGATE' 'Aggregation fields'
 }
+
+##
+## @brief      Print a hint to the user about how to send messages to this
+##             module. INTERFACE_IP and SFLOW_KAFKA_TOPIC environment
+##             variables must be defined.
+##
+## @return     Always true
+##
+zz_connector_print_send_message_hint () {
+	printf 'Use "%s:6343 (or reachable from probe address) as ' "$INTERFACE_IP"
+	printf 'sflow collector in your probe configuration. '
+	printf 'You can check that messages are produced in the topic with '
+	printf '"prozzie kafka consume %s"\n' "$SFLOW_KAFKA_TOPIC"
+}

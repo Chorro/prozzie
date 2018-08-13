@@ -49,3 +49,16 @@ declare -A module_envs=()
 showVarsDescription () {
     printf '\tNo vars description\n'
 }
+
+##
+## @brief      Print a hint to the user about how to send messages to this
+##             module.
+##
+## @return     Always true
+##
+zz_connector_print_send_message_hint () {
+	printf 'Use "curl -d '\''{"test":1,"timestamp":1518086046}'\'
+	printf ' %s:7980/v1/data/testtopic" to produce a message ' "${INTERFACE_IP}"
+	printf 'to topic testtopic. You can check that message reception with '
+	printf '"prozzie kafka consumer testtopic".\n'
+}

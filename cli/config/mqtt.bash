@@ -56,3 +56,16 @@ showVarsDescription () {
     printf '\t%-40s%s\n' 'mqtt.qosl' 'Value converter class'
     printf '\t%-40s%s\n' 'message_processor_class' 'Value converter class'
 }
+
+##
+## @brief      Print a hint to the user about how to send messages to this
+##             module. Needs ${kafka__topic} environment variable.
+##
+## @return     Always true
+##
+zz_connector_print_send_message_hint () {
+	printf 'MQTT client will fetch messages. You can check the reception with '
+	# kafka_topic variable will be at this function call
+	# shellcheck disable=SC2154
+	printf '"prozzie kafka consume %s"\n' "${kafka__topic}"
+}

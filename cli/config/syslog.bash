@@ -50,3 +50,18 @@ showVarsDescription () {
     printf '\t%-40s%s\n' 'syslog.port' "Syslog's port"
     printf '\t%-40s%s\n' 'syslog.structured.data' 'Enable structured data'
 }
+
+##
+## @brief      Print a hint to the user about how to send messages to this
+##             module. INTERFACE_IP and kafka_topic environment
+##             variables must be defined.
+##
+## @return     Always true
+##
+zz_connector_print_send_message_hint () {
+	printf 'Use "%s:5577/udp (or reachable from probe address) ' "$INTERFACE_IP"
+	printf 'as syslog remote server in your probe configuration. '
+	printf 'You can check that messages are produced in the topic with '
+	# shellcheck disable=SC2154
+	printf '"prozzie kafka consume %s"\n' "${kafka_topic}"
+}

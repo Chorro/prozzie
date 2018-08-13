@@ -99,6 +99,40 @@ module_config_file () {
     printf '%s' "$config_file"
 }
 
+##
+## @brief      Print connector usage hint to the user, if the connector provides
+##             it
+##
+## @return     Always 0
+##
+config_connector_print_hint () {
+    declare -r module="$1"
+
+    if ! func_exists zz_connector_print_send_message_hint; then
+        return 0
+    fi
+
+    # Load needed variables
+    declare env_var env_val
+
+    # PREFIX must be declared from prozzie cli
+    # shellcheck disable=SC2153
+    while IFS='=' read -r env_var env_val; do
+        printf -v "$env_var" '%s' "$env_val"
+    done < "${PREFIX}/etc/prozzie/.env"
+
+    # module_envs needs to be imported from ${config_file}
+    # shellcheck disable=SC2154
+    for env_var in "${!module_envs[@]}"; do
+        # Escape variables dots
+        escaped_env_var="${env_var//./__}"
+        env_val_no_description="${module_envs[$env_var]%|*}"
+        printf -v "$escaped_env_var" '%s' "${env_val_no_description}"
+    done
+
+    zz_connector_print_send_message_hint "$module"
+}
+
 main() {
     declare action="$1"
 
@@ -149,7 +183,12 @@ main() {
                 ;;
                 setup)
                     printf 'Setup %s module:\n' "$module"
-                    zz_connector_setup "$module" "$@"
+                    if zz_connector_setup "$module" "$@"; then
+                        config_connector_print_hint "$module"
+                    else
+                        return 1
+                    fi
+
                     return
                 ;;
             esac
@@ -185,8 +224,14 @@ main() {
             esac
             for module in "$@"; do
                 (config_file=$(module_config_file "$module") && {
-                  . "$config_file"
-                  $action_callback "$module"
+                    . "$config_file"
+                    if ! $action_callback "$module"; then
+                        return 1
+                    fi
+
+                    if [[ $action == enable ]]; then
+                        config_connector_print_hint "$module"
+                    fi
                 }) || return_code=1
             done
 

@@ -34,3 +34,16 @@ showVarsDescription () {
     printf '\t%-40s%s\n' 'MONITOR_CUSTOM_MIB_PATH' 'Path to monitor custom MIB'
     printf '\t%-40s%s\n' 'MONITOR_SENSORS_ARRAY' 'Array of monitor agents'
 }
+
+##
+## @brief      Print a hint to the user about how to send messages to this
+##             module.
+##
+## @return     Always true
+##
+zz_connector_print_send_message_hint () {
+	printf 'Monitor will start to fetch messages from SNMP network elements.'
+	printf ' If you need to send traps, you can send it to port 162, and you '
+	printf 'can check they are arriving with '
+	printf '"prozzie consume monitor" command.\n'
+}

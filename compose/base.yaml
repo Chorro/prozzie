@@ -2,7 +2,7 @@ version: '3.6'
 
 services:
   zookeeper:
-    image: zookeeper:3.4.10
+    image: zookeeper:3.4.13
     restart: always
     ports:
       - 2181:2181
@@ -14,7 +14,7 @@ services:
       default:
         aliases:
           - ${INTERFACE_IP}
-    image: wurstmeister/kafka:0.11.0.0
+    image: wurstmeister/kafka:2.11-0.11.0.3
     restart: always
     depends_on:
       - zookeeper
@@ -76,4 +76,4 @@ services:
       BATCH_DEFLATE: "false"
       HTTP_INSECURE: "false"
       KAFKA_TOPICS: "*"
-      KAFKA_VERSION: "0_11_0_0"
+      KAFKA_VERSION: "0_11_0_2"

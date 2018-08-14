@@ -401,8 +401,8 @@ testProzzieUpgradeHelp () {
 }
 
 testProzzieCheckForUpgrade () {
-    # prozzie upgrade --check-for-upgrades must show help with no failure
-    "${PROZZIE_PREFIX}/bin/prozzie" upgrade --check-for-upgrades
+    # prozzie upgrade --check must show help with no failure
+    "${PROZZIE_PREFIX}/bin/prozzie" upgrade --check
 }
 
 . test_run.sh

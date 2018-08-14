@@ -25,22 +25,22 @@ printShortHelp() {
 
 printUsage() {
     declare -A options_descriptions=(
-        ["--from-git (-y, --yes, --assumeyes)"]="Upgrade Prozzie from git master branch to get latest changes (This is dangerous!)"
-        ["--from-git=<branch|commit> (-y, --yes, --assumeyes)"]="Upgrade Prozzie from git specified branch or commit to get changes (This is dangerous!)"
-        ["--prerelease (-y, --yes, --assumeyes)"]="Upgrade Prozzie with latest pre-release"
+        ["--from-git"]="Upgrade Prozzie from git master branch to get latest changes (This is dangerous!)"
+        ["--from-git=<branch|commit>"]="Upgrade Prozzie from git specified branch or commit to get changes (This is dangerous!)"
+        ["--prerelease"]="Upgrade Prozzie with latest pre-release"
         ["-y, --yes, --assumeyes"]="Automatic yes to prompts. Assume \"yes\" as answer to all prompts and run non-interactively"
         ["-f, --force"]="Disable checks and force upgrade to latest release"
-        ["--check-for-upgrades"]="Check for available Prozzie release"
+        ["--check"]="Check for available Prozzie release"
         ["-h, --help"]="Show this help"
     )
 
     declare -a options_order=(
-        "--from-git (-y, --yes, --assumeyes)"
-        "--from-git=<branch|commit> (-y, --yes, --assumeyes)"
-        "--prerelease (-y, --yes, --assumeyes)"
+        "--from-git"
+        "--from-git=<branch|commit>"
+        "--prerelease"
         "-y, --yes, --assumeyes"
         "-f, --force"
-        "--check-for-upgrades"
+        "--check"
         "-h, --help"
     )
 
@@ -61,7 +61,7 @@ main () {
         ["--prerelease"]="n"
         ["force"]="n"
         ["assumeyes"]="n"
-        ["--check-for-upgrades"]="n"
+        ["--check"]="n"
         ["help"]="n"
         ["--shorthelp"]="n"
         ["git-ref"]=""
@@ -105,8 +105,8 @@ main () {
         printUsage
         exit 0
     elif [[ ${options_activation["--from-git"]} == 'y' ]]; then
-        log warn $'You are going to upgrade prozzie from git master branch. This version could be unstable\n'
         upgrade_to="${options_activation["git-ref"]:-master}"
+        log warn $'You are going to upgrade prozzie from git '"$upgrade_to"$' branch. This version could be unstable\n'
     elif [[ ${options_activation["--prerelease"]} == 'y' ]]; then
         printf "Checking latest prozzie prerelease, please wait...\\n"
         if ! upgrade_to="$(print_github_last_prerelease)"; then
@@ -115,7 +115,7 @@ main () {
         fi
         printf "Latest prerelease: %s\\n" "$upgrade_to"
         log warn $'You are going to upgrade prozzie to latest prerelease.\n'
-    elif [[ ${options_activation["--check-for-upgrades"]} == 'y' ]]; then
+    elif [[ ${options_activation["--check"]} == 'y' ]]; then
         upgrade='n'
         if ! upgrade_to="$(print_github_last_release)"; then
             printf "Error to get information about latest prozzie release\\n"
@@ -152,7 +152,7 @@ main () {
 
     if [[ "$upgrade" == 'y' ]]; then
         if [[ ${options_activation["force"]} == 'y' ]]; then
-            log warn $'You are goint to force upgrade to version '"$upgrade_to"$'\n'
+            log warn $'You are going to force upgrade to version '"$upgrade_to"$'\n'
         fi
         if [[ ${options_activation["assumeyes"]} == 'y' ]] || read_yn_response "Do you want to continue?"; then
             upgrade_to_new_version "$upgrade_to"
@@ -217,6 +217,7 @@ upgrade_to_new_version () {
         echo "$new_version" > "${PREFIX}"/etc/prozzie/.version
         log ok $'Prozzie has been upgraded successfully to version '"$new_version"$'!\n'
         trap '' EXIT
+        "${PREFIX}/bin/prozzie" up -d
     else
         log error $'An error has been occurred!\n' >&2
         exit 1

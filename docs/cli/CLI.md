@@ -241,12 +241,12 @@ Prozzie upgrade with transactional operations. First of all Prozzie create a bac
 
 Prozzie upgrade command has next options:
 
-`--from-git[=<branch|commit>] [-y, --yes, --assumeyes]`
+`--from-git[=<branch|commit>]`
 : Upgrade prozzie from git to get changes. You can optionally reference a branch or commit. If you don't set any branch or commit, by default, Prozzie will get latest changes from git master branch.
 
 <span style="color:red"><i class="fas fa-exclamation-triangle" /> <span style="font-weight: bold">\-\-from-git</span> operation is dangerous, you could break your prozzie! Use it at your own risk.</span>
 
-`--prerelease [-y, --yes, --assumeyes]`
+`--prerelease`
 : Upgrade prozzie with latest pre-release.
 
 `-y, --yes, --assumeyes`
@@ -257,7 +257,7 @@ Prozzie upgrade command has next options:
 
 <span style="color:red"><i class="fas fa-exclamation-triangle" /> <span style="font-weight: bold">\-\-force</span> operation is dangerous, you could break your prozzie! Use it at your own risk.</span>
 
-`--check-for-upgrades`
+`--check`
 : Checks for avaiable prozzie release.
 
 `-h, --help`

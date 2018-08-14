@@ -9,6 +9,6 @@ services:
     ports:
       - 6343:6343/udp
     env_file:
-      - ${PREFIX}/etc/prozzie/envs/f2k.env
+      - ${PREFIX}/etc/prozzie/envs/sfacctd.env
     environment:
       KAFKA_BROKERS: "kafka"

@@ -32,7 +32,7 @@
 zz_cli_case () {
     declare -r subcommand="$1$2.bash"
     if [[ ! -x $(realpath "${subcommand}") ]]; then
-        "$0: '$1$2' is not a $0 command. See '$0 --help'." >&2
+        echo "$0: '$1$2' is not a $0 command. See '$0 --help'." >&2
         exit 1
     fi
     shift  2  # Prefix & subcommand

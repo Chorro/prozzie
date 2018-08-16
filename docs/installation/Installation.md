@@ -93,10 +93,14 @@ Prozzie doesn't provide any mechanism to uninstall prozzie. If you want to unins
 
 When you install prozzie first time you must specify a `prefix`, by default It's `/usr/local`. In this prefix, prozzie creates following directories:
 
-- `${PREFIX}/share/prozzie`: Contains files about prozzie cli and docker compose files.
-- `${PREFIX}/bin`: Contains the symbolic link to prozzie command.
-- `${PREFIX}/etc/prozzie`: Contains information about prozzie modules configuration.
-- `${PREFIX}/var/prozzie/backup`: Contains prozzie backup when upgrade prozzie.
+- `${PREFIX}/share/prozzie`
+: Contains files about prozzie cli and docker compose files.
+- `${PREFIX}/bin`
+: Contains the symbolic link to prozzie command.
+- `${PREFIX}/etc/prozzie`
+: Contains information about prozzie modules configuration.
+- `${PREFIX}/var/prozzie/backup`
+: Contains prozzie backup when upgrade prozzie.
 
 To uninstall prozzie you must follow the next steps:
 

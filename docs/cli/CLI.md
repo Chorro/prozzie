@@ -68,7 +68,7 @@ i.e:
 $ prozzie config set base INTERFACE_IP=192.168.1.100 CLIENT_API_KEY=myAwesomeAPIKey
 ```
 
-As you can see, the format of key-value pairs are <key>=<value>
+As you can see, the format of key-value pairs are `<key>`=`<value>`
 
 `prozzie config` command allows you check and handle the configuration in next modules:
 
@@ -83,27 +83,37 @@ As you can see, the format of key-value pairs are <key>=<value>
 
 Prozzie config command has next actions:
 
-`get`: Allow you get information about prozzie component configuration
+`prozzie config get`
+: Allow you get information about prozzie component configuration
 
-`set`: Allow you handle prozzie component configuration
+`prozzie config set`
+: Allow you handle prozzie component configuration
 
-`wizard`: Allow you configure all available modules with wizard assistant
+`prozzie config wizard`
+: Allow you configure all available modules with wizard assistant
 
-`describe <module>`: Shows what variables have a specific module
+`prozzie config describe <module>`
+: Shows what variables have a specific module
 
-`setup <module>`: Allow you configure a module with setup assistant
+`prozzie config setup <module>`
+: Allow you configure a module with setup assistant
 
-`describe-all`: Shows all variables of each module
+`prozzie config describe-all`
+: Shows all variables of each module
 
-`enable <module1, module2, ···, moduleN>`: Enable selected modules to run with `prozzie up` command
+`prozzie config enable <module1, module2, ···, moduleN>`
+: Enable selected modules to run with `prozzie up` command
 
-`disable <module1, module2, ···, moduleN>`: Disable selected modules to avoid run it with `prozzie up` command
+`prozzie config disable <module1, module2, ···, moduleN>`
+: Disable selected modules to avoid run it with `prozzie up` command
 
-`list-enabled`: Shows only enabled modules
+`prozzie config list-enabled`
+: Shows only enabled modules
 
 Prozzie config command has next options:
 
-`-h|--help`: Shows prozzie help
+`prozzie config [-h|--help]`
+: Shows prozzie config subcommand help
 
 ### Prozzie service operation
 
@@ -158,6 +168,13 @@ example, to check kafka logs:
 
 ```bash
 $ prozzie logs kafka
+```
+
+If log file is too long, you can use `--tail <n>` option to show the last part
+of log, where `<n>` is the number of lines to show:
+
+```bash
+$ prozzie logs -f --tail 1000 kafka
 ```
 
 ### Prozzie message queue operation

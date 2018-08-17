@@ -393,6 +393,8 @@ connector_setup () {
   fi
 
   declare -r src_env_file="$1"
+  shift
+
   touch "$src_env_file"
 
   declare mod_tmp_env

@@ -366,7 +366,7 @@ testWizard() {
 testEnableModule() {
     declare -r expected_message='{"fieldA": "valueA", "fieldB": 12, "fieldC": true}'
 
-    "${PROZZIE_PREFIX}/bin/prozzie" config enable f2k monitor http2k
+    "${PROZZIE_PREFIX}/bin/prozzie" config enable f2k monitor http2k syslog
 
     if [[ ! -L "${PROZZIE_PREFIX}/etc/prozzie/compose/f2k.yaml" ]]; then
         ${_FAIL_} '"prozzie config enable must link f2k compose file"'
@@ -403,10 +403,14 @@ testEnableModule() {
 
     ${_ASSERT_EQUALS_} '"Incorrect expected message"' \
     "'${expected_message}'" "'${message}'"
+
+    if [[ $("${PROZZIE_PREFIX}"/bin/prozzie kcli status syslog | head -n 1 | grep -o 'RUNNING\|PAUSED') == PAUSED ]]; then
+        ${_FAIL_} '"Syslog must be enabled and running"'
+    fi
 }
 
 testDisableModule() {
-    "${PROZZIE_PREFIX}/bin/prozzie" config disable f2k monitor http2k
+    "${PROZZIE_PREFIX}/bin/prozzie" config disable f2k monitor http2k syslog
 
     if [[ -L "${PROZZIE_PREFIX}/etc/prozzie/compose/f2k.yaml" ]]; then
         ${_FAIL_} '"prozzie config disable must to unlink f2k compose file"'
@@ -430,24 +434,14 @@ testDisableModule() {
     if curl -v http://"${HOSTNAME}":7980/v1/data/http2k_topic -H 'X-Consumer-ID:test' -d '{"fieldA":"valueA", "fieldB": 12, "fieldC": true}'; then
         ${_FAIL_} '"HTTP2K must be disabled and stopped"'
     fi
+
+    if [[ $("${PROZZIE_PREFIX}"/bin/prozzie kcli status syslog | head -n 1 | grep -o 'RUNNING\|PAUSED') == RUNNING ]]; then
+        ${_FAIL_} '"Syslog must be disabled and stopped"'
+    fi
 }
 
 testListEnabledModules() {
     "${PROZZIE_PREFIX}/bin/prozzie" config list-enabled
-}
-
-#--------------------------------------------------------
-# TEST PROZZIE UPGRADE
-#--------------------------------------------------------
-
-testProzzieUpgradeHelp () {
-    # prozzie upgrade --help must show help with no failure
-    "${PROZZIE_PREFIX}/bin/prozzie" upgrade --help
-}
-
-testProzzieCheckForUpgrade () {
-    # prozzie upgrade --check must show help with no failure
-    "${PROZZIE_PREFIX}/bin/prozzie" upgrade --check
 }
 
 . test_run.sh

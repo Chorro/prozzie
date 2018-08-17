@@ -128,8 +128,6 @@ zz_connector_disable () {
 kcli_fill_module_envs () {
 	declare -r module="$1" output_filename='/dev/null'
 
-	set -x
-
 	zz_variables_env_update_array <("${PREFIX}/bin/prozzie" kcli get "$module" \
 															| sed 's/\./__/g') \
 								  "${output_filename}"

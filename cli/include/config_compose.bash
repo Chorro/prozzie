@@ -146,7 +146,6 @@ zz_connector_enable () {
 		printf 'Module %s enabled\n' "$module" >&2
 	else
 		printf 'Module %s already enabled\n' "$module" >&2
-		return 1
 	fi
 }
 

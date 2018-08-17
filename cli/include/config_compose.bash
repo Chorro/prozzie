@@ -110,7 +110,7 @@ zz_connector_setup () {
 	# shellcheck disable=SC2068
 	connector_setup "$(connector_env_file "$module")" \
 					${connector_setup_args[@]} \
-					zz_link_compose_file "$@"
+					zz_connector_enable "$@"
 }
 
 # Create a symbolic link in prozzie compose directory in order to enable a module

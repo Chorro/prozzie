@@ -136,6 +136,51 @@ testSetupSfacctdModuleVariables() {
 }
 
 #--------------------------------------------------------
+# TEST MERAKI MODULE
+#--------------------------------------------------------
+
+##
+## @brief      Send a meraki message and checks that it is received via kafka.
+##
+## @param      1 Meraki POST message
+## @param      2 Number of messages expected. Only the last will be checked
+## @param      3 Kafka message expected in position $2
+##
+## @return     { description_of_the_return_value }
+##
+send_meraki_msg() {
+    declare recv_kafka_messages
+
+    ${_ASSERT_EQUALS_} '"Not valid meraki validator returned"' \
+        "'$(curl http://localhost:2057/v1/meraki/validator)'" "'validator'"
+
+    curl -v -d "$1" "http://localhost:2057/v1/meraki/validator"
+
+    recv_kafka_messages=$("${PROZZIE_PREFIX}/bin/prozzie" kafka consume meraki \
+        --from-beginning --max-messages "$2" | tail -n 1)
+    ${_ASSERT_EQUALS_} '"Wrong message recieved via meraki"' \
+        "'$3'" "'${recv_kafka_messages}'"
+}
+
+testMeraki() {
+    "${PROZZIE_PREFIX}/bin/prozzie" config setup meraki
+
+    # After setup, we must be able to send and receive meraki messages
+    declare -r meraki_message1='{"test":1}{"test":2}'
+    declare -r meraki_message2='{"test":1}{"test":2}{"test":3}'
+
+    send_meraki_msg "$meraki_message1" 1 '{"test":1}'
+
+    # We should not be able to send messages when disabled. Actual error is
+    # "can't resolve prozzie_meraki_1" if we try curl, so we will not test it.
+    "${PROZZIE_PREFIX}/bin/prozzie" config disable meraki
+
+    # We should be able to send messages when enabled again
+    "${PROZZIE_PREFIX}/bin/prozzie" config enable meraki
+    send_meraki_msg "$meraki_message2" 5 '{"test":3}'
+}
+
+#--------------------------------------------------------
 # TEST MQTT MODULE
 #--------------------------------------------------------
 

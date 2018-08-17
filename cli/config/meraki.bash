@@ -24,8 +24,9 @@
 ## @return     Always true
 ##
 zz_connector_print_send_message_hint () {
-	printf 'Use "curl -d '\''{"test":1,"timestamp":1518086046}'\'
-	printf ' %s:7980/v1/data/testtopic" to produce a message ' "${INTERFACE_IP}"
-	printf 'to topic testtopic. You can check that message reception with '
-	printf '"prozzie kafka consumer testtopic".\n'
+	printf 'Configure "%s:2057/v1/meraki/<validator>" (or '\' "${INTERFACE_IP}"
+	printf 'equivalent) under "Network wide > configure > general > '
+	printf 'Location and scanning" in your meraki dashboard to make meraki '
+	printf 'cloud send location messages. You can check that they are being '
+	printf 'received with "prozzie kafka consumer meraki".\n'
 }

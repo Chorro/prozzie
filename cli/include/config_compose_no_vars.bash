@@ -33,7 +33,7 @@
 declare -r no_variables_error_msg='http2k module does not have any variables'
 zz_connector_get_variables () {
 	shift  # Module name
-	printf '%s' "$no_variables_error_msg" >&2
+	printf '%s\n' "$no_variables_error_msg" >&2
 	[[ $# -eq 0 ]]
 }
 
@@ -42,7 +42,7 @@ zz_connector_get_variables () {
 ## an error.
 ##
 zz_connector_set_variables () {
-	printf '%s' "$no_variables_error_msg" >&2
+	printf '%s\n' "$no_variables_error_msg" >&2
 	return 1
 }
 

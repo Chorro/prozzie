@@ -227,7 +227,7 @@ kcli_update_properties_file () {
 # Exit status:
 #  Regular
 kcli_setup () {
-    log info 'These changes will be applied at the end of app setup\n'
+    log info $'These changes will be applied at the end of app setup\n'
     kcli_update_properties_file "$1"
     declare -r module_name="${module_envs['name']-${module_hidden_envs['name']}}"
     "${PREFIX}/bin/prozzie" kcli create "${module_name}" < "$1"

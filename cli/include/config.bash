@@ -180,7 +180,7 @@ zz_variables_ask () {
 print_not_modified_warning () {
     echo
     if [[ "$src_env_file" != '/dev/fd/'* && -f "$src_env_file" ]]; then
-        log warn "No changes made to $src_env_file"'\n'
+        log warn "No changes made to $src_env_file"$'\n'
     fi
 }
 

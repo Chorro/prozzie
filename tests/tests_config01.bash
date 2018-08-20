@@ -407,6 +407,13 @@ testEnableModule() {
     if [[ $("${PROZZIE_PREFIX}"/bin/prozzie kcli status syslog | head -n 1 | grep -o 'RUNNING\|PAUSED') == PAUSED ]]; then
         ${_FAIL_} '"Syslog must be enabled and running"'
     fi
+
+    if ! logger "test syslog message" -p local0.info -d -n localhost -P 1514; then
+        ${_FAIL_} '"Fail to send syslog message"'
+    fi
+
+    ${_ASSERT_EQUALS_} '"Incorrect number of messages in topic syslog"' \
+    '1' "$("${PROZZIE_PREFIX}/bin/prozzie" kafka consume syslog --from-beginning --max-messages 1 | grep -o -E '{.+}' | wc -l)"
 }
 
 testDisableModule() {
@@ -438,6 +445,13 @@ testDisableModule() {
     if [[ $("${PROZZIE_PREFIX}"/bin/prozzie kcli status syslog | head -n 1 | grep -o 'RUNNING\|PAUSED') == RUNNING ]]; then
         ${_FAIL_} '"Syslog must be disabled and stopped"'
     fi
+
+    if ! logger "test syslog message" -p local0.info -d -n localhost -P 1514; then
+        ${_FAIL_} '"Fail to send syslog message"'
+    fi
+
+    ${_ASSERT_EQUALS_} '"Incorrect number of messages in topic syslog"' \
+    '2' "$("${PROZZIE_PREFIX}/bin/prozzie" kafka consume syslog --from-beginning --max-messages 5 --timeout-ms 500 | grep -o -E '{.+}' | wc -l)"
 }
 
 testListEnabledModules() {

@@ -45,6 +45,13 @@ P_tests: &P_tests
             EXEC:'docker run --network prozzie_default -i alpine/socat
             STDIO TCP\:prozzie_meraki_1\:2057'
     - run:
+        name: Expose syslog port
+        background: true
+        command: >-
+          socat UDP-LISTEN:1514,reuseaddr,fork
+          EXEC:'docker run --network prozzie_default -i alpine/socat
+          STDIO UDP\:prozzie_kafka-connect_1\:1514'
+    - run:
         name: Expose monitor port
         background: true
         command: >-

@@ -20,5 +20,7 @@
       url: /protocols/flow
     - title: meraki
       url: /protocols/meraki
+    - title: aerohive
+      url: /protocols/aerohive
     - title: snmp
       url: /protocols/snmp

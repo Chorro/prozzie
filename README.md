@@ -104,6 +104,7 @@ arguments will be forwarded to these commands.
       [Netflow](https://github.com/wizzie-io/f2k), sFlow (integrated via
       [pmacct](http://www.pmacct.net/)) and pmacct family.
 - [x] [Meraki](docs/meraki.md)
+- [x] [Aerohive](docs/aerohive.md)
 - [x] [SNMP](docs/snmp.md)
 
 ## LICENSE

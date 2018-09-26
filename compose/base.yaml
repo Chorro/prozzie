@@ -29,7 +29,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
   kafka-connect:
-    image: gcr.io/wizzie-registry/wizzie-kc:0.1.0
+    image: gcr.io/wizzie-registry/wizzie-kc:0.2.0
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://kafka-connect:8083"]
@@ -42,6 +42,7 @@ services:
       - 8083:8083
       - 5577:1514/udp
       - 5576:601
+      - 7880:7880
     environment:
        CONNECT_BOOTSTRAP_SERVERS: kafka:9092
        CONNECT_GROUP_ID: prozzie-id

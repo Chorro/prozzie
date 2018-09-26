@@ -81,7 +81,7 @@ zz_variable () {
     "$read_callback" "$1" "$3" "$2"
 
     if [[ -z "${!1}" && -z "$2" ]]; then
-      log fail "[${!1}][$2] Empty $1 not allowed"'\n'
+      log fail "[${!1}][$2] Empty $1 not allowed"$'\n'
     fi
   done
 

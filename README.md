@@ -98,14 +98,14 @@ arguments will be forwarded to these commands.
 
 - [x] Kafka
 - [x] [JSON over HTTP](https://github.com/wizzie-io/n2kafka/blob/master/src/decoder/zz_http2k/README.md)
-- [x] [Syslog: UDP, TCP, SSL](https://github.com/jcustenborder/kafka-connect-syslog)
-- [x] [MQTT](https://github.com/wizzie-io/kafka-connect-mqtt.git) - [MQTT Setup](https://github.com/wizzie-io/prozzie/docs/MQTT.md)
-- [x] [Flow](docs/flow.md) protocols,
+- [x] [Syslog: UDP, TCP, SSL](https://github.com/wizzie-io/kafka-connect-syslog)
+- [x] [MQTT](https://github.com/wizzie-io/kafka-connect-mqtt.git) - [MQTT Setup](https://github.com/wizzie-io/prozzie/docs/protocols/MQTT.md)
+- [x] [Flow](docs/protocols/flow.md) protocols,
       [Netflow](https://github.com/wizzie-io/f2k), sFlow (integrated via
       [pmacct](http://www.pmacct.net/)) and pmacct family.
-- [x] [Meraki](docs/meraki.md)
-- [x] [Aerohive](docs/aerohive.md)
-- [x] [SNMP](docs/snmp.md)
+- [x] [Meraki](docs/protocols/meraki.md)
+- [x] [Aerohive](docs/protocols/aerohive.md)
+- [x] [SNMP](docs/protocols/snmp.md)
 
 ## LICENSE
 This project is licensed under the terms of the [Apache 2.0 license](LICENSE.md)

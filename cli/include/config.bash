@@ -357,8 +357,6 @@ wizard () {
             break
         fi
 
-        log info "Configuring ${reply} module\\n"
-
         set +m  # Send SIGINT only to child
         "${PREFIX}"/bin/prozzie config setup ${reply}
         set -m

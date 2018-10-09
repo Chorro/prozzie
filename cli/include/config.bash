@@ -137,10 +137,14 @@ zz_variables_env_update_array () {
 # Exit status:
 #  Always 0
 zz_variable_ask () {
-    local var_default var_prompt
+    local var_default var_prompt var_help
 
-    IFS='|' read -r var_default var_prompt < \
+    IFS='|' read -r var_default var_prompt var_help < \
                                         <(squash_spaces <<<"${module_envs[$2]}")
+
+    if [[ ! -z $var_help ]]; then
+        printf "%s\\n" "$var_help"
+    fi
 
     zz_variable "$2" "$var_default" "$var_prompt" "$1"
 }

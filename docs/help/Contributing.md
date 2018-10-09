@@ -1,10 +1,13 @@
+---
+---
+
 # Prozzie contributing guidelines
 
 First of all, thanks for contribute to Wizzie prozzie! Here you will find
 guidelines to add features or fix the project.
 
 ## I don't want to contribute, I just have a question to do
-Please review the project [FAQ](FAQ.md) to check if your question already has
+Please review the project [FAQs](FAQs) to check if your question already has
 an answer. In another case, feel free to raise an issue with the label
 `question`, and it will be answered ASAP.
 
@@ -76,4 +79,3 @@ container. A more dynamic way to do it is on development.
 
 ### Add a test
 Check [tests README.md](tests/README.md).
-

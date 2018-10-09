@@ -53,12 +53,17 @@ if command_exists sudo; then
     declare -r sudo=sudo
 fi
 
+# Check if we already have an installed prozzie
+if ! prozzie -v &> /dev/null; then
+  AUTODETECTED_IP=$(autodetect_ip "scope global")
+fi
+
 # This variable is iused in app_setup, but shellcheck does not feel that way.
 # shellcheck disable=SC2034
 # [env_variable]="default|prompt"
 declare -A module_envs=(
   [PREFIX]="${DEFAULT_PREFIX}|Where do you want install prozzie?"
-  [INTERFACE_IP]='|Introduce the IP address'
+  [INTERFACE_IP]="${AUTODETECTED_IP}|Prozzie's Internal Kafka advertised IP|(See https://wizzie-io.github.io/prozzie/help/FAQ for more info about Kafka reachability)"
   [CLIENT_API_KEY]='|Introduce your client API key'
   [ZZ_HTTP_ENDPOINT]='|Introduce the data HTTPS endpoint URL (use http://.. for plain HTTP)')
 
@@ -370,22 +375,6 @@ function app_setup () {
   # Force enable base module by default. CLI will never offer this path
   ( . "${PREFIX}/share/prozzie/cli/include/config_compose.bash"
     zz_connector_enable --no-set-default base)
-
-  declare -r prozzie_git='https://github.com/wizzie-io/prozzie'
-  declare -r ip_help_url="${prozzie_git}/blob/master/FAQ.md#kafka-reachability"
-  declare -r ip_help_what='Prozzie'\''s Internal kafka advertised IP'
-  declare -r ip_hint='Introduce an externally reachable prozzie IP address'
-
-  if [[ -z $INTERFACE_IP ]] && \
-                      read_yn_response \
-                        --help "${ip_help_what}. ${ip_hint}. See ${ip_help_url}" \
-                        "Do you want discover the IP address automatically?"; \
-  then
-      get_interface_cmd="ip route|grep default|awk '{printf(\"%s\", \$5)}'"
-      MAIN_INTERFACE=$(docker run --rm --net=host wizzieio/prozzie-toolbox sh -c "$get_interface_cmd")
-      get_interface_ip_cmd="ip addr show $MAIN_INTERFACE | grep -Eo 'inet \\d{1,3}(\\.\\d{1,3}){3}' | awk '{printf(\"%s\", \$2)}'"
-      INTERFACE_IP=$(docker run --rm --net=host wizzieio/prozzie-toolbox sh -c "$get_interface_ip_cmd")
-  fi
 
   zz_variables_ask "/dev/fd/${tmp_env}"
 

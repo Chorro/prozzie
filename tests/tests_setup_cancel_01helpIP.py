@@ -32,20 +32,13 @@ class Line:
 
 
 def test_help(linux_setup_path):
-    # Check the FAQ link
-    interface_ip_help = 'FAQ.md#kafka-reachability'
 
     responses_sendline = {
         'Where do you want install prozzie?': [Line('')],
         'Introduce your client API key': [Line('def')],
         'Introduce the data HTTPS endpoint URL': [Line('abc.def')],
         'Do you want that docker to start on boot?': ['y'],
-        'Do you want discover the IP address automatically?': [
-                                                     ('h', interface_ip_help),
-                                                     ('H', interface_ip_help),
-                                                     (pexpect.spawn.sendintr)],
-        # We should never reach this question
-        'Introduce the IP address': [],
+        'Prozzie\'s Internal Kafka advertised IP': [(pexpect.spawn.sendintr)],
     }
 
     logfile = None

@@ -24,3 +24,9 @@
       url: /protocols/aerohive
     - title: snmp
       url: /protocols/snmp
+- title: Help links
+  children: 
+    - title: FAQs
+      url: /help/FAQs
+    - title: Contributing
+      url: /help/Contributing

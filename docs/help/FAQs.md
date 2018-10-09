@@ -1,7 +1,10 @@
-# Prozzie FAQ
+---
+---
+
+# Prozzie FAQs
 
 ## How do I contribute to the project?
-Please read [CONTRIBUTING.md](CONTRIBUTING.md).
+Please read [contributing](Contributing) section.
 
 ## How do I install prozzie in docker container
 You can't, at least easily. Since prozzie is composed of dockers, you would
@@ -10,7 +13,7 @@ need to use some docker-in-docker skills to use it that way.
 You can use a docker container with capabilities to manage host docker daemon,
 and use it to install prozzie in. However, that configuration is not a
 priority to maintain, so you can have a hard time using it. To do that, check
-[How can I test prozzie](CONTRIBUTING.md#How-can-I-test-prozzie-dirt-and-quickly).
+[How can I test prozzie](Contributing#How-can-I-test-prozzie-dirt-and-quickly).
 
 ## Troubleshooting: I don't see my messages in the kafka queue
 ### Kafka reachability

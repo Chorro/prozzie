@@ -252,7 +252,7 @@ function app_setup () {
   local -r ARCH=$(uname -m | sed 's/x86_//;s/i[3-6]86/32/')
 
   # List of needed depedencies for prozzie
-  local -r NEEDED_DEPENDENCIES="curl net-tools"
+  local -r NEEDED_DEPENDENCIES="curl"
   # Package manager for install, uninstall and update
   local PKG_MANAGER=""
 
@@ -381,8 +381,10 @@ function app_setup () {
                         --help "${ip_help_what}. ${ip_hint}. See ${ip_help_url}" \
                         "Do you want discover the IP address automatically?"; \
   then
-      MAIN_INTERFACE=$(route -n | awk '{printf("%s %s\n", $1, $8)}' | grep 0.0.0.0 | awk '{printf("%s", $2)}')
-      INTERFACE_IP=$(ifconfig "${MAIN_INTERFACE}" | grep inet | grep -v inet6 | awk '{printf("%s", $2)}' | sed -E -e 's/(inet|addr)://')
+      get_interface_cmd="ip route|grep default|awk '{printf(\"%s\", \$5)}'"
+      MAIN_INTERFACE=$(docker run --rm --net=host wizzieio/prozzie-toolbox sh -c "$get_interface_cmd")
+      get_interface_ip_cmd="ip addr show $MAIN_INTERFACE | grep -Eo 'inet \\d{1,3}(\\.\\d{1,3}){3}' | awk '{printf(\"%s\", \$2)}'"
+      INTERFACE_IP=$(docker run --rm --net=host wizzieio/prozzie-toolbox sh -c "$get_interface_ip_cmd")
   fi
 
   zz_variables_ask "/dev/fd/${tmp_env}"

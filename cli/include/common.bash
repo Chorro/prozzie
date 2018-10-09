@@ -246,3 +246,33 @@ cp () {
         /usr/bin/env cp "$@"
     fi
 }
+
+# Auto-detect the current IPs of machine
+#
+# Arguments
+#  1 - If "scope global" is used returned IP is the global
+#
+# Environment
+#  -
+#
+# Out:
+#  Autodetected IP
+#
+# Return code
+#  Always 0
+autodetect_ip() {
+    if [[ "$1" != "scope global" ]]; then
+        shift
+    fi
+
+    declare inet_line_start='^[[:blank:]]*inet6\?'
+    declare ip_addr_chars='[0-9a-f.:]*'
+
+    declare get_interface_cmd="ip route|awk '/default/ {printf \$5}'"
+
+    MAIN_INTERFACE=$(docker run --rm --net=host wizzieio/prozzie-toolbox sh -c "$get_interface_cmd")
+
+    declare get_interface_ip_cmd="ip addr show dev $MAIN_INTERFACE $1 | sed  -n \"/${inet_line_start}/ s%${inet_line_start} \\(${ip_addr_chars}\\).*%\\1%p\""
+
+    docker run --rm --net=host wizzieio/prozzie-toolbox sh -c "$get_interface_ip_cmd"
+}

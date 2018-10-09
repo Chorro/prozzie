@@ -29,7 +29,8 @@ every change you want to make from now on.
 If you have not installed docker or docker-compose yet, `linux_setup.sh` script
 will install them. Next tools it needs for installation:
 - `curl`
-- `net-tools`
+
+Curl is only needed to install docker. Beyond that point, all dependencies are contained in a docker image named [`prozzie-toolbox`](https://hub.docker.com/r/wizzieio/prozzie-toolbox/).
 
 You will be asked for the variables on `Linux` section of
 [VARIABLES.md](https://github.com/wizzie-io/prozzie/blob/master/VARIABLES.md).

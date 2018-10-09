@@ -18,6 +18,10 @@
 # Get current release
 current_release=$(<"${PREFIX}/etc/prozzie/.version")
 declare -r current_release
+declare -r latest_prerelease_cmd="curl --silent https://api.github.com/repos/wizzie-io/
+prozzie/releases | jq -j 'first(.[] | select(.prerelease==true) | .tag_name)'"
+declare -r latest_release_cmd="curl --silent https://api.github.com/repos/wizzie-io/pro
+zzie/releases/latest | jq -j '.tag_name'"
 
 printShortHelp() {
     printf "Check and upgrade Prozzie to latest release\\n"
@@ -170,7 +174,7 @@ main () {
 print_github_last_prerelease () {
     # Get latest github prerelease
     declare latest_prerelease
-    if ! latest_prerelease=$(docker run -it cfmanteiga/alpine-bash-curl-jq:latest bash -c "curl --silent https://api.github.com/repos/wizzie-io/prozzie/releases | jq -j 'first(.[] | select(.prerelease==true) | .tag_name)'"); then
+    if ! latest_prerelease=$(docker run --rm wizzieio/prozzie-toolbox sh -c "$latest_prerelease_cmd"); then
         printf "Error to check latest prozzie prerelease in github\\n" >&2
         return 1
     fi
@@ -185,7 +189,7 @@ print_github_last_prerelease () {
 print_github_last_release () {
     # Get latest github release
     declare latest_release
-    if ! latest_release=$(docker run -it cfmanteiga/alpine-bash-curl-jq:latest bash -c "curl --silent https://api.github.com/repos/wizzie-io/prozzie/releases/latest | jq -j '.tag_name'"); then
+    if ! latest_release=$(docker run --rm wizzieio/prozzie-toolbox sh -c "$latest_release_cmd"); then
         printf "Error to check latest prozzie release in github\\n" >&2
         return 1
     fi

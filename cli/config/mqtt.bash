@@ -36,6 +36,7 @@ declare -A module_hidden_envs=(
 	[mqtt.clean_session]='true'
 	[mqtt.connection_timeout]='30'
 	[mqtt.keep_alive_interval]='60'
+	[mqtt.connection.retries]='60'
 	[mqtt.qos]='1'
 	[message_processor_class]='com.evokly.kafka.connect.mqtt.sample.StringProcessor'
 )
@@ -51,10 +52,11 @@ showVarsDescription () {
     printf '\t%-40s%s\n' 'value.converter' 'Value converter class'
     printf '\t%-40s%s\n' 'mqtt.client_id' "MQTT client's id"
     printf '\t%-40s%s\n' 'mqtt.clean_session' 'Clean session'
-    printf '\t%-40s%s\n' 'mqtt.connection_timeout' 'Value converter class'
-    printf '\t%-40s%s\n' 'mqtt.keep_alive_interval' 'Value converter class'
-    printf '\t%-40s%s\n' 'mqtt.qosl' 'Value converter class'
-    printf '\t%-40s%s\n' 'message_processor_class' 'Value converter class'
+    printf '\t%-40s%s\n' 'mqtt.connection_timeout' 'connection timeout to use'
+    printf '\t%-40s%s\n' 'mqtt.keep_alive_interval' 'keepalive interval to use'
+    printf '\t%-40s%s\n' 'mqtt.connection.retries' 'number of retry connection'
+    printf '\t%-40s%s\n' 'mqtt.qos' 'mqtt qos to use'
+    printf '\t%-40s%s\n' 'message_processor_class' 'message processor to use'
 }
 
 ##

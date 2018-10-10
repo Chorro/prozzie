@@ -195,8 +195,9 @@ testSetupMqttModuleVariables() {
     while ! docker inspect --format='{{json .State.Health.Status}}' \
                     prozzie_kafka-connect_1| grep healthy >/dev/null; do :; done
 
-    genericTestModule 14 mqtt 'name=mqtt' \
+    genericTestModule 15 mqtt 'name=mqtt' \
                               'mqtt.qos=1' \
+                              'mqtt.connection.retries=60' \
                               'key.converter=org.apache.kafka.connect.storage.StringConverter' \
                               'value.converter=org.apache.kafka.connect.storage.StringConverter' \
                               'mqtt.server_uris=my.broker.mqtt:1883' \

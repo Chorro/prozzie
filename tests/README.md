@@ -37,6 +37,9 @@ reports
 Location of coverage report. `coverage.out` by default.
 
 ## Tests
+### tests_compose*.bash
+Test docker compose forwarding commands.
+
 ### tests_config*.bash
 Tests the configuration system. They do changes over the prozzie installation,
 so you can't run these tests in parallel with others.
@@ -53,3 +56,10 @@ the own test, allowing them to run in parallel.
 Test that will start the installation process, BUT they are not allowed to
 interact with docker daemon. You can execute these tests in parallel with
 others.
+
+### tests_setup_cancel*.bash
+Test cancellation in the middle of a setup.
+
+### tests_upgrade*.bash
+(Will) Test that previous version of prozzie can be upgraded to this version.
+This tests can't run in parallel with others.

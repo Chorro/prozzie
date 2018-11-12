@@ -16,23 +16,13 @@
 # limitations under the License.
 #
 
+from prozzie_pexpect import Line, test_pexpect
 
 import pexpect
 import sys
 
 
-class ControlCharacter:
-    def __init__(self, char):
-        self.char = char
-
-
-class Line:
-    def __init__(self, s):
-        self.line = s
-
-
-def test_help(linux_setup_path):
-
+if __name__ == "__main__":
     responses_sendline = {
         'Where do you want install prozzie?': [Line('')],
         'Introduce your client API key': [Line('def')],
@@ -41,45 +31,4 @@ def test_help(linux_setup_path):
         'Prozzie\'s Internal Kafka advertised IP': [(pexpect.spawn.sendintr)],
     }
 
-    logfile = None
-    logfile = sys.stdout
-    exit_status = 0
-
-    with pexpect.spawn(linux_setup_path,
-                       logfile=logfile,
-                       encoding='utf-8') as child:
-        expect_patterns = list(responses_sendline.keys())
-        while True:
-            res_index = child.expect(expect_patterns, timeout=300)
-
-            # If the list is empty, this raises an IndexError exception. This
-            # is intended.
-            res = responses_sendline[expect_patterns[res_index]].pop(0)
-            if res == pexpect.spawn.sendintr:
-                # Send intr and exit
-                child.sendintr()
-                exit_status = child.wait()
-                break
-
-            expected_child_response = None
-
-            if isinstance(res, Line) or isinstance(res, str):
-                # Fire and forget string
-                res_str = res
-            else:
-                res_str = res[0]
-                expected_child_response = res[1]
-
-            if isinstance(res_str, Line):
-                child.sendline(res_str.line)
-            else:
-                child.send(res_str)
-
-            if expected_child_response:
-                child.expect([expected_child_response], timeout=1)
-
-    return exit_status
-
-
-if __name__ == "__main__":
-    sys.exit(test_help(sys.argv[1]))
+    sys.exit(test_pexpect(sys.argv[1], responses_sendline))

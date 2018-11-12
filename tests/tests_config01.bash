@@ -6,6 +6,8 @@ declare -r INTERFACE_IP="a.b.c.d"
 . backupconfig.sh
 . base_tests_config.bash
 
+. "${PROZZIE_PREFIX}/share/cli/include/common.bash"
+
 #--------------------------------------------------------
 # TEST PROZZIE CONFIG OPTIONS
 #--------------------------------------------------------
@@ -366,8 +368,17 @@ testWizard() {
 
 testEnableModule() {
     declare -r expected_message='{"fieldA": "valueA", "fieldB": 12, "fieldC": true}'
+    declare -r connectors=(f2k monitor http2k syslog)
+    declare connector
 
-    "${PROZZIE_PREFIX}/bin/prozzie" config enable f2k monitor http2k syslog
+    "${PROZZIE_PREFIX}/bin/prozzie" config enable "${connectors[@]}"
+
+    for connector in "${connectors[@]}"; do
+        if ! "${PROZZIE_PREFIX}/bin/prozzie" config list-enabled | \
+                                           grep -x "$connector" >/dev/null; then
+            ${_FAIL_} "'$connector not listed in prozzie config list-enabled'"
+        fi
+    done
 
     if [[ ! -L "${PROZZIE_PREFIX}/etc/prozzie/compose/f2k.yaml" ]]; then
         ${_FAIL_} '"prozzie config enable must link f2k compose file"'
@@ -418,7 +429,16 @@ testEnableModule() {
 }
 
 testDisableModule() {
-    "${PROZZIE_PREFIX}/bin/prozzie" config disable f2k monitor http2k syslog
+    declare -r connectors=(f2k monitor http2k syslog)
+
+    "${PROZZIE_PREFIX}/bin/prozzie" config disable "${connectors[@]}"
+
+    if "${PROZZIE_PREFIX}/bin/prozzie" config list-enabled | \
+                            grep -xq "$(str_join '|' "${connectors[@]}")"; then
+        ${_FAIL_} \
+            "'Unexpected connector listed in prozzie config list-enabled: \
+            $("${PROZZIE_PREFIX}/bin/prozzie" config list-enabled)'"
+    fi
 
     if [[ -L "${PROZZIE_PREFIX}/etc/prozzie/compose/f2k.yaml" ]]; then
         ${_FAIL_} '"prozzie config disable must to unlink f2k compose file"'

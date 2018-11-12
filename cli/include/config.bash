@@ -436,13 +436,13 @@ zz_list_enabled_modules() {
     # Yaml modules
     for module in "${PREFIX}"/etc/prozzie/compose/*.yaml; do
         module=${module#$search_prefix}
-        printf '%s\n' "${module%$suffix}" >&2
+        printf '%s\n' "${module%$suffix}"
     done
 
     # Kafka connect modules
     for module in $("${PREFIX}"/bin/prozzie kcli ps); do
         "${PREFIX}/bin/prozzie" kcli status "$module" | head -n 1 | \
-                        grep 'RUNNING' >/dev/null && printf '%s\n' "$module" >&2
+                        grep -q 'RUNNING' && printf '%s\n' "$module"
     done
 }
 

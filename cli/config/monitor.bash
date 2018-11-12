@@ -23,10 +23,10 @@ monitor_custom_mib_prompt="$monitor_custom_mib_prompt for no custom mibs)"
 # This variable is intended to be imported, so we don't use this variable here
 # shellcheck disable=SC2034
 declare -A module_envs=(
-	[MONITOR_REQUEST_TIMEOUT]='25|Seconds between monitor polling'
-	[MONITOR_KAFKA_TOPIC]='monitor|Topic to produce monitor metrics'
+	[REQUESTS_TIMEOUT]='25|Seconds between monitor polling'
+	[KAFKA_TOPIC]='monitor|Topic to produce monitor metrics'
 	[MONITOR_CUSTOM_MIB_PATH]="monitor_custom_mibs|$monitor_custom_mib_prompt"
-	[MONITOR_SENSORS_ARRAY]="''|Monitor agents array")
+	[SENSORS_ARRAY]="''|Monitor agents array")
 
 ##
 ## @brief      Print a hint to the user about how to send messages to this

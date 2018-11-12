@@ -4,7 +4,7 @@
 # SNMP prozzie support
 ## SNMP polling
 In order to setup SNMP polling in prozzie, is advisable to add all snmp agents
-to `MONITOR_SENSORS_ARRAY` environment variable before use monitor setup, using
+to `SENSORS_ARRAY` environment variable before use monitor setup, using
 the format described in
 [monitor readme](https://github.com/wizzie-io/monitor#simple-snmp-monitoring).
 For example, executing monitor setup this way:
@@ -20,14 +20,14 @@ You can check that messages are properly delivered using `prozzie kafka consume 
 
 ## Variables
 
-MONITOR_REQUEST_TIMEOUT
+REQUESTS_TIMEOUT
 : Seconds between monitor polling. By default `25`
 
-MONITOR_KAFKA_TOPIC
+KAFKA_TOPIC
 : Topic to produce monitor metrics. By default `monitor`
 
 MONITOR_CUSTOM_MIB_PATH
 : Monitor custom MIB path. By default `monitor_custom_mibs`
 
-MONITOR_SENSORS_ARRAY
+SENSORS_ARRAY
 : Monitor agents array. By default `''`

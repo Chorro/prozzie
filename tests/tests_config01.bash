@@ -83,6 +83,46 @@ testSetupF2kModuleVariables() {
 # TEST MONITOR MODULE
 #--------------------------------------------------------
 
+##
+## @brief      Assert that topic exists and there are one message in it
+##
+## @param      1 - Topic to check
+##
+## @return     Always true, exit if not
+##
+assert_one_message_in_topic() {
+    while ! "${PROZZIE_PREFIX}/bin/prozzie" kafka topics --list | \
+                                                             grep -xq "$1"; do
+            :
+    done
+
+    ${_ASSERT_EQUALS_} "'Incorrect number of messages in topic $1'" \
+        '1' "$("${PROZZIE_PREFIX}/bin/prozzie" kafka consume "$1" \
+        --from-beginning --max-messages 1 | grep -o -E '{.+}' | wc -l)"
+}
+
+##
+## @brief      Sends a test snmp trap.
+##
+## @param      1 Destination host
+##
+## @return     Always true, shunit fail otherwise
+##
+send_snmp_trap () {
+    declare -r destination="$1"
+
+    if ! snmptrap \
+            -v 2c \
+            -c public \
+            "${destination}" \
+            "" \
+            1.3.6.1.4.1.2021.13.991 \
+            .1.3.6.1.2.1.1.6 \
+            s "Device in Wizzie"; then
+        ${_FAIL_} '"snmptrap command failed"'
+    fi
+}
+
 testSetupMonitorModuleVariables() {
     declare mibs_directory mibs_directory2
     mibs_directory=$(mktemp -d)
@@ -97,20 +137,35 @@ testSetupMonitorModuleVariables() {
        'Monitor agents array' "\\'\\'"
 
     genericTestModule 4 monitor "MONITOR_CUSTOM_MIB_PATH=${mibs_directory}" \
-                                'MONITOR_KAFKA_TOPIC=monitor' \
-                                'MONITOR_REQUEST_TIMEOUT=25' \
-                                "MONITOR_SENSORS_ARRAY=''"
+                                'KAFKA_TOPIC=monitor' \
+                                'REQUESTS_TIMEOUT=25' \
+                                "SENSORS_ARRAY=''"
+
+    while ! /opt/prozzie/bin/prozzie logs monitor | \
+                                            grep -q 'Listening for traps'; do
+        :;
+    done
+    send_snmp_trap "${HOSTNAME}"
+    assert_one_message_in_topic monitor
 
     "${PROZZIE_PREFIX}"/bin/prozzie config set monitor \
         MONITOR_CUSTOM_MIB_PATH="${mibs_directory2}" \
-        MONITOR_KAFKA_TOPIC=myMonitorTopic \
-        MONITOR_REQUEST_TIMEOUT=60 \
-        MONITOR_SENSORS_ARRAY="'a,b,c,d'" \
+        KAFKA_TOPIC=myMonitorTopic \
+        REQUESTS_TIMEOUT=60 \
+        SENSORS_ARRAY="''"
 
     genericTestModule 4 monitor "MONITOR_CUSTOM_MIB_PATH=${mibs_directory2}" \
-                                'MONITOR_KAFKA_TOPIC=myMonitorTopic' \
-                                'MONITOR_REQUEST_TIMEOUT=60' \
-                                "MONITOR_SENSORS_ARRAY='a,b,c,d'"
+                                'KAFKA_TOPIC=myMonitorTopic' \
+                                'REQUESTS_TIMEOUT=60' \
+                                "SENSORS_ARRAY=''"
+
+    while ! /opt/prozzie/bin/prozzie logs monitor | \
+                                            grep -q 'Listening for traps'; do
+        :;
+    done
+
+    send_snmp_trap "${HOSTNAME}"
+    assert_one_message_in_topic myMonitorTopic
 }
 
 #--------------------------------------------------------
@@ -476,16 +531,6 @@ testEnableModule() {
     if [[ ! -L "${PROZZIE_PREFIX}/etc/prozzie/compose/monitor.yaml" ]]; then
         ${_FAIL_} '"prozzie config enable must link monitor compose file"'
     fi
-
-    if ! snmptrap -v 2c -c public "${HOSTNAME}" "" 1.3.6.1.4.1.2021.13.991 .1.3.6.1.2.1.1.6 s "Device in Wizzie"; then
-        ${_FAIL_} '"snmptrap command failed"'
-    fi
-
-    ${_ASSERT_EQUALS_} '"Incorrect number of topics for monitor"' \
-    '1' "$("${PROZZIE_PREFIX}/bin/prozzie" kafka topics --list | grep monitor | wc -w)"
-
-    ${_ASSERT_EQUALS_} '"Incorrect number of messages in topic monitor"' \
-    '1' "$("${PROZZIE_PREFIX}/bin/prozzie" kafka consume monitor --from-beginning --max-messages 1 | grep -o -E '{.+}' | wc -l)"
 
     if [[ ! -L "${PROZZIE_PREFIX}/etc/prozzie/compose/http2k.yaml" ]]; then
         ${_FAIL_} '"prozzie config enable must link http2k compose file"'

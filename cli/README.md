@@ -59,6 +59,19 @@ zz_connector_disable
 the enable operation easy, and don't need to introduce all the parameters
 again.
 
+Note that you can also import these function from files like
+`config_compose.bash`, regular compose connectors,
+`config_compose_no_vars.bash`, for compose connectors that do not need any
+configuration variable, and `config_kcli.bash`, for kafka-connect base
+connectors, and to override the one you need.
+Also, the configuration file may contain these functions that modify a
+specific variable configuration's behavior:
+
+${variable_name}_sanitize: This function runs after the user's variable value
+introduction, and can modify the variable value. Pre-sanitize variable's value
+is the first parameter, and sanitize function must return the variable's new
+value.
+
 ### Compose based
 To be able to enable/disable docker based components, the compose is formed by
 many `.yaml` files, and they are concatenated in prozzie config command: The

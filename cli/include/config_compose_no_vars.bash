@@ -50,6 +50,12 @@ zz_connector_set_variables () {
 # shellcheck disable=SC2034
 declare -A module_envs=()
 
-showVarsDescription () {
+##
+## @brief      Print message saying that there is nothing to configure for this
+##             module
+##
+## @return     Always 0
+##
+zz_connector_show_vars_description () {
     printf '\tNo vars description\n'
 }

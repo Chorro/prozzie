@@ -24,32 +24,18 @@ declare -A module_envs=()
 # This variable is intended to be imported, so we don't use this variable here
 # shellcheck disable=SC2034
 declare -A module_hidden_envs=(
-	[name]='syslog'
-	[connector.class]='com.github.jcustenborder.kafka.connect.syslog.UDPSyslogSourceConnector'
-	[tasks.max]='1'
-	[key.converter]='org.apache.kafka.connect.json.JsonConverter'
-	[value.converter]='org.apache.kafka.connect.json.JsonConverter'
-	[key.converter.schemas.enable]='false'
-	[value.converter.schemas.enable]='false'
-	[kafka.topic]='syslog'
-	[syslog.host]='0.0.0.0'
-	[syslog.port]='1514'
-	[syslog.structured.data]='true'
+	[name]="syslog|Syslog client's name"
+	[connector.class]='com.github.jcustenborder.kafka.connect.syslog.UDPSyslogSourceConnector|Connector Java class'
+	[tasks.max]='1|Max number of tasks'
+	[key.converter]='org.apache.kafka.connect.json.JsonConverter|Key converter Java class'
+	[value.converter]='org.apache.kafka.connect.json.JsonConverter|Value converter Java class'
+	[key.converter.schemas.enable]='false|Enable key schema conversion'
+	[value.converter.schemas.enable]='false|Enable value schema conversion'
+	[kafka.topic]="syslog|Kafka's topic"
+	[syslog.host]="0.0.0.0|Syslog's host"
+	[syslog.port]="1514|Syslog's port"
+	[syslog.structured.data]='true|Enable structured data'
 )
-
-showVarsDescription () {
-    printf '\t%-40s%s\n' 'name' "Syslog client's name"
-    printf '\t%-40s%s\n' 'connector.class' 'Connector Java class'
-    printf '\t%-40s%s\n' 'tasks.max' 'Max number of tasks'
-    printf '\t%-40s%s\n' 'key.converter' 'Key converter Java class'
-    printf '\t%-40s%s\n' 'value.converter' 'Value converter Java class'
-    printf '\t%-40s%s\n' 'key.converter.schemas.enable' 'Enable key schema conversion '
-    printf '\t%-40s%s\n' 'value.converter.schemas.enable' 'Value converter Enable value schema conversion'
-    printf '\t%-40s%s\n' 'kafka.topic' "Kafka's topic"
-    printf '\t%-40s%s\n' 'syslog.host' "Syslog's host"
-    printf '\t%-40s%s\n' 'syslog.port' "Syslog's port"
-    printf '\t%-40s%s\n' 'syslog.structured.data' 'Enable structured data'
-}
 
 ##
 ## @brief      Print a hint to the user about how to send messages to this

@@ -32,12 +32,6 @@ declare -A module_envs=(
 	[SFLOW_RENORMALIZE]='true|Normalize sflow based on sampling'
 	[SFLOW_AGGREGATE]="$sfacctd_aggregate"'|sfacctd aggregation fields')
 
-showVarsDescription () {
-    printf '\t%-40s%s\n' 'SFLOW_KAFKA_TOPIC' 'Topic to produce sflow traffic'
-    printf '\t%-40s%s\n' 'SFLOW_RENORMALIZE' 'Normalize sflow based on sampling'
-    printf '\t%-40s%s\n' 'SFLOW_AGGREGATE' 'Aggregation fields'
-}
-
 ##
 ## @brief      Print a hint to the user about how to send messages to this
 ##             module. INTERFACE_IP and SFLOW_KAFKA_TOPIC environment

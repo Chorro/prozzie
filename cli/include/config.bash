@@ -445,3 +445,38 @@ zz_list_enabled_modules() {
                         grep 'RUNNING' >/dev/null && printf '%s\n' "$module" >&2
     done
 }
+
+##
+## @brief      Prints description of every variable in module_envs and
+##             module_hidden_envs environment variables via stdout.
+##
+## No Arguments
+##
+## Environment:
+##  module_envs - Module's environment as usual
+##  module_hidden_envs - Module's hidden environment as usual
+##
+## Out:
+##  User interface
+##
+## @return     Always 0
+##
+zz_connector_show_vars_description () {
+    declare -r not_pipe='[^\|]'
+    declare var_key var_description
+
+    # module_{hidden_}envs is supposed to be present when prozzie calls this
+    # function
+    # shellcheck disable=2154
+    for var_key in "${!module_envs[@]}" "${!module_hidden_envs[@]}"; do
+        var_description="${module_envs[$var_key]-${module_hidden_envs[$var_key]}}"
+        # Variable description is in between '|'
+        # Shellcheck say that we must replace '\' for '\\', but is simply wrong
+        # shellcheck disable=1117
+        var_description=$(sed \
+                          "s%${not_pipe}*|\(${not_pipe}*\).*%\1%" \
+                          <<<"$var_description" | squash_spaces)
+
+        printf '\t%-40s%s\n' "${var_key}" "${var_description}"
+    done
+}

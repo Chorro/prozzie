@@ -27,37 +27,19 @@ declare -A module_envs=(
 # This variable is intended to be imported, so we don't use this variable here
 # shellcheck disable=SC2034
 declare -A module_hidden_envs=(
-	[name]='mqtt'
-	[connector.class]='com.evokly.kafka.connect.mqtt.MqttSourceConnector'
-	[tasks.max]='1'
-	[key.converter]='org.apache.kafka.connect.storage.StringConverter'
-	[value.converter]='org.apache.kafka.connect.storage.StringConverter'
-	[mqtt.client_id]='my-id'
-	[mqtt.clean_session]='true'
-	[mqtt.connection_timeout]='30'
-	[mqtt.keep_alive_interval]='60'
-	[mqtt.connection.retries]='60'
-	[mqtt.qos]='1'
-	[message_processor_class]='com.evokly.kafka.connect.mqtt.sample.StringProcessor'
+	[name]="mqtt|MQTT client's name"
+	[connector.class]='com.evokly.kafka.connect.mqtt.MqttSourceConnector|MQTT connector'
+	[tasks.max]='1|Max number of tasks'
+	[key.converter]='org.apache.kafka.connect.storage.StringConverter|Key converter class'
+	[value.converter]='org.apache.kafka.connect.storage.StringConverter|Value converter class'
+	[mqtt.client_id]="my-id|MQTT client's id"
+	[mqtt.clean_session]='true|Clean session'
+	[mqtt.connection_timeout]='30|Connection timeout to use'
+	[mqtt.keep_alive_interval]='60|Keepalive interval to use'
+	[mqtt.connection.retries]='60|Number of retry connection'
+	[mqtt.qos]='1|Mqtt qos to use'
+	[message_processor_class]='com.evokly.kafka.connect.mqtt.sample.StringProcessor|Message processor to use'
 )
-
-showVarsDescription () {
-    printf '\t%-40s%s\n' 'mqtt.server_uris' 'MQTT brokers'
-    printf '\t%-40s%s\n' 'kafka.topic' "Kafka's topic to produce MQTT consumed messages"
-    printf '\t%-40s%s\n' 'mqtt.topic' "MQTT's topics to consume"
-    printf '\t%-40s%s\n' 'name' "MQTT client's name"
-    printf '\t%-40s%s\n' 'connector.class' 'MQTT connector'
-    printf '\t%-40s%s\n' 'tasks.max' 'Max number of tasks'
-    printf '\t%-40s%s\n' 'key.converter' 'Key converter class'
-    printf '\t%-40s%s\n' 'value.converter' 'Value converter class'
-    printf '\t%-40s%s\n' 'mqtt.client_id' "MQTT client's id"
-    printf '\t%-40s%s\n' 'mqtt.clean_session' 'Clean session'
-    printf '\t%-40s%s\n' 'mqtt.connection_timeout' 'connection timeout to use'
-    printf '\t%-40s%s\n' 'mqtt.keep_alive_interval' 'keepalive interval to use'
-    printf '\t%-40s%s\n' 'mqtt.connection.retries' 'number of retry connection'
-    printf '\t%-40s%s\n' 'mqtt.qos' 'mqtt qos to use'
-    printf '\t%-40s%s\n' 'message_processor_class' 'message processor to use'
-}
 
 ##
 ## @brief      Print a hint to the user about how to send messages to this

@@ -25,12 +25,6 @@ declare -A module_envs=(
 	[INTERFACE_IP]='|Interface IP address '
 	[CLIENT_API_KEY]='|Client API key ')
 
-showVarsDescription () {
-    printf '\t%-40s%s\n' 'ZZ_HTTP_ENDPOINT' 'HTTPS endpoint URL'
-    printf '\t%-40s%s\n' 'INTERFACE_IP' 'Interface IP address'
-    printf '\t%-40s%s\n' 'CLIENT_API_KEY' 'Client API key'
-}
-
 ##
 ## @brief      Simple wrapper for zz_get_vars, using base env file. Need
 ##             PREFIX environment variable to know where to find envs file.

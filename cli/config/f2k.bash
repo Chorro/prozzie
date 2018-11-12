@@ -23,11 +23,6 @@ declare -A module_envs=(
 	[NETFLOW_PROBES]="{}|JSON object of NF probes (It's recommend to use env var) "
 	[NETFLOW_KAFKA_TOPIC]='flow|Topic to produce netflow traffic? ')
 
-showVarsDescription () {
-    printf '\t%-40s%s\n' 'NETFLOW_PROBES' 'JSON object of NF probes'
-    printf '\t%-40s%s\n' 'NETFLOW_KAFKA_TOPIC' 'Topic to produce netflow traffic'
-}
-
 ##
 ## @brief      Print a hint to the user about how to send messages to this
 ##             module. INTERFACE_IP and NETFLOW_KAFKA_TOPIC environment

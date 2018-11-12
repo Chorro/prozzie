@@ -20,30 +20,20 @@
 # This variable is intended to be imported, so we don't use this variable here
 # shellcheck disable=SC2034
 declare -A module_envs=(
-	[aerohive.access_token]='|Access token to validate webhook callbacks'
+	[aerohive.access_token]='|Access token to validate webhook callbacks|Access token sent to server within an HTTP Authorization header'
     )
 
 # This variable is intended to be imported, so we don't use this variable here
 # shellcheck disable=SC2034
 declare -A module_hidden_envs=(
-	[name]='aerohive'
-	[connector.class]='io.wizzie.kafka.connect.aerohive.WebhookSourceConnector'
-	[tasks.max]='1'
-	[key.converter]='org.apache.kafka.connect.storage.StringConverter'
-	[value.converter]='org.apache.kafka.connect.storage.StringConverter'
-	[aerohive.client_id]='aerohive'
-	[message_processor_class]='io.wizzie.kafka.connect.aerohive.processor.StringProcessor'
+	[name]="aerohive|Aerohive client's name"
+	[connector.class]='io.wizzie.kafka.connect.aerohive.WebhookSourceConnector|Aerohive connector'
+	[tasks.max]='1|Max number of tasks'
+	[key.converter]='org.apache.kafka.connect.storage.StringConverter|Key converter class'
+	[value.converter]='org.apache.kafka.connect.storage.StringConverter|Value converter class'
+	[aerohive.client_id]="aerohive|Aerohives client's id"
+	[message_processor_class]='io.wizzie.kafka.connect.aerohive.processor.StringProcessor|Value converter class'
 )
-
-showVarsDescription () {
-    printf '\t%-40s%s\n' 'aerohive.access_token' 'Access token sent to server within an HTTP Authorization header to validate webhook callbacks'
-    printf '\t%-40s%s\n' 'name' "Aerohive client's name"
-    printf '\t%-40s%s\n' 'tasks.max' 'Max number of tasks'
-    printf '\t%-40s%s\n' 'key.converter' 'Key converter class'
-    printf '\t%-40s%s\n' 'value.converter' 'Value converter class'
-    printf '\t%-40s%s\n' 'aerohive.client_id' "Aerohives client's id"
-    printf '\t%-40s%s\n' 'message_processor_class' 'Value converter class'
-}
 
 ##
 ## @brief      Print a hint to the user about how to send messages to this

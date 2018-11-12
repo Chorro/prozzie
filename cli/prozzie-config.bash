@@ -178,7 +178,7 @@ main() {
                 ;;
                 describe)
                     printf 'Module %s: \n' "${module}"
-                    showVarsDescription
+                    zz_connector_show_vars_description
                     return
                 ;;
                 setup)
@@ -202,12 +202,12 @@ main() {
             declare -r suffix=".bash"
 
             for config_module in "$PROZZIE_CLI_CONFIG"/*.bash; do
-                . "$config_module"
+                (. "$config_module"
 
                 config_module=${config_module#$prefix}
                 printf 'Module %s: \n' "${config_module%$suffix}"
 
-                showVarsDescription
+                zz_connector_show_vars_description)
             done
             exit 0
         ;;

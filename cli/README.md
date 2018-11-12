@@ -34,7 +34,7 @@ To add a new one, you need to create your `cli/config/<module>.bash` file with
 the module_envs associative array variable, that contains module keys->values,
 and the next functions:
 
-showVarsDescription
+zz_connector_show_vars_description
 : Print all module variable descriptions.
 
 zz_connector_get_variables

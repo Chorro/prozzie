@@ -191,7 +191,7 @@ kcli_update_properties_file () {
     # shellcheck disable=SC2154
     for var in "${!module_hidden_envs[@]}"; do
         # shellcheck disable=SC2154
-        printf '%s=%s\n' "${var}" "${module_hidden_envs["${var}"]}" >> "$1"
+        printf '%s=%s\n' "${var}" "${module_hidden_envs[${var}]%%|*}" >> "$1"
     done
 
     # Escape dots for app_setup environments
@@ -229,6 +229,8 @@ kcli_update_properties_file () {
 kcli_setup () {
     log info $'These changes will be applied at the end of app setup\n'
     kcli_update_properties_file "$1"
-    declare -r module_name="${module_envs['name']-${module_hidden_envs['name']}}"
+    declare module_name="${module_envs['name']-${module_hidden_envs['name']}}"
+    # Only the name, not the module prompt or help
+    module_name="${module_name%%|*}"
     "${PREFIX}/bin/prozzie" kcli create "${module_name}" < "$1"
 }

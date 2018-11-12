@@ -9,25 +9,6 @@ declare -r INTERFACE_IP="a.b.c.d"
 . "${PROZZIE_PREFIX}/share/prozzie/cli/include/common.bash"
 
 #--------------------------------------------------------
-# TEST PROZZIE CONFIG OPTIONS
-#--------------------------------------------------------
-
-testBasicHelp() {
-    # prozzie config must show help with no failure
-    "${PROZZIE_PREFIX}"/bin/prozzie config
-}
-
-testConfigCommandHelp() {
-    # prozzie config --help must show help with no failure
-    "${PROZZIE_PREFIX}"/bin/prozzie config --help
-}
-
-testDescribeAll() {
-    # prozzie config describe-all must describe all modules with no failure
-    "${PROZZIE_PREFIX}"/bin/prozzie config describe-all
-}
-
-#--------------------------------------------------------
 # TEST BASE MODULE
 #--------------------------------------------------------
 
@@ -305,24 +286,6 @@ testSetupSyslogModuleVariables() {
 # TEST RESILIENCE
 #--------------------------------------------------------
 
-testDescribeWrongModule() {
-    if "${PROZZIE_PREFIX}"/bin/prozzie config describe wrongModule; then
-        ${_FAIL_} '"prozzie config describe wrongModule must show error"'
-    fi
-}
-
-testWrongOption() {
-    if "${PROZZIE_PREFIX}"/bin/prozzie config --wrongOption; then
-        ${_FAIL_} '"prozzie config --wrongOption must show error"'
-    fi
-}
-
-testWrongAction() {
-    if "${PROZZIE_PREFIX}"/bin/prozzie config wrongAction; then
-        ${_FAIL_} '"prozzie config wrongAction must show error"'
-    fi
-}
-
 ##
 ## @brief      Test to set a wrong variable with prozzie config set
 ##
@@ -422,12 +385,6 @@ testSetNoReloadProzzie() {
     fi
 }
 
-testGetWrongModuleConfiguration() {
-    if "${PROZZIE_PREFIX}"/bin/prozzie config get wrongModule; then
-        ${_FAIL_} '"prozzie config get must show error if module does not have an associated .env file"'
-    fi
-}
-
 testWrongModule() {
     touch "${PROZZIE_PREFIX}"/etc/prozzie/envs/wrongModule.env
 
@@ -436,33 +393,6 @@ testWrongModule() {
     fi
 
     rm -rf "${PROZZIE_PREFIX}"/etc/prozzie/envs/wrongModule.env
-}
-
-testDescribeMustShowHelpIfModuleIsNotPresent() {
-    if "${PROZZIE_PREFIX}"/bin/prozzie config describe; then
-        ${_FAIL_} '"prozzie config describe must show help with failure"'
-    fi
-}
-
-testSetupMustShowHelpIfModuleIsNotPresent() {
-    if "${PROZZIE_PREFIX}"/bin/prozzie config setup; then
-        ${_FAIL_} '"prozzie config setup must show help with failure"'
-    fi
-}
-
-testConfigMustShowErrorIfModuleIsNotExist() {
-    if "${PROZZIE_PREFIX}"/bin/prozzie config get wrongModule; then
-        ${_FAIL_} '"prozzie config get wrongModule must show error"'
-    fi
-}
-
-testConfigMustShowHelpIfTryToSetMqttAndSyslogModules() {
-    if "${PROZZIE_PREFIX}"/bin/prozzie config set mqtt kafka.topic=myTopic; then
-        ${_FAIL_} '"prozzie config set mqtt kafka.topic=myTopic must show help"'
-    fi
-    if "${PROZZIE_PREFIX}"/bin/prozzie config set syslog kafka.topic=myTopic; then
-        ${_FAIL_} '"prozzie config set syslog kafka.topic=myTopic must show help"'
-    fi
 }
 
 testSetupCancellation() {

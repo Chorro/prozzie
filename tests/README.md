@@ -44,6 +44,9 @@ Test docker compose forwarding commands.
 Tests the configuration system. They do changes over the prozzie installation,
 so you can't run these tests in parallel with others.
 
+### tests_dryconfig.bash
+Tests with `config` command that can be parallelized with other tests.
+
 ### tests_prozzie*.bash
 Test basic CLI behavior, like error returning or help. You can run these tests
 in parallel.

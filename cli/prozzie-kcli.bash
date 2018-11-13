@@ -31,10 +31,21 @@
 #  kcli one
 #
 
+set -e
+
 if [[ $# -gt 0 && $1 == '--shorthelp' ]]; then
 	printf '%s\n' 'Handle kafka connectors'
 	exit 0
 fi
 
-docker run --network=prozzie_default --rm -i -e KAFKA_CONNECT_REST='http://kafka-connect:8083' \
-    gcr.io/wizzie-registry/kafka-connect-cli:1.0.3 sh -c "kcli $*"
+declare -r kafka_connect_image=gcr.io/wizzie-registry/kafka-connect-cli:1.0.3
+
+# Don't want docker pull mess with stdout, and there is no need to do docker
+# pull if no actual pull will be done.
+if ! docker images "${kafka_connect_image}" | grep -q .; then
+	docker pull "${kafka_connect_image}" >&2
+fi
+
+docker run --network=prozzie_default --rm -i \
+    -e KAFKA_CONNECT_REST='http://kafka-connect:8083' \
+    "$kafka_connect_image" sh -c "kcli $*"

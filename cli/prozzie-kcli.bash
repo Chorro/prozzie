@@ -46,6 +46,21 @@ if ! docker images "${kafka_connect_image}" | grep -q .; then
 	docker pull "${kafka_connect_image}" >&2
 fi
 
+declare waiting_kafka_connect=n
+while ! "${PREFIX}/bin/prozzie" compose ps kafka-connect | \
+                                                     grep -q '(healthy)'; do
+    if [[ "$waiting_kafka_connect" == n ]]; then
+        waiting_kafka_connect=y
+        printf 'Waiting kafka-connect to be ready... ' >&2
+    fi
+    sleep 0.5
+    printf '.' >&2
+done
+
+if [[ "$waiting_kafka_connect" == y ]]; then
+	printf 'OK\n' >&2
+fi
+
 docker run --network=prozzie_default --rm -i \
     -e KAFKA_CONNECT_REST='http://kafka-connect:8083' \
     "$kafka_connect_image" sh -c "kcli $*"

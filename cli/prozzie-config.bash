@@ -241,7 +241,7 @@ main() {
             exit $return_code
         ;;
         list-enabled)
-            zz_list_enabled_modules
+            zz_list_enabled_modules "$@"
             exit 0
         ;;
         --shorthelp)

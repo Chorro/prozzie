@@ -425,11 +425,11 @@ connector_setup () {
 
 # List enable modules
 # Arguments:
-#  None
+#  [--quiet|-q] Only show modules
 # Exit status:
 #  Always 0
 zz_list_enabled_modules() {
-    printf 'Enabled modules: \n' >&2
+    [[ $# -lt 1 || ($1 != -q && $1 != --quiet) ]] && printf 'Enabled modules:\n'
     declare -r search_prefix='*/compose/'
     declare -r suffix='.yaml'
 

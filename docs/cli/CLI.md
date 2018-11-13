@@ -107,8 +107,9 @@ Prozzie config command has next actions:
 `prozzie config disable <module1, module2, ···, moduleN>`
 : Disable selected modules to avoid run it with `prozzie up` command
 
-`prozzie config list-enabled`
-: Shows only enabled modules
+`prozzie config list-enabled [--quiet|-q]`
+: Shows only enabled modules. The option `--quiet` will not print the title,
+making it more suitable for scripting.
 
 Prozzie config command has next options:
 

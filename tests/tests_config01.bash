@@ -477,6 +477,22 @@ testDisableModule() {
 
 testListEnabledModules() {
     "${PROZZIE_PREFIX}/bin/prozzie" config list-enabled
+
+    # Currently, they are equal: Only difference in "table" header
+    if ! diff <("${PROZZIE_PREFIX}/bin/prozzie" config list-enabled | \
+                                                grep -v '^Enabled modules:' | \
+                                                sort) \
+              <("${PROZZIE_PREFIX}/bin/prozzie" config list-enabled -q | \
+                                                                    sort); then
+        ${_FAIL_} '"prozzie config list-enabled not working properly"'
+    fi
+
+    if ! diff <("${PROZZIE_PREFIX}/bin/prozzie" config list-enabled --quiet | \
+                                                                        sort) \
+              <("${PROZZIE_PREFIX}/bin/prozzie" config list-enabled -q | \
+                                                                    sort); then
+        ${_FAIL_} '"prozzie config list-enabled -q not equal to --quiet"'
+    fi
 }
 
 . test_run.sh

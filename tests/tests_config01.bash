@@ -6,7 +6,7 @@ declare -r INTERFACE_IP="a.b.c.d"
 . backupconfig.sh
 . base_tests_config.bash
 
-. "${PROZZIE_PREFIX}/share/cli/include/common.bash"
+. "${PROZZIE_PREFIX}/share/prozzie/cli/include/common.bash"
 
 #--------------------------------------------------------
 # TEST PROZZIE CONFIG OPTIONS
@@ -492,6 +492,11 @@ testListEnabledModules() {
               <("${PROZZIE_PREFIX}/bin/prozzie" config list-enabled -q | \
                                                                     sort); then
         ${_FAIL_} '"prozzie config list-enabled -q not equal to --quiet"'
+    fi
+
+    # Base module should never be printed here
+    if "${PROZZIE_PREFIX}/bin/prozzie" config list-enabled -q | grep base; then
+        ${_FAIL_} "'Base compose module listed in \"prozzie config list-enabled\"'"
     fi
 }
 

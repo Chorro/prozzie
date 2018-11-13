@@ -445,6 +445,9 @@ zz_list_enabled_modules() {
 
     # Yaml modules
     for module in "${PREFIX}"/etc/prozzie/compose/*.yaml; do
+        if [[ $module =~ /base.yaml$ ]]; then
+            continue
+        fi
         module=${module#$search_prefix}
         printf '%s\n' "${module%$suffix}"
     done

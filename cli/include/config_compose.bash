@@ -64,17 +64,31 @@ assert_env_file_exists () {
 ## @param      2 - Module name, and env file name
 ## @param      @ - Other parameters
 ##
-## @return     { description_of_the_return_value }
+## @return     cmd_callback return code
 ##
 zz_connector_env_handler () {
+	eval set -- "$(getopt -o '' --long dry-run -- "$@")"
+	declare -a opts
+
+	while [[ $#	-gt 1 ]]; do
+		if [[ $1 == '--' ]]; then
+			shift
+			break
+		fi
+
+		opts+=("$1")
+		shift
+	done
+
 	declare -r cmd_callback="$1"
-	declare -r module="$2"
+	declare -r connector="$2"
+	shift 2
 	declare env_file
-	env_file=$(connector_env_file "$module")
+	env_file=$(connector_env_file "$connector")
 	declare -r env_file
 
 	assert_env_file_exists "${env_file}"
-	$cmd_callback "${env_file}" "${@:3}"
+	$cmd_callback "${opts[@]}" "${env_file}" "$@"
 }
 
 ##
@@ -89,8 +103,24 @@ zz_connector_get_variables () {
 ## @brief      Simple wrapper for zz_set_vars, using proper env path. Need
 ##             PREFIX environment variable to know where to find envs file.
 ##
+## @param      --no-reload-prozzie    Do not reload prozzie at end of `prozzie
+##             config set`
+## @param      $@ Any other parameter is forwarded to zz_connector_env_handler
+##
+## @return     prozzie up -d result
+##
 zz_connector_set_variables () {
-	zz_connector_env_handler zz_set_vars "$@"
+	declare reload_prozzie=y
+
+	if [[ $1 == --no-reload-prozzie ]]; then
+		reload_prozzie=n
+		shift
+	fi
+
+	zz_connector_env_handler zz_set_vars "$@" && {
+		[[ $reload_prozzie == 'n' ]] || \
+		"${PREFIX}/bin/prozzie" up -d
+	}
 }
 
 ##

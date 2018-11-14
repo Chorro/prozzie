@@ -259,14 +259,103 @@ testWrongAction() {
     fi
 }
 
+##
+## @brief      Test to set a wrong variable with prozzie config set
+##
+## @param      1 Args modifier, to be able to add and remove arguments of the
+##               set
+##
+## @return     Always true
+##
+x_testSetWrongVariable() {
+    declare args_modifier=$1
+    declare base_md5sum_pre f2k_md5sum_pre
+    declare -ar wrongCommands=(
+        # First variable valid, other invalid: `prozzie config set should not
+        # change anything even if some of them are valid
+        'base INTERFACE_IPV4=1.2.3.4 HTTP_ENDPOINT=my.super.test.endpoint'
+        # First variable valid, other invalid: `prozzie config set should not
+        # change anything even if some of them are valid
+        'base CLIENT_API_KEY=1234 INTERFACE_IPV4=1.2.3.4 HTTP_ENDPOINT=my.super.test.endpoint'
+        # Wrong variable formar
+        'base VAR_WITH_NO_VALUE'
+        # Unknown variable in module ! base
+        'f2k BLABLA=bleble'
+        'f2k NETFLOW_KAFKA_TOPIC=titi BLABLA=bleble'
+        # Wrong module
+        'wrongModule MYVAR=myval'
+        )
+
+    "${PROZZIE_PREFIX}/bin/prozzie" config enable f2k
+
+    base_md5sum_pre=$(md5sum ${PROZZIE_PREFIX}/etc/prozzie/.env)
+    f2k_md5sum_pre=$(md5sum ${PROZZIE_PREFIX}/etc/prozzie/envs/f2k.env)
+    declare -r base_md5sum_pre f2k_md5sum_pre
+
+    for args in "${wrongCommands[@]}"; do
+        # Want argument splitting here
+        # shellcheck disable=2086
+        args="$($args_modifier $args)"
+        printf 'Testing prozzie config set %s\n' "$args"
+        # shellcheck disable=2086
+        if "${PROZZIE_PREFIX}"/bin/prozzie config set $args; then
+            ${_FAIL_} \
+                '"prozzie config set must show error if keys are not recognized"'
+        fi
+
+        ${_ASSERT_EQUALS_} \
+            '"prozzie config set invalid variable changed env file"' \
+            "'$base_md5sum_pre'" \
+            "'$(md5sum ${PROZZIE_PREFIX}/etc/prozzie/.env)'"
+
+        ${_ASSERT_EQUALS_} \
+            '"prozzie config set invalid variable changed env file"' \
+            "'$f2k_md5sum_pre'" \
+            "'$(md5sum ${PROZZIE_PREFIX}/etc/prozzie/envs/f2k.env)'"
+
+        # Check that anything change
+        genericTestModule 3 base 'ZZ_HTTP_ENDPOINT=https://localhost/v1/data' \
+                                 "INTERFACE_IP=${HOSTNAME}" \
+                                 'CLIENT_API_KEY=prozzieapi'
+    done
+}
+
+add_dry_run_after_module() {
+    printf '%s ' "$1"
+    printf '%s ' '--dry-run'
+    printf '%s ' "${@:1}"
+}
+
+identity_function() {
+    printf '%s ' "$@"
+}
+
+append_dry_run() {
+    printf '%s ' '--dry-run '; printf '%s ' "$@"
+}
+
+
 testSetWrongVariable() {
-    if "${PROZZIE_PREFIX}"/bin/prozzie config set base CLIENT__API__KEY=1234 INTERFACE_IPV4=1.2.3.4 HTTP_ENDPOINT=my.super.test.endpoint; then
-        ${_FAIL_} '"prozzie config set must show error if keys are not recognized"'
+    x_testSetWrongVariable identity_function
+    x_testSetWrongVariable append_dry_run
+    x_testSetWrongVariable add_dry_run_after_module
+}
+
+testSetNoReloadProzzie() {
+    "${PROZZIE_PREFIX}"/bin/prozzie config set --no-reload-prozzie \
+        base CLIENT_API_KEY=notreloadedapi
+
+    if ! grep -xq 'CLIENT_API_KEY=notreloadedapi' \
+                                      "${PROZZIE_PREFIX}/etc/prozzie/.env"; then
+        ${_FAIL_} '"Variable not changed in env file"'
     fi
 
-    genericTestModule 3 base 'ZZ_HTTP_ENDPOINT=https://localhost/v1/data' \
-                             "INTERFACE_IP=${HOSTNAME}" \
-                             'CLIENT_API_KEY=prozzieapi'
+    if ! docker inspect prozzie_k2http_1 | \
+                        grep -q 'HTTP_POST_PARAMS=apikey:prozzieapi' || \
+                        docker inspect prozzie_k2http_1 | \
+                        grep -q 'HTTP_POST_PARAMS=apikey:notreloadedapi'; then
+        ${_FAIL_} '"Variable reloaded in container"'
+    fi
 }
 
 testGetWrongModuleConfiguration() {

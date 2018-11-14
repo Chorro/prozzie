@@ -44,9 +44,10 @@ will print the parameter value. If the parameter does not exists, it will print
 an error via stderr and return error code.
 
 zz_connector_set_variables
-: Obtain module variables. First parameter is module name. If no other
-parameter is passed, it will print usage and exit. If parameters passed, it
-will set that parameter in the module.
+: Obtain module variables. The first parameter must be the module name. If
+there is no other parameter, it just prints usage and exit with an error code.
+If parameters passed, it set that parameter in the module. It accepts
+modifiers if they start with `--`, like `--dry-run`.
 
 zz_connector_setup
 : Offers an interactive view where user can specify the variables values.

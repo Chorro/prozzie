@@ -70,6 +70,21 @@ $ prozzie config set base INTERFACE_IP=192.168.1.100 CLIENT_API_KEY=myAwesomeAPI
 
 As you can see, the format of key-value pairs are `<key>`=`<value>`
 
+The command `prozzie config set` also accepts two modifiers in the case of
+compose modules that accept configuration:
+
+:`--dry-run`
+Only validate configuration, do not modify anything.
+
+:`--no-reload-prozzie`
+Do NOT reload prozzie after configuration. This is useful in case you want to
+modify the configuration of many modules and you don't want to wait for all the
+reloads: just set this modifier in all but the last. Note that the use of this
+modifier can set prozzie in an inconsistent state: Configuration files and
+current connectors configuration are not synced until you do `prozzie up` or
+similar.
+
+
 `prozzie config` command allows you check and handle the configuration in next modules:
 
 - [x] [**base**](https://github.com/wizzie-io/prozzie/blob/master/docs/installation/Installation.md)

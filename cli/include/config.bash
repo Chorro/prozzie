@@ -245,6 +245,7 @@ zz_get_vars () {
 
 # Set variable in env file
 # Arguments:
+#  [[ --dry-run ]] Do not change anything in env file or in actual variables
 #  1 - File from get variables
 #  2 - Variable to set
 #  3 - Value to set
@@ -258,6 +259,12 @@ zz_get_vars () {
 #  0 - Variable is set without error
 #  1 - An error has ocurred while set a variable (variable not found or mispelled)
 zz_set_var () {
+    declare dry_run=n
+    if [[ $1 == --dry-run ]]; then
+        dry_run=y
+        shift
+    fi
+
     if exists_key_in_module_envs "$2"; then
         declare value="$3"
 
@@ -265,9 +272,10 @@ zz_set_var () {
             value="$("$2_sanitize" "${3}")"
         fi
 
-        printf -v new_value "%s=%s" "$2" "$value"
-
-        sed -i "/$2.*/c$new_value" "$1"
+        if [[ $dry_run == n ]]; then
+            printf -v new_value "%s=%s" "$2" "$value"
+            sed -i "/$2.*/c$new_value" "$1"
+        fi
     else
         printf "Variable '%s' not recognized! No changes made to %s\\n" "$2" "$1" >&2
         return 1
@@ -276,6 +284,7 @@ zz_set_var () {
 
 # Check and set a list of key-value pairs separated by delimiter
 # Arguments:
+#  [[--dry-run]] - Do not make any actual change
 #  1 - File from get variables
 #  2 - List of key-value pairs separated by delimiter
 # Environment:
@@ -288,16 +297,33 @@ zz_set_var () {
 #  Always 0
 zz_set_vars () {
     declare key val
-    declare -r env_file=$1
+
+    declare dry_run_arg
+    if [[ "$1" == '--dry-run' ]]; then
+        dry_run_arg=--dry-run
+        shift
+    fi
+
+    declare -r env_file="$1"
     shift
 
+    if [[ -z $dry_run_arg ]]; then
+        # Check that all parameters are OK before do any change
+        zz_set_vars --dry-run "$env_file" "$@" || return 1
+        dry_run_arg=
+    fi
+    declare -r dry_run_arg
+
     for pair in "$@"; do
-        if [[ $pair == *=* ]]; then
+        if [[ $pair != *=* ]]; then
+            printf "The argument '%s' isn't a valid key=value pair " "$pair" >&2
+            printf "and won't be applied\\n" >&2
+            return 1
+        else
             key=${pair%%=*}
             val="${pair#*=}"
-            zz_set_var "$env_file" "$key" "$val"
-        else
-            printf "The argument '%s' isn't a valid key-value pair and won't be applied\\n" "$pair" >&2
+
+            zz_set_var $dry_run_arg "$env_file" "$key" "$val" || return 1
         fi
     done
 }

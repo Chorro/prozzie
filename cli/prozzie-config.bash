@@ -31,7 +31,7 @@ printUsage() {
     declare -A commands_and_options_descriptions=(
         ['get <module>']='Get the configuration of the specified module'
         ['get <module> <key>...']='Get the configuration of the specified key in specified module'
-        ['set <module> <key>=<value>...']='Set the configuration of the list of pairs key-value for a specified module'
+        ['set <module> [--dry-run] [--no-reload-prozzie] <key>=<value>...']='Set the configuration of the list of pairs key-value for a specified module'
         ['wizard']='Start modules wizard'
         ['describe <module>']='Describe module vars'
         ['setup <module>']='Configure module with setup assistant'
@@ -45,7 +45,7 @@ printUsage() {
     declare -a actions_order=(
         'get <module>'
         'get <module> <key>...'
-        'set <module> <key>=<value>...'
+        'set <module> [--dry-run] [--no-reload-prozzie] <key>=<value>...'
         'describe <module>'
         'enable <modules-list>'
         'disable <modules-list>'
@@ -74,6 +74,39 @@ printUsage() {
     do
         apply_help_command_format "$opt" "${commands_and_options_descriptions[$opt]}"
     done
+}
+
+print_set_help() {
+    cat<<EOF
+prozzie config set - Set connectors options
+
+    prozzie config set <module> <key>=<val> [<key>=<val>] ...
+    prozzie config set --dry-run <module> <key>=<val> [<key>=<val>] ...
+    prozzie config set --no-reload-prozzie <module> <key>=<val> [<key>=<val>] ...
+
+Overrides a connector configuration key. It can set many parameters at once
+using many key=val parameters, but all of them need to be of the same module.
+See --no-reload-prozzie to know how to overcommit this limitation.
+
+Only can override valid options on valid connectors. Otherwise, the command
+prints a message via stderr and return with an error value different than 0,
+doing no changes on config.
+
+Options:
+    --dry-run           Do not make any actual change, only validates that the
+                        command syntax is OK and the variables exist.
+    --no-reload-prozzie Do not reload prozzie at the end of command execution.
+                        Doing this can cause the config prozzie owns do not
+                        match with currently running configurations, so use it
+                        with caution. Valid uses are to make many changes to
+                        many modules and only do an actual reload at the end of
+                        all the changes.
+
+Notes:
+    Currently, options only apply to docker-compose based modules. Kafka-connect
+    based ones will always apply the changes, and the reload will not make any
+    effect.
+EOF
 }
 
 ##
@@ -146,11 +179,19 @@ main() {
 
     case $action in
         get|set|describe|setup)
+            declare arg
+            declare -a modifiers=() arguments=()
             # Check that parameters has been passed
+
             if [[ $# -eq 0 ]]; then
-                printUsage
+                if [[ $action == set ]]; then
+                    print_set_help
+                else
+                    printUsage
+                fi
+
                 case $action in
-                    describe|setup)
+                    describe|setup|set)
                         return 1
                         ;;
                     *)
@@ -159,21 +200,41 @@ main() {
                 esac
             fi
 
+            # Proper options ordering
+            for arg in "$@"; do
+                if [[ $arg == -- ]]; then
+                    shift
+                    arguments+=("$@")
+                    break
+                fi
+
+                if [[ $arg == -* ]]; then
+                    modifiers+=("$arg")
+                else
+                    arguments+=("$arg")
+                fi
+
+                shift
+            done
+
             # Get module
-            declare -r module="$1"
-            shift
+            declare -r module="${arguments[0]}"
+            arguments=("${arguments[@]:1}")
 
             declare config_file
             config_file=$(module_config_file "$module") || return
             declare -r config_file
 
+            # All set. Restore order.
+            set -- "${modifiers[@]}" "$module" "${arguments[@]}"
+
             . "$config_file"
             case $action in
                 set)
-                    zz_connector_set_variables "$module" "$@"
+                    zz_connector_set_variables "$@"
                 ;;
                 get)
-                    zz_connector_get_variables "$module" "$@"
+                    zz_connector_get_variables "$@"
                     return
                 ;;
                 describe)
@@ -183,7 +244,7 @@ main() {
                 ;;
                 setup)
                     printf 'Setup %s module:\n' "$module"
-                    if zz_connector_setup "$module" "$@"; then
+                    if zz_connector_setup "$@"; then
                         config_connector_print_hint "$module"
                     else
                         return 1

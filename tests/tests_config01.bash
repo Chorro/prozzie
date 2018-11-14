@@ -586,7 +586,7 @@ testDisableModule() {
         ${_FAIL_} '"snmptrap command failed"'
     fi
 
-    ${_ASSERT_EQUALS_} '"Incorrect number of messages in topic monitor"' \
+    ${_ASSERT_EQUALS_} '"Incorrect number of messages in topic test_http2k_topic"' \
     '1' "$("${PROZZIE_PREFIX}/bin/prozzie" kafka consume test_http2k_topic --from-beginning --timeout-ms 500 | grep -o -E '{.+}' | wc -l)"
 
     if [[ -L "${PROZZIE_PREFIX}/etc/prozzie/compose/http2k.yaml" ]]; then

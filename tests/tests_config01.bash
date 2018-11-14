@@ -375,7 +375,7 @@ testEnableModule() {
 
     for connector in "${connectors[@]}"; do
         if ! "${PROZZIE_PREFIX}/bin/prozzie" config list-enabled | \
-                                           grep -x "$connector" >/dev/null; then
+                                           grep -qx "$connector"; then
             ${_FAIL_} "'$connector not listed in prozzie config list-enabled'"
         fi
     done

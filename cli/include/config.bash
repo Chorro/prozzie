@@ -433,6 +433,16 @@ zz_list_enabled_modules() {
     declare -r search_prefix='*/compose/'
     declare -r suffix='.yaml'
 
+    declare restore_sigpipe_cmd
+    restore_sigpipe_cmd=$(trap -p SIGPIPE)
+    if [[ -z "$restore_sigpipe_cmd" ]]; then
+        restore_sigpipe_cmd='trap - SIGPIPE'
+    fi
+    declare -r restore_sigpipe_cmd
+
+    # If can't write, return properly. It may be grep -q or similar.
+    trap '$restore_sigpipe_cmd; return 0' SIGPIPE
+
     # Yaml modules
     for module in "${PREFIX}"/etc/prozzie/compose/*.yaml; do
         module=${module#$search_prefix}
@@ -444,6 +454,8 @@ zz_list_enabled_modules() {
         "${PREFIX}/bin/prozzie" kcli status "$module" | head -n 1 | \
                         grep -q 'RUNNING' && printf '%s\n' "$module"
     done
+
+    $restore_sigpipe_cmd
 }
 
 ##

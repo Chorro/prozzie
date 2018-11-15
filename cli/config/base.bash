@@ -26,22 +26,6 @@ declare -A module_envs=(
 	[CLIENT_API_KEY]='|Client API key ')
 
 ##
-## @brief      Simple wrapper for zz_get_vars, using base env file. Need
-##             PREFIX environment variable to know where to find envs file.
-##
-zz_connector_get_variables () {
-	zz_get_vars "${PREFIX}/etc/prozzie/.env" "${@:2}"
-}
-
-##
-## @brief      Simple wrapper for zz_set_vars, using base env path. Need
-##             PREFIX environment variable to know where to find envs file.
-##
-zz_connector_set_variables () {
-	zz_set_vars "${PREFIX}/etc/prozzie/.env" "${@:2}"
-}
-
-##
 ## @brief      Forbids base connector to be enabled or disabled
 ##
 ## @return     Always error

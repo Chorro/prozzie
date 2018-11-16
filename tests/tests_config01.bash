@@ -267,6 +267,11 @@ testSetupMqttModuleVariables() {
                               'mqtt.clean_session=true' \
                               'mqtt.keep_alive_interval=60' \
                               'mqtt.connection_timeout=30'
+
+    # Disable mqtt module, since kafka-connect tools will slow down every other
+    # test that use config list-enabled
+    "${PROZZIE_PREFIX}/bin/prozzie" config disable mqtt
+    "${PROZZIE_PREFIX}/bin/prozzie" kcli rm mqtt
 }
 
 #--------------------------------------------------------
@@ -290,6 +295,10 @@ testSetupSyslogModuleVariables() {
                                 'key.converter.schemas.enable=false' \
                                 'connector.class=com.github.jcustenborder.kafka.connect.syslog.UDPSyslogSourceConnector' \
                                 'value.converter.schemas.enable=false'
+    # Disable syslog module, since kafka-connect tools will slow down every other
+    # test that use config list-enabled
+    "${PROZZIE_PREFIX}/bin/prozzie" config disable syslog
+    "${PROZZIE_PREFIX}/bin/prozzie" kcli rm syslog
 }
 
 #--------------------------------------------------------

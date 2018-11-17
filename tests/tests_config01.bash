@@ -525,9 +525,6 @@ testDisableModule() {
         ${_FAIL_} '"snmptrap command failed"'
     fi
 
-    ${_ASSERT_EQUALS_} '"Incorrect number of messages in topic test_http2k_topic"' \
-    '1' "$("${PROZZIE_PREFIX}/bin/prozzie" kafka consume test_http2k_topic --from-beginning --timeout-ms 500 | grep -o -E '{.+}' | wc -l)"
-
     if [[ -L "${PROZZIE_PREFIX}/etc/prozzie/compose/http2k.yaml" ]]; then
         ${_FAIL_} '"prozzie config disable must to unlink http2k compose file"'
     fi
@@ -535,6 +532,9 @@ testDisableModule() {
     if curl -v http://"${HOSTNAME}":7980/v1/data/http2k_topic -H 'X-Consumer-ID:test' -d '{"fieldA":"valueA", "fieldB": 12, "fieldC": true}'; then
         ${_FAIL_} '"HTTP2K must be disabled and stopped"'
     fi
+
+    ${_ASSERT_EQUALS_} '"Incorrect number of messages in topic test_http2k_topic"' \
+    '1' "$("${PROZZIE_PREFIX}/bin/prozzie" kafka consume test_http2k_topic --from-beginning --timeout-ms 500 | grep -o -E '{.+}' | wc -l)"
 
     if [[ $("${PROZZIE_PREFIX}"/bin/prozzie kcli status syslog | head -n 1 | grep -o 'RUNNING\|PAUSED') == RUNNING ]]; then
         ${_FAIL_} '"Syslog must be disabled and stopped"'

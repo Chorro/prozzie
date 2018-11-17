@@ -475,12 +475,12 @@ testEnableModule() {
         ${_FAIL_} '"prozzie config enable must link http2k compose file"'
     fi
 
-    if ! curl -v http://"${HOSTNAME}":7980/v1/data/http2k_topic -H 'X-Consumer-ID:test' -d '{"fieldA": "valueA", "fieldB": 12, "fieldC": true}'; then
+    if ! curl -v http://"${HOSTNAME}":7980/v1/data/test_http2k_topic \
+                   -d '{"fieldA": "valueA", "fieldB": 12, "fieldC": true}'; then
         ${_FAIL_} '"HTTP2K must be enabled and running"'
     fi
 
-    ${_ASSERT_EQUALS_} '"Incorrect number of topics for http2k"' \
-    '1' "$("${PROZZIE_PREFIX}/bin/prozzie" kafka topics --list | grep test_http2k_topic | wc -w)"
+    assert_one_message_in_topic "test_http2k_topic"
 
     declare message
     message=$("${PROZZIE_PREFIX}/bin/prozzie" kafka consume test_http2k_topic --from-beginning --max-messages 1|grep -o -E "{.+}")
@@ -529,12 +529,12 @@ testDisableModule() {
         ${_FAIL_} '"prozzie config disable must to unlink http2k compose file"'
     fi
 
-    if curl -v http://"${HOSTNAME}":7980/v1/data/http2k_topic -H 'X-Consumer-ID:test' -d '{"fieldA":"valueA", "fieldB": 12, "fieldC": true}'; then
+    if curl -v http://"${HOSTNAME}":7980/v1/data/test_http2k_topic \
+                    -d '{"fieldA":"valueA", "fieldB": 12, "fieldC": true}'; then
         ${_FAIL_} '"HTTP2K must be disabled and stopped"'
     fi
 
-    ${_ASSERT_EQUALS_} '"Incorrect number of messages in topic test_http2k_topic"' \
-    '1' "$("${PROZZIE_PREFIX}/bin/prozzie" kafka consume test_http2k_topic --from-beginning --timeout-ms 500 | grep -o -E '{.+}' | wc -l)"
+    assert_one_message_in_topic "test_http2k_topic"
 
     if [[ $("${PROZZIE_PREFIX}"/bin/prozzie kcli status syslog | head -n 1 | grep -o 'RUNNING\|PAUSED') == RUNNING ]]; then
         ${_FAIL_} '"Syslog must be disabled and stopped"'

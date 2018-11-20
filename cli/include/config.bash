@@ -16,17 +16,6 @@
 # limitations under the License.
 
 
-function ZZ_HTTP_ENDPOINT_sanitize() {
-  declare out="$1"
-  if [[ ! "$out" =~ ^http[s]?://* ]]; then
-    declare out="https://${out}"
-  fi
-  if [[ ! "$out" =~ /v1/data[/]?$ ]]; then
-    declare out="${out}/v1/data"
-  fi
-  printf "%s" "$out"
-}
-
 # Reads user input, using readline completions interface to fill paths.
 # Arguments:
 #  $1 - Variable to store user introduced text

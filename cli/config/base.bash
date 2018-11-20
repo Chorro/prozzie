@@ -55,3 +55,14 @@ zz_connector_print_send_message_hint () {
 	printf 'message. You can check it'\''s reception with '
 	printf '"prozzie kafka consume <mutopic>"\n'
 }
+
+ZZ_HTTP_ENDPOINT_sanitize() {
+	declare out="$1"
+	if [[ ! "$out" =~ ^http[s]?://* ]]; then
+		declare out="https://${out}"
+	fi
+	if [[ ! "$out" =~ /v1/data[/]?$ ]]; then
+		declare out="${out}/v1/data"
+	fi
+	printf "%s" "$out"
+}

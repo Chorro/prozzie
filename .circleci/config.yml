@@ -59,8 +59,11 @@ P_tests: &P_tests
             EXEC:'docker run --network prozzie_default -i alpine/socat
             STDIO UDP\:prozzie_monitor_1\:162'
     - run:
-        name: Run actual tests
-        command: cd tests; make tests_config01.cov; make tests_upgrade01.cov; make -j 6 coverage
+        name: Run not parallel tests
+        command: cd tests; make tests_config01.cov tests_upgrade01.cov tests_monitor01.cov
+    - run:
+        name: Run parallel tests
+        command: cd tests; make -j 6 coverage
     - run: mkdir -p /tmp/coverage
     - run:
         name: Merge all coverage

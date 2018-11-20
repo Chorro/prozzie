@@ -40,3 +40,28 @@ zz_connector_print_send_message_hint () {
 	printf 'can check they are arriving with '
 	printf '"prozzie consume monitor" command.\n'
 }
+
+##
+## @brief      Check that monitor_custom_mibs is either 'monitor_custom_mibs', a
+##             valid docker volume or a valid system directory
+##
+## @param      User introduced value
+##
+## @return     True if valid, false otherwise
+##
+MONITOR_CUSTOM_MIB_PATH_sanitize () {
+	# Use of docker volume output redirection for obtain grep exit status
+	if [[ 'monitor_custom_mibs' == "$1" || -d "$1" ]] || \
+	                  (set -o pipefail; docker volume ls -q | grep "^$1$"); then
+	    printf '%s' "$1"
+		return 0
+	fi
+
+	{
+		printf 'Invalid value %s! Please specify either ' "$1"
+		printf '"monitor_custom_mibs", a valid docker volume or a valid system'
+		printf ' directory\n'
+	} >&2
+
+	return 1
+}

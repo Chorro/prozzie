@@ -42,7 +42,7 @@ zz_read () {
 }
 
 # ZZ variables treatment. Checks if an environment variable is defined, and ask
-# user for value if not.
+# user for value if not. It will sanitize the variable in both cases.
 # After that, save it in docker-compose .env file
 # Arguments:
 #  $1 The variable name. Will be overridden if needed.
@@ -58,7 +58,14 @@ zz_read () {
 # Exit status:
 #  Always 0
 zz_variable () {
+  declare new_value
   declare -r env_file="$4"
+
+  if [[ -v $1 ]]; then
+    declare -r env_provided=y
+  else
+    declare -r env_provided=n
+  fi
 
   if [[ "$1" == PREFIX || "$1" == *_PATH ]]; then
     declare -r read_callback=zz_read_path
@@ -66,17 +73,31 @@ zz_variable () {
     declare -r read_callback=zz_read
   fi
 
-  while [[ -z "${!1}" ]]; do
-    "$read_callback" "$1" "$3" "$2"
+  while [[ -z "${!1}" || $env_provided == y ]]; do
+    if [[ $env_provided == n ]]; then
+      "$read_callback" "$1" "$3" "$2"
+    fi
 
     if [[ -z "${!1}" && -z "$2" ]]; then
       log fail "[${!1}][$2] Empty $1 not allowed"$'\n'
+      continue
+    fi
+
+    if func_exists "$1_sanitize"; then
+      if ! new_value=$("$1_sanitize" "${!1}"); then
+        if [[ $env_provided == y ]]; then
+          exit 1
+        fi
+        new_value=''
+      fi
+
+      printf -v "$1" '%s' "$new_value"
+    fi
+
+    if [[ $env_provided == y ]]; then
+      break
     fi
   done
-
-  if func_exists "$1_sanitize"; then
-    read -r "$1" <<< "$("$1_sanitize" "${!1}")"
-  fi
 
   if [[ $1 != PREFIX ]]; then
     printf '%s=%s\n' "$1" "${!1}" >> "$env_file"
@@ -257,8 +278,9 @@ zz_set_var () {
     if exists_key_in_module_envs "$2"; then
         declare value="$3"
 
-        if func_exists "$2_sanitize"; then
-            value="$("$2_sanitize" "${3}")"
+        if func_exists "$2_sanitize" && ! value="$("$2_sanitize" "${3}")"; then
+            # Can't sanitize value from command line
+            return 1
         fi
 
         if [[ $dry_run == n ]]; then

@@ -68,10 +68,15 @@ connectors, and to override the one you need.
 Also, the configuration file may contain these functions that modify a
 specific variable configuration's behavior:
 
-${variable_name}_sanitize: This function runs after the user's variable value
+${variable_name}_sanitize
+: This function runs after the user's variable value
 introduction, and can modify the variable value. Pre-sanitize variable's value
 is the first parameter, and sanitize function must return the variable's new
 value.
+
+${variable_name}_hint
+: Interactive configurations like `prozzie setup` will use this function's
+output if no previous value exists.
 
 ### Compose based
 To be able to enable/disable docker based components, the compose is formed by

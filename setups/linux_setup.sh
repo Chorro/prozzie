@@ -73,6 +73,16 @@ function ZZ_HTTP_ENDPOINT_sanitize() {
   printf "%s" "$out"
 }
 
+##
+## @brief      Prints the docker (prozzie) host external IP4, as seen by the
+##             command `ip`.
+##
+## @return     Always true, except in child commands fatal.
+##
+INTERFACE_IP_hint() {
+  autodetect_ip "scope global"
+}
+
 # Wizzie Prozzie banner! :D
 show_banner () {
     cat<<-'EOF'
@@ -370,13 +380,6 @@ function app_setup () {
   # Force enable base module by default. CLI will never offer this path
   ( . "${PREFIX}/share/prozzie/cli/include/config_compose.bash"
     zz_connector_enable --no-set-default base)
-
-  # Offer external IP autodetection for user hint if no previous IP address
-  # detected
-  if [[ '|' == "${module_envs[INTERFACE_IP]:0:1}" ]]; then
-    declare -r pipe_description=${module_envs[INTERFACE_IP]}
-    module_envs[INTERFACE_IP]="$(autodetect_ip "scope global")$pipe_description"
-  fi
 
   zz_variables_ask "/dev/fd/${tmp_env}"
 

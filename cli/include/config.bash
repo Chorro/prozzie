@@ -58,7 +58,7 @@ zz_read () {
 # Exit status:
 #  Always 0
 zz_variable () {
-  declare new_value
+  declare new_value default="$2"
   declare -r env_file="$4"
 
   if [[ -v $1 ]]; then
@@ -73,13 +73,18 @@ zz_variable () {
     declare -r read_callback=zz_read
   fi
 
+  if func_exists "$1_hint" && [[ -z "$default" ]]; then
+    default=$("$1_hint")
+  fi
+  declare -r default
+
   while [[ -z "${!1}" || $env_provided == y ]]; do
     if [[ $env_provided == n ]]; then
-      "$read_callback" "$1" "$3" "$2"
+      "$read_callback" "$1" "$3" "$default"
     fi
 
-    if [[ -z "${!1}" && -z "$2" ]]; then
-      log fail "[${!1}][$2] Empty $1 not allowed"$'\n'
+    if [[ -z "${!1}" && -z "$default" ]]; then
+      log fail "[${!1}][$default] Empty $1 not allowed"$'\n'
       continue
     fi
 

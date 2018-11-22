@@ -274,7 +274,7 @@ zz_get_vars () {
 #  0 - Variable is set without error
 #  1 - An error has ocurred while set a variable (variable not found or mispelled)
 zz_set_var () {
-    declare dry_run=n
+    declare dry_run=n key_value
     if [[ $1 == --dry-run ]]; then
         dry_run=y
         shift
@@ -289,8 +289,8 @@ zz_set_var () {
         fi
 
         if [[ $dry_run == n ]]; then
-            printf -v new_value "%s=%s" "$2" "$value"
-            sed -i "/$2.*/c$new_value" "$1"
+            printf -v key_value "%s=%s" "$2" "$value"
+            sed -i "/$2.*/c$key_value" "$1"
         fi
     else
         printf "Variable '%s' not recognized! No changes made to %s\\n" "$2" "$1" >&2

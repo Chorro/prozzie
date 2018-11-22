@@ -26,23 +26,23 @@ declare -A module_envs=(
 	[CLIENT_API_KEY]='|Client API key ')
 
 ##
-## @brief      Forbids base connector to be enabled or disabled
+## @brief      NO-OP, since user can't disable base connector via CLI.
 ##
-## @return     Always error
+## @return     Always true
 ##
 zz_connector_enable () {
-    printf 'Base module cannot be enabled or disabled\n' >&2
-    return 1
+	:
 }
 
 ##
-## @brief      Forbids base connector to be enabled or disabled
+## @brief      Forbids disable base connector.
 ##
 ## @return     Always error
 ##
 zz_connector_disable () {
 	# Same effect
-	zz_connector_enable
+	printf 'Base module cannot be disabled\n' >&2
+	return 1
 }
 
 ## @brief      Print a hint to the user about how to send messages to this

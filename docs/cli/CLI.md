@@ -70,6 +70,10 @@ $ prozzie config set base INTERFACE_IP=192.168.1.100 CLIENT_API_KEY=myAwesomeAPI
 
 As you can see, the format of key-value pairs are `<key>`=`<value>`
 
+Please note that the prozzie makes some verifications, and the variables can be
+modified or rejected. The new `key=val` will be printed to check the actual new
+variable assignment.
+
 The command `prozzie config set` also accepts two modifiers in the case of
 compose modules that accept configuration:
 

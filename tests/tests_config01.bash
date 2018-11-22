@@ -31,7 +31,17 @@ testSetupBaseModuleVariables() {
     "${PROZZIE_PREFIX}"/bin/prozzie config set base \
         ZZ_HTTP_ENDPOINT=my.super.test.endpoint \
         INTERFACE_IP=${INTERFACE_IP} \
-        CLIENT_API_KEY=mySuperApiKey
+        CLIENT_API_KEY=mySuperApiKey | sort > "${SHUNIT_TMPDIR}/base.out"
+
+    if ! diff "${SHUNIT_TMPDIR}/base.out" <(cat <<-EOF
+			CLIENT_API_KEY=mySuperApiKey
+			INTERFACE_IP=${INTERFACE_IP}
+			ZZ_HTTP_ENDPOINT=https://my.super.test.endpoint/v1/data
+			EOF
+                                                                        ); then
+        ${_FAIL_} '"Expect prozzie config set tell the new variables value"'
+    fi
+
 
     genericTestModule 3 base 'ZZ_HTTP_ENDPOINT=https://my.super.test.endpoint/v1/data' \
                              "INTERFACE_IP=${INTERFACE_IP}" \

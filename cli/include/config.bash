@@ -258,7 +258,7 @@ zz_get_vars () {
         done
 }
 
-# Set variable in env file
+# Set variable in env file and prints it in order to check sanitations applied.
 # Arguments:
 #  [[ --dry-run ]] Do not change anything in env file or in actual variables
 #  1 - File from get variables
@@ -268,7 +268,7 @@ zz_get_vars () {
 #  -
 #
 # Out:
-#  -
+#  New key=val
 #
 # Exit status:
 #  0 - Variable is set without error
@@ -288,6 +288,8 @@ zz_set_var () {
             return 1
         fi
 
+        printf -v key_value "%s=%s" "$2" "$value"
+        printf '%s\n' "$key_value"
         if [[ $dry_run == n ]]; then
             printf -v key_value "%s=%s" "$2" "$value"
             sed -i "/$2.*/c$key_value" "$1"
@@ -325,7 +327,7 @@ zz_set_vars () {
 
     if [[ -z $dry_run_arg ]]; then
         # Check that all parameters are OK before do any change
-        zz_set_vars --dry-run "$env_file" "$@" || return 1
+        zz_set_vars --dry-run "$env_file" "$@" >/dev/null || return 1
         dry_run_arg=
     fi
     declare -r dry_run_arg

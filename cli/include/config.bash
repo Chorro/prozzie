@@ -236,7 +236,7 @@ zz_get_vars () {
 #  0 - Variable is set without error
 #  1 - An error has ocurred while set a variable (variable not found or mispelled)
 zz_set_var () {
-    declare dry_run=n key_value
+    declare dry_run=n key_value file
     if [[ $1 == --dry-run ]]; then
         dry_run=y
         shift
@@ -261,17 +261,26 @@ zz_set_var () {
         return 0
     fi
 
-    if grep -q . "$1"; then
-        # shellcheck disable=SC2094
-        sed -n -e "/^$2=/!p; \$a$key_value" < "$1" | zz_sponge "$1"
-        #         ^^^^^^^^^^
-        #         Do not copy non interesting values
-        #                    ^^^^^^^^^^^^^^^
-        #                    Append interesting values
-    else
-        # Sed does not work with empty files
-        printf '%s\n' "$key_value" > "$1"
+    declare -a env_files=("$1")
+    declare -r is_dot_env_variable="$2_is_dot_env"
+    if [[ ${!is_dot_env_variable:=n} == y ]]; then
+        env_files+=("${PREFIX}/etc/prozzie/.env")
     fi
+
+    for file in "${env_files[@]}"; do
+        # Can suppress stderr: If no such file, printf will try to create it
+        if grep -q . "$file" 2>/dev/null; then
+            # shellcheck disable=SC2094
+            sed -n -e "/^$2=/!p; \$a$key_value" < "$file" | zz_sponge "$file"
+            #         ^^^^^^^^^^
+            #         Do not copy non interesting values
+            #                    ^^^^^^^^^^^^^^^
+            #                    Append interesting values
+        else
+            # Sed does not work with empty files
+            printf '%s\n' "$key_value" > "$file"
+        fi
+    done
 }
 
 # Check and set a list of key-value pairs separated by delimiter

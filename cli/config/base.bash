@@ -25,6 +25,9 @@ declare -A module_envs=(
 	[INTERFACE_IP]='|Interface IP address'
 	[HTTP_POST_PARAMS]='|Client API key')
 
+#shellcheck disable=2034
+declare -r INTERFACE_IP_is_dot_env=y
+
 ##
 ## @brief      NO-OP, since user can't disable base connector via CLI.
 ##

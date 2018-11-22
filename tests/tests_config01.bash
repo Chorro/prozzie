@@ -314,7 +314,6 @@ testSetupSyslogModuleVariables() {
     # Disable syslog module, since kafka-connect tools will slow down every other
     # test that use config list-enabled
     "${PROZZIE_PREFIX}/bin/prozzie" config disable syslog
-    "${PROZZIE_PREFIX}/bin/prozzie" kcli rm syslog
 }
 
 #--------------------------------------------------------
@@ -408,7 +407,7 @@ testSetNoReloadProzzie() {
         base HTTP_POST_PARAMS=notreloadedapi
 
     if ! grep -xq 'HTTP_POST_PARAMS=apikey:notreloadedapi' \
-                                      "${PROZZIE_PREFIX}/etc/prozzie/.env"; then
+                                      "${PROZZIE_PREFIX}/etc/prozzie/envs/base.env"; then
         ${_FAIL_} '"Variable not changed in env file"'
     fi
 
@@ -444,7 +443,8 @@ testSetupCancellation() {
         'Interface IP address' 'blah.blah.blah.blah' \
         'Client API key' 'blahblahblah'
 
-    md5sum "${PROZZIE_PREFIX}"/etc/prozzie/.env > "/dev/fd/${md5sum_file}"
+    md5sum "${PROZZIE_PREFIX}"/etc/prozzie/envs/base.env > \
+                                                        "/dev/fd/${md5sum_file}"
 
     genericSetupQuestionAnswer base \
         'Data HTTPS endpoint URL (use http://.. for plain HTTP)' \

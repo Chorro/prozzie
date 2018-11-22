@@ -347,9 +347,6 @@ function app_setup () {
   ( . "${PREFIX}/share/prozzie/cli/include/config_compose.bash"
     zz_connector_enable --no-set-default base)
 
-  if [[ ! -f ${PREFIX}/etc/prozzie/.env ]]; then
-    (cd "${PREFIX}/etc/prozzie/" && ln -s envs/base.env .env || exit 1)
-  fi
   "${PREFIX}/bin/prozzie" config setup base --no-reload-prozzie
 
   # Need for kafka connect modules configuration.

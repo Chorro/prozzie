@@ -78,6 +78,10 @@ ${variable_name}_hint
 : Interactive configurations like `prozzie setup` will use this function's
 output if no previous value exists.
 
+${variable_name}_is_dot_env
+: Variable is set at the module env file and at the global docker-compose
+`.env` file. Mandatory for volumes.
+
 ### Compose based
 To be able to enable/disable docker based components, the compose is formed by
 many `.yaml` files, and they are concatenated in prozzie config command: The

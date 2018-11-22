@@ -276,3 +276,16 @@ autodetect_ip() {
 
     docker run --rm --net=host wizzieio/prozzie-toolbox sh -c "$get_interface_ip_cmd"
 }
+
+##
+## @brief      Pure bash emulator of moreutils sponge. It accumulates all input
+##             in memory and prints at the input EOF.
+##
+## @param 1    File to drop the content
+##
+## @return     readarray && print value
+##
+zz_sponge() {
+    declare -a lines
+    readarray lines && printf "%s" "${lines[@]}" > "$1"
+}

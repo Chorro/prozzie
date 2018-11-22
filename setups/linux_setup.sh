@@ -24,7 +24,6 @@ installer_directory=$(dirname "${BASH_SOURCE[0]}")
 declare -r installer_directory
 declare -r common_filename="${installer_directory}/../cli/include/common.bash"
 declare -r config_filename="${installer_directory}/../cli/include/config.bash"
-declare -r cli_filename="${installer_directory}/../cli/include/cli.bash"
 
 if [[ ! -f "${common_filename}" ]]; then
     # We are probably being called from download. Need to download prozzie
@@ -47,7 +46,6 @@ declare -a created_files
 
 . "${common_filename}"
 . "${config_filename}"
-. "${cli_filename}"
 
 if command_exists sudo; then
     declare -r sudo=sudo
@@ -57,31 +55,7 @@ fi
 # shellcheck disable=SC2034
 # [env_variable]="default|prompt"
 declare -A module_envs=(
-  [PREFIX]="${DEFAULT_PREFIX}|Where do you want install prozzie?"
-  [INTERFACE_IP]="|Prozzie's Internal Kafka advertised IP|(See https://wizzie-io.github.io/prozzie/help/FAQ for more info about Kafka reachability)"
-  [CLIENT_API_KEY]='|Introduce your client API key'
-  [ZZ_HTTP_ENDPOINT]='|Introduce the data HTTPS endpoint URL (use http://.. for plain HTTP)')
-
-function ZZ_HTTP_ENDPOINT_sanitize() {
-  declare out="$1"
-  if [[ ! "$out" =~ ^http[s]?://* ]]; then
-    declare out="https://${out}"
-  fi
-  if [[ ! "$out" =~ /v1/data[/]?$ ]]; then
-    declare out="${out}/v1/data"
-  fi
-  printf "%s" "$out"
-}
-
-##
-## @brief      Prints the docker (prozzie) host external IP4, as seen by the
-##             command `ip`.
-##
-## @return     Always true, except in child commands fatal.
-##
-INTERFACE_IP_hint() {
-  autodetect_ip "scope global"
-}
+  [PREFIX]="${DEFAULT_PREFIX}|Where do you want install prozzie?")
 
 # Wizzie Prozzie banner! :D
 show_banner () {
@@ -285,8 +259,8 @@ function app_setup () {
   fi
 
   # Special treatment of PREFIX variable
-  zz_variable_ask "/dev/null" PREFIX
-  unset "module_envs[PREFIX]"
+  zz_variable --no-check-valid base \
+                 PREFIX "${module_envs[PREFIX]%%|*}" "${module_envs[PREFIX]#*|}"
 
   # Set PKG_MANAGER first time
   case $ID in
@@ -357,7 +331,6 @@ function app_setup () {
   DOCKER_COMPOSE_VERSION=$(docker-compose --version) 2> /dev/null
   log ok "Installed: ${DOCKER_COMPOSE_VERSION}"$'\n\n'
 
-  declare -r src_env_file="${PREFIX}/etc/prozzie/.env"
   declare -r prozzie_compose_dir="${PREFIX}/share/prozzie/compose"
   create_directory_tree
   echo $PROZZIE_VERSION > "${PREFIX}/etc/prozzie/.version"
@@ -365,13 +338,6 @@ function app_setup () {
   trap install_rollback EXIT
 
   log info "Prozzie will be installed under: [${PREFIX}]"$'\n'
-
-  declare tmp_env
-  tmp_fd tmp_env
-  if [[ -f "$src_env_file" ]]; then
-    # Copy not interested variables and take previous values.
-    zz_variables_env_update_array "$src_env_file" "/dev/fd/$tmp_env"
-  fi
 
   log info "Installing ${PROZZIE_VERSION} release of Prozzie..."$'\n'
   cp -R -- "${installer_directory}/../compose/"*.yaml "${prozzie_compose_dir}"
@@ -381,10 +347,11 @@ function app_setup () {
   ( . "${PREFIX}/share/prozzie/cli/include/config_compose.bash"
     zz_connector_enable --no-set-default base)
 
-  zz_variables_ask "/dev/fd/${tmp_env}"
+  if [[ ! -f ${PREFIX}/etc/prozzie/.env ]]; then
+    (cd "${PREFIX}/etc/prozzie/" && ln -s envs/base.env .env || exit 1)
+  fi
+  "${PREFIX}/bin/prozzie" config setup base --no-reload-prozzie
 
-  cp -- "/dev/fd/$tmp_env" "$src_env_file"
-  exec {tmp_env}<&-
   # Need for kafka connect modules configuration.
   "${PREFIX}/bin/prozzie" up -d kafka-connect
   trap stop_prozzie_install_rollback EXIT

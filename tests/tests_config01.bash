@@ -24,28 +24,28 @@ testSetupBaseModuleVariables() {
 
     ${_ASSERT_TRUE_} '"prozzie config setup base must done with no failure"' $?
 
-    genericTestModule 3 base 'ZZ_HTTP_ENDPOINT=https://my.test.endpoint/v1/data' \
+    genericTestModule 3 base 'HTTP_ENDPOINT=https://my.test.endpoint/v1/data' \
                              "INTERFACE_IP=${INTERFACE_IP}" \
-                             'CLIENT_API_KEY=myApiKey'
+                             'HTTP_POST_PARAMS=apikey:myApiKey'
 
     "${PROZZIE_PREFIX}"/bin/prozzie config set base \
-        ZZ_HTTP_ENDPOINT=my.super.test.endpoint \
-        INTERFACE_IP=${INTERFACE_IP} \
-        CLIENT_API_KEY=mySuperApiKey | sort > "${SHUNIT_TMPDIR}/base.out"
+        HTTP_ENDPOINT=my.super.test.endpoint \
+        HTTP_POST_PARAMS=mySuperApiKey \
+        INTERFACE_IP=${INTERFACE_IP} | sort > "${SHUNIT_TMPDIR}/base.out"
 
     if ! diff "${SHUNIT_TMPDIR}/base.out" <(cat <<-EOF
-			CLIENT_API_KEY=mySuperApiKey
+			HTTP_ENDPOINT=https://my.super.test.endpoint/v1/data
+			HTTP_POST_PARAMS=apikey:mySuperApiKey
 			INTERFACE_IP=${INTERFACE_IP}
-			ZZ_HTTP_ENDPOINT=https://my.super.test.endpoint/v1/data
 			EOF
                                                                         ); then
         ${_FAIL_} '"Expect prozzie config set tell the new variables value"'
     fi
 
 
-    genericTestModule 3 base 'ZZ_HTTP_ENDPOINT=https://my.super.test.endpoint/v1/data' \
+    genericTestModule 3 base 'HTTP_ENDPOINT=https://my.super.test.endpoint/v1/data' \
                              "INTERFACE_IP=${INTERFACE_IP}" \
-                             'CLIENT_API_KEY=mySuperApiKey'
+                             'HTTP_POST_PARAMS=apikey:mySuperApiKey'
 }
 
 #--------------------------------------------------------
@@ -237,10 +237,6 @@ testSetupMqttModuleVariables() {
         ${_FAIL_} '"MQTT enabled at this point"'
     fi
 
-    if "${PROZZIE_PREFIX}/bin/prozzie" config set mqtt kafka.topic=mqtt; then
-        ${_FAIL_} '"Config allow to set variables on mqtt disabled module"'
-    fi
-
     genericSetupQuestionAnswer mqtt \
          'MQTT Topics to consume' '/my/mqtt/topic' \
          "Kafka's topic to produce MQTT consumed messages" 'mqtt' \
@@ -342,7 +338,7 @@ x_testSetWrongVariable() {
         'base INTERFACE_IPV4=1.2.3.4 HTTP_ENDPOINT=my.super.test.endpoint'
         # First variable valid, other invalid: `prozzie config set should not
         # change anything even if some of them are valid
-        'base CLIENT_API_KEY=1234 INTERFACE_IPV4=1.2.3.4 HTTP_ENDPOINT=my.super.test.endpoint'
+        'base HTTP_POST_PARAMS=1234 INTERFACE_IPV4=1.2.3.4 HTTP_ENDPOINT=my.super.test.endpoint'
         # Wrong variable formar
         'base VAR_WITH_NO_VALUE'
         # Unknown variable in module ! base
@@ -380,9 +376,9 @@ x_testSetWrongVariable() {
             "'$(md5sum ${PROZZIE_PREFIX}/etc/prozzie/envs/f2k.env)'"
 
         # Check that anything change
-        genericTestModule 3 base 'ZZ_HTTP_ENDPOINT=https://localhost/v1/data' \
+        genericTestModule 3 base 'HTTP_ENDPOINT=https://localhost/v1/data' \
                                  "INTERFACE_IP=${HOSTNAME}" \
-                                 'CLIENT_API_KEY=prozzieapi'
+                                 'HTTP_POST_PARAMS=apikey:prozzieapi'
     done
 }
 
@@ -409,9 +405,9 @@ testSetWrongVariable() {
 
 testSetNoReloadProzzie() {
     "${PROZZIE_PREFIX}"/bin/prozzie config set --no-reload-prozzie \
-        base CLIENT_API_KEY=notreloadedapi
+        base HTTP_POST_PARAMS=notreloadedapi
 
-    if ! grep -xq 'CLIENT_API_KEY=notreloadedapi' \
+    if ! grep -xq 'HTTP_POST_PARAMS=apikey:notreloadedapi' \
                                       "${PROZZIE_PREFIX}/etc/prozzie/.env"; then
         ${_FAIL_} '"Variable not changed in env file"'
     fi

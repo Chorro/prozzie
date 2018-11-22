@@ -21,9 +21,9 @@
 # This variable is intended to be imported, so we don't use this variable here
 # shellcheck disable=SC2034
 declare -A module_envs=(
-	[ZZ_HTTP_ENDPOINT]='|Data HTTPS endpoint URL (use http://.. for plain HTTP)'
-	[INTERFACE_IP]='|Interface IP address '
-	[CLIENT_API_KEY]='|Client API key ')
+	[HTTP_ENDPOINT]='|Data HTTPS endpoint URL (use http://.. for plain HTTP)'
+	[INTERFACE_IP]='|Interface IP address'
+	[HTTP_POST_PARAMS]='|Client API key')
 
 ##
 ## @brief      NO-OP, since user can't disable base connector via CLI.
@@ -56,7 +56,7 @@ zz_connector_print_send_message_hint () {
 	printf '"prozzie kafka consume <mutopic>"\n'
 }
 
-ZZ_HTTP_ENDPOINT_sanitize() {
+HTTP_ENDPOINT_sanitize() {
 	declare out="$1"
 	if [[ ! "$out" =~ ^http[s]?://* ]]; then
 		declare out="https://${out}"
@@ -65,4 +65,27 @@ ZZ_HTTP_ENDPOINT_sanitize() {
 		declare out="${out}/v1/data"
 	fi
 	printf "%s" "$out"
+}
+
+##
+## @brief      http2k expect POST parameters to be in this format
+##
+## @return     { description_of_the_return_value }
+##
+HTTP_POST_PARAMS_sanitize() {
+    declare out="$1"
+    if [[ $out != "apikey:"* ]]; then
+        out="apikey:$out"
+    fi
+    printf "%s" "$out"
+}
+
+##
+## @brief      Prints the docker (prozzie) host external IP4, as seen by the
+##             command `ip`.
+##
+## @return     Always true, except in child commands fatal.
+##
+INTERFACE_IP_hint() {
+  autodetect_ip "scope global"
 }

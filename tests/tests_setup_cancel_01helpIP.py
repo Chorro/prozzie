@@ -25,10 +25,10 @@ import sys
 if __name__ == "__main__":
     responses_sendline = {
         'Where do you want install prozzie?': [Line('')],
-        'Introduce your client API key': [Line('def')],
-        'Introduce the data HTTPS endpoint URL': [Line('abc.def')],
+        'Client API key': [Line('def')],
+        'Data HTTPS endpoint URL': [Line('abc.def')],
         'Do you want that docker to start on boot?': ['y'],
-        'Prozzie\'s Internal Kafka advertised IP': [(pexpect.spawn.sendintr)],
+        'Interface IP address': [(pexpect.spawn.sendintr)],
     }
 
     sys.exit(test_pexpect(sys.argv[1], responses_sendline))

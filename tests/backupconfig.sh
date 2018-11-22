@@ -9,11 +9,11 @@ declare -r env_bak
 
 setUp () {
     if [[ -f "${PROZZIE_PREFIX}/etc/prozzie/.env" ]]; then
-        cp "${PROZZIE_PREFIX}/etc/prozzie/.env" "$env_bak"
+        cp "${PROZZIE_PREFIX}/etc/prozzie/envs/base.env" "$env_bak"
     fi
 }
 
 tearDown () {
-    cp "$env_bak" "${PROZZIE_PREFIX}/etc/prozzie/.env"
+    cp "$env_bak" "${PROZZIE_PREFIX}/etc/prozzie/envs/base.env"
     "${PROZZIE_PREFIX}/bin/prozzie" up -d
 }

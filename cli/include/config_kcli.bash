@@ -49,18 +49,27 @@ zz_connector_get_variables () {
 }
 
 ##
-## @brief      Show a kafka connect message error indicating how to configure
-##             kafka connect modules properly.
+## @brief      Set a kafka-connect connector variables
 ##
-## @return     Always error.
-## @todo       Wrap kcli properly
+## @param [--dry-run] Do not modify any variable
+## @param [--no-reload-prozzie] Unused, only for prozzie compose connector
+##                              compatibility
+## @param 1 Prozzie connector name
+## @param @ Variables to set in variable=value format
+##
+## @return True if variables set or --dry-run, false otherwise
 ##
 zz_connector_set_variables () {
-    declare -a args
-    declare properties dry_run=n
+    eval set -- "$(getopt -o '' --long dry-run,no-reload-prozzie -- "$@")"
+    declare -a args variables
+    declare i properties dry_run=n
 
     while [[ $1 == '--'* ]]; do
-        if [[ $1 == '--dry-run' ]]; then
+        if [[ $1 == '--no-reload-prozzie' || $1 == -- ]]; then
+            # Not related here
+            shift
+            continue
+        elif [[ $1 == '--dry-run' ]]; then
             dry_run=y
         fi
         args+=("$1")
@@ -70,26 +79,25 @@ zz_connector_set_variables () {
     declare -r module="$1" dry_run
     shift
 
+    tmp_fd properties
     if [[ $dry_run == n ]]; then
         declare -r prozzie_cmd="${PREFIX}/bin/prozzie"
-        # Create temprary file for zz_set_vars
-        properties="$(mktemp)"
-        declare -r properties
-        trap -- "rm -f '$properties'" EXIT
-        if ! "${PREFIX}"/bin/prozzie kcli get "$module" > "${properties}"; then
-            return 1
-        fi
     else
-        declare prop_fd
-        tmp_fd prop_fd  # Safer with temp_fd
-        declare -r properties="/dev/fd/$prop_fd"
         # Do not execute actual commands
         declare -r prozzie_cmd=:
     fi
 
-    "$prozzie_cmd" kcli rm "$module" && \
-    zz_set_vars "${args[@]}" "$properties" "$@" && \
-    "$prozzie_cmd" kcli create "${module}" < "$properties"
+    # Escape variable arguments
+    for (( i=1; i<=$#; ++i )); do
+        declare key="${!i%%=*}" value="${!i#*=}"
+        variables+=("${key/./__}=${value}")
+    done
+
+    "$prozzie_cmd" kcli rm "$module"
+    kcli_update_properties_file "/dev/fd/${properties}" \
+        zz_set_vars "${args[@]}" "/dev/fd/${properties}" "${variables[@]}" \
+        | sed ':x; /.*__.*=/ s/__/./; tx' && \
+    "$prozzie_cmd" kcli create "${module}" < "/dev/fd/${properties}"
 }
 
 ##
@@ -179,6 +187,8 @@ inline_awk () {
 # Update kcli properties file
 # Arguments:
 #  1 - properties file to update
+#  2 - Callback to update
+#  @ - Arguments to callback
 #
 # Environment:
 #  module_envs - Variables to ask via app_setup.
@@ -214,9 +224,7 @@ kcli_update_properties_file () {
        fi
     done
 
-    # Ask for regular variables
-    declare -r temp_env_file="$1"
-    connector_setup "$temp_env_file"
+    "${@:2}"  # Callback to update variables
 
     # Undo escape
     inline_awk "$1" -F '=' -v OFS='=' '{ gsub(/__/, ".", $1); }1-2'
@@ -240,9 +248,14 @@ kcli_update_properties_file () {
 #  Regular
 kcli_setup () {
     log info $'These changes will be applied at the end of app setup\n'
-    kcli_update_properties_file "$1"
+
+    # Ask for regular variables
+    declare -r temp_env_file="$1"
+    connector_env_file() { printf '%s\n' "$temp_env_file"; }
+
     declare module_name="${module_envs['name']-${module_hidden_envs['name']}}"
     # Only the name, not the module prompt or help
     module_name="${module_name%%|*}"
+    kcli_update_properties_file "$1" connector_setup "${module_name}"
     "${PREFIX}/bin/prozzie" kcli create "${module_name}" < "$1"
 }

@@ -39,8 +39,6 @@ testWrongArguments() {
         'config describe wrongModule'
         'config setup'
         'config setup wrongModule'
-        'config set mqtt kafka.topic=myTopic'
-        'config set syslog kafka.topic=myTopic'
         'config get wrongModule'
         )
 

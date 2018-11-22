@@ -30,12 +30,7 @@
 # @return     Always true
 #
 connector_env_file () {
-	declare -r module="$1"
-	if [[ "${1}" == base ]]; then
-	  printf "%s/etc/prozzie/.env" "${PREFIX}"
-	else
-	  printf '%s/etc/prozzie/envs/%s.env' "${PREFIX}" "$module"
-	fi
+    printf '%s/etc/prozzie/envs/%s.env' "${PREFIX}" "$1"
 }
 
 ##
@@ -137,7 +132,7 @@ zz_connector_setup () {
 	fi
 	declare -r module="$1" reload_prozzie
 
-	connector_setup "$(connector_env_file "$module")"
+	connector_setup "$module"
 	zz_connector_enable "$1"
 	[[ $reload_prozzie == n ]] || "${PREFIX}/bin/prozzie" up -d
 }

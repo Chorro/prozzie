@@ -42,13 +42,14 @@ zz_read () {
 }
 
 # ZZ variables treatment. Checks if an environment variable is defined, and ask
-# user for value if not. It will sanitize the variable in both cases.
-# After that, save it in docker-compose .env file
+# user for value if not. It will check with a dry-run of config module set.
+# After that, Save the variable in the environment one.
 # Arguments:
-#  $1 The variable name. Will be overridden if needed.
-#  $2 Default value if empty text introduced ("" for error raising)
-#  $3 Question text
-#  $4 env file to write
+#  [--no-check-valid] Do not check if the value is valid
+#  $1 The connector name
+#  $2 The variable name.
+#  $3 Default value if empty text introduced ("" for error raising)
+#  $4 Question text
 # Environment:
 #  module_envs - Associated array to update.
 #
@@ -58,8 +59,16 @@ zz_read () {
 # Exit status:
 #  Always 0
 zz_variable () {
-  declare new_value default="$2"
-  declare -r env_file="$4"
+  declare new_value check_for_valid=y
+
+  if [[ $1 == --no-check-valid ]]; then
+    check_for_valid=n
+    shift
+  fi
+
+  declare -r module="$1"
+  declare default="$3"
+  shift
 
   if [[ -v $1 ]]; then
     declare -r env_provided=y
@@ -88,32 +97,32 @@ zz_variable () {
       continue
     fi
 
-    if func_exists "$1_sanitize"; then
-      if ! new_value=$("$1_sanitize" "${!1}"); then
-        if [[ $env_provided == y ]]; then
-          exit 1
-        fi
-        new_value=''
+    # Check if the value is valid
+    if [[ $check_for_valid == n ]]; then
+      new_value="${!1}"
+    elif ! new_value=$("${PREFIX}/bin/prozzie" config set --no-reload-prozzie \
+                                           "$module" --dry-run "$1=${!1}"); then
+      if [[ $env_provided == y ]]; then
+        # Tried to force and it fails
+        exit 1
       fi
 
-      printf -v "$1" '%s' "$new_value"
+      unset -v "$1"
+      continue
+    else
+      new_value="${new_value#*=}"
     fi
 
-    if [[ $env_provided == y ]]; then
-      break
-    fi
+    # Set environment variable to actual new value
+    printf -v "$1" '%s' "${new_value#*=}"
+    break
   done
-
-  if [[ $1 != PREFIX ]]; then
-    printf '%s=%s\n' "$1" "${!1}" >> "$env_file"
-  fi
 }
 
 # Update zz variables array default values using a docker-compose .env file. If
 # variable it's not contained in module_envs, copy it to .env file
 # Arguments:
 #  1 - File to read previous values
-#  2 - File to save not-interesting values
 #
 # Environment:
 #  module_envs - Associated array to update and iterate searching for variables
@@ -126,61 +135,14 @@ zz_variable () {
 zz_variables_env_update_array () {
   declare prompt var_key var_val
   while IFS='=' read -r var_key var_val || [[ -n "$var_key" ]]; do
-    if exists_key_in_module_envs "$var_key"; then
-      # Update zz variable
-      prompt="${module_envs[$var_key]#*|}"
-      module_envs[$var_key]=$(printf "%s|%s" "$var_val" "$prompt")
-    else
-      # Copy to output .env file
-      printf '%s=%s\n' "$var_key" "$var_val" >> "$2"
+    if ! exists_key_in_module_envs "$var_key"; then
+      continue
     fi
+
+    # Update zz variable
+    prompt="${module_envs[$var_key]#*|}"
+    module_envs[$var_key]=$(printf "%s|%s" "$var_val" "$prompt").
   done < "$1"
-}
-
-# Ask user for a single ZZ variable. If the environment variable is defined,
-# assign the value to the variable directly.
-# Arguments:
-#  $1 The env file to save variables
-#  $2 The variable to ask user for
-#
-# Environment:
-#  module_envs - The associated array to update.
-#
-# Out:
-#  User Interface
-#
-# Exit status:
-#  Always 0
-zz_variable_ask () {
-    local var_default var_prompt var_help
-
-    IFS='|' read -r var_default var_prompt var_help < \
-                                        <(squash_spaces <<<"${module_envs[$2]}")
-
-    if [[ ! -z $var_help ]]; then
-        printf "%s\\n" "$var_help"
-    fi
-
-    zz_variable "$2" "$var_default" "$var_prompt" "$1"
-}
-
-# Ask the user for module variables. If the environment variable is defined,
-# assign the value to the variable directly.
-# Arguments:
-#  $1 The env file to save variables
-#
-# Environment:
-#  module_envs - The associated array to update.
-#
-# Out:
-#  User Interface
-#
-# Exit status:
-#  Always 0
-zz_variables_ask () {
-    for var_key in "${!module_envs[@]}"; do
-        zz_variable_ask "$1" "$var_key"
-    done
 }
 
 # Print a warning saying that "$src_env_file" has not been modified.
@@ -291,8 +253,17 @@ zz_set_var () {
         printf -v key_value "%s=%s" "$2" "$value"
         printf '%s\n' "$key_value"
         if [[ $dry_run == n ]]; then
-            printf -v key_value "%s=%s" "$2" "$value"
-            sed -i "/$2.*/c$key_value" "$1"
+            if grep -q . "$1"; then
+                # shellcheck disable=SC2094
+                sed -n -e "/^$2=/!p; \$a$key_value" < "$1" | zz_sponge "$1"
+                #         ^^^^^^^^^^
+                #         Do not copy non interesting values
+                #                   ^^^^^^^^^^^^^^^
+                #                   Append interesting values
+            else
+                # Sed does not work with empty files
+                printf '%s\n' "$key_value" > "$1"
+            fi
         fi
     else
         printf "Variable '%s' not recognized! No changes made to %s\\n" "$2" "$1" >&2
@@ -414,37 +385,60 @@ wizard () {
 # Set up connector in prozzie, asking the user the connector variables and
 # applying them in the provided env file.
 # Arguments:
-#  1 - env file to modify
+#  1 - The connector name
 #
 # Environment:
-#  PREFIX - Where to look for the `.env` file.
-#  ENV_FILE - The path of `.env` file to modify. Defaults to
-#    ${PREFIX}/etc/prozzie/.env if not declared
 #  module_envs - The variables to ask for, in form:
-#    ([global_var]="default|description"). See also
-#    `zz_variables_env_update_array` and `zz_variables_ask`
+#    ([global_var]="default|description").
 #
 # Out:
 #  User interface
 #
+# Note
+#  It will call set with --no-reload-prozzie always, so the caller function
+#  needs to reload it.
+#
 # Exit status:
 #  Always 0
 connector_setup () {
-  declare -r src_env_file="$1"
-  touch "$src_env_file"
+  declare var_key var_default var_prompt var_help
+  declare -a new_connector_vars
 
-  declare mod_tmp_env
-  tmp_fd mod_tmp_env
+  declare -r connector="$1"
+  declare src_env_file
+  src_env_file="$(connector_env_file "$connector")"
+  declare -r src_env_file
+  shift
+
   trap print_not_modified_warning EXIT
 
   # Check if the user previously provided the variables. In that case,
   # offer user to mantain previous value.
-  zz_variables_env_update_array "$src_env_file" "/dev/fd/${mod_tmp_env}"
-  zz_variables_ask "/dev/fd/${mod_tmp_env}"
+  if [[ -f "$src_env_file" ]]; then
+    zz_variables_env_update_array "$src_env_file"
+  else
+    touch "$src_env_file"
+  fi
+
+  for var_key in "${!module_envs[@]}"; do
+    IFS='|' read -r var_default var_prompt var_help < \
+                                <(squash_spaces <<<"${module_envs[$var_key]}")
+
+    if [[ ! -v "$var_key" && $var_help ]]; then
+        printf "%s\\n" "$var_help"
+    fi
+    zz_variable "$connector" "$var_key" "$var_default" "$var_prompt"
+
+    if [[ "${!var_key}" != \
+            "$("${PREFIX}/bin/prozzie" config get "$connector" "${var_key}")" ]]; then
+        new_connector_vars+=("${var_key}=${!var_key}")
+    fi
+  done
+
+  "${PREFIX}/bin/prozzie" config set --no-reload-prozzie "$connector" \
+                                                      "${new_connector_vars[@]}"
 
   # Hurray! app installation end!
-  cp -- "/dev/fd/${mod_tmp_env}" "$src_env_file"
-  exec {mod_tmp_env}<&-
   trap '' EXIT
 }
 

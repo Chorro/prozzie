@@ -64,12 +64,12 @@ services:
     restart: always
     depends_on:
       - kafka
+    env_file:
+      - ${PREFIX}/etc/prozzie/envs/base.env
     environment:
-      HTTP_POST_PARAMS: "apikey:${CLIENT_API_KEY}"
       KAFKA_OFFSET_RESET: "earliest"
       KAFKA_CONSUMER_GROUP: "k2http"
       KAFKA_BROKERS: "kafka:9092"
-      HTTP_ENDPOINT: "${ZZ_HTTP_ENDPOINT:-http://localhost:8000/v1/data}"
       LIMITER_MAX_MESSAGES: 0
       LIMITER_MAX_BYTES: 0
       BATCH_SIZE: 1000000

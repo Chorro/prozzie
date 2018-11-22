@@ -12,8 +12,8 @@ P_tests: &P_tests
     - run:
         name: Install prozzie & dependencies
         environment:
-          CLIENT_API_KEY: prozzieapi
-          ZZ_HTTP_ENDPOINT: localhost
+          HTTP_POST_PARAMS: prozzieapi  # Prozzie api key
+          HTTP_ENDPOINT: localhost
         # yes will fail
         command: >
           set +o pipefail;

@@ -242,32 +242,35 @@ zz_set_var () {
         shift
     fi
 
-    if exists_key_in_module_envs "$2"; then
-        declare value="$3"
-
-        if func_exists "$2_sanitize" && ! value="$("$2_sanitize" "${3}")"; then
-            # Can't sanitize value from command line
-            return 1
-        fi
-
-        printf -v key_value "%s=%s" "$2" "$value"
-        printf '%s\n' "$key_value"
-        if [[ $dry_run == n ]]; then
-            if grep -q . "$1"; then
-                # shellcheck disable=SC2094
-                sed -n -e "/^$2=/!p; \$a$key_value" < "$1" | zz_sponge "$1"
-                #         ^^^^^^^^^^
-                #         Do not copy non interesting values
-                #                   ^^^^^^^^^^^^^^^
-                #                   Append interesting values
-            else
-                # Sed does not work with empty files
-                printf '%s\n' "$key_value" > "$1"
-            fi
-        fi
-    else
-        printf "Variable '%s' not recognized! No changes made to %s\\n" "$2" "$1" >&2
+    if ! exists_key_in_module_envs "$2"; then
+        printf "Variable '%s' not recognized! No changes made to %s\\n" \
+                                                                   "$2" "$1" >&2
         return 1
+    fi
+
+    declare value="$3"
+    if func_exists "$2_sanitize" && ! value="$("$2_sanitize" "${3}")"; then
+        # Can't sanitize value from command line
+        return 1
+    fi
+
+    printf -v key_value "%s=%s" "$2" "$value"
+    printf '%s\n' "$key_value"
+
+    if [[ $dry_run == y ]]; then
+        return 0
+    fi
+
+    if grep -q . "$1"; then
+        # shellcheck disable=SC2094
+        sed -n -e "/^$2=/!p; \$a$key_value" < "$1" | zz_sponge "$1"
+        #         ^^^^^^^^^^
+        #         Do not copy non interesting values
+        #                    ^^^^^^^^^^^^^^^
+        #                    Append interesting values
+    else
+        # Sed does not work with empty files
+        printf '%s\n' "$key_value" > "$1"
     fi
 }
 

@@ -76,9 +76,6 @@ zz_connector_setup () {
     tmp_fd properties
     kcli_setup "/dev/fd/${properties}" "$module"
     exec {properties}<&-
-
-    # Get properties for hint message
-    kcli_fill_module_envs "$module"
 }
 
 zz_connector_enable () {
@@ -99,9 +96,6 @@ zz_connector_enable () {
             printf 'Module %s enabled\n' "$module" >&2
         ;;
     esac
-
-    # Get properties for hint message
-    kcli_fill_module_envs "$module"
 }
 
 zz_connector_disable () {
@@ -123,14 +117,6 @@ zz_connector_disable () {
             exit 1
         ;;
     esac
-}
-
-kcli_fill_module_envs () {
-	declare -r module="$1" output_filename='/dev/null'
-
-	zz_variables_env_update_array <("${PREFIX}/bin/prozzie" kcli get "$module" \
-															| sed 's/\./__/g') \
-								  "${output_filename}"
 }
 
 kafka_connector_status () {

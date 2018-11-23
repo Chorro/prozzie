@@ -412,11 +412,9 @@ wizard () {
 }
 
 # Set up connector in prozzie, asking the user the connector variables and
-# applying them in prozzie.
+# applying them in the provided env file.
 # Arguments:
-#  [--no-reload-prozzie] Don't reload prozzie at the end of `.env` changes
 #  1 - env file to modify
-#  n - Callback + arguments before send reload to docker compose. Can be empty.
 #
 # Environment:
 #  PREFIX - Where to look for the `.env` file.
@@ -432,15 +430,7 @@ wizard () {
 # Exit status:
 #  Always 0
 connector_setup () {
-  declare reload_prozzie=y
-  if [[ $1 == --no-reload-prozzie ]]; then
-    reload_prozzie=n
-    shift
-  fi
-
   declare -r src_env_file="$1"
-  shift
-
   touch "$src_env_file"
 
   declare mod_tmp_env
@@ -456,15 +446,6 @@ connector_setup () {
   cp -- "/dev/fd/${mod_tmp_env}" "$src_env_file"
   exec {mod_tmp_env}<&-
   trap '' EXIT
-
-  if [[ $# -gt 1 ]]; then
-    "$@"
-  fi
-
-  # Reload prozzie
-  if [[ $reload_prozzie == y ]]; then
-    "${PREFIX}/bin/prozzie" up -d
-  fi
 }
 
 # List enable modules

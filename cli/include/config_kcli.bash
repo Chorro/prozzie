@@ -204,7 +204,7 @@ kcli_update_properties_file () {
 
     # Ask for regular variables
     declare -r temp_env_file="$1"
-    connector_setup --no-reload-prozzie "$temp_env_file" "$@"
+    connector_setup "$temp_env_file"
 
     # Undo escape
     inline_awk "$1" -F '=' -v OFS='=' '{ gsub(/__/, ".", $1); }1-2'

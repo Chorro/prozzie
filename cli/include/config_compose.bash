@@ -126,21 +126,20 @@ zz_connector_set_variables () {
 ##
 ## @brief      Wrapper for connector_setup, that ask the user for the different
 ##             variables needed for the connector.
+## @param 1    The prozzie connector name
 ##
 zz_connector_setup () {
-	declare -a connector_setup_args
+	declare reload_prozzie=y
+
 	if [[ $1 == --no-reload-prozzie ]]; then
-		connector_setup_args+=(--no-reload-prozzie)
+		reload_prozzie=n
 		shift
 	fi
+	declare -r module="$1" reload_prozzie
 
-	declare -r module="$1"
-
-	# If no args provided, we want to expand to nothing, not empty string.
-	# shellcheck disable=SC2068
-	connector_setup "$(connector_env_file "$module")" \
-					${connector_setup_args[@]} \
-					zz_connector_enable "$@"
+	connector_setup "$(connector_env_file "$module")"
+	zz_connector_enable "$1"
+	[[ $reload_prozzie == n ]] || "${PREFIX}/bin/prozzie" up -d
 }
 
 # Create a symbolic link in prozzie compose directory in order to enable a module

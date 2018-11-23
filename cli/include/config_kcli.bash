@@ -56,14 +56,40 @@ zz_connector_get_variables () {
 ## @todo       Wrap kcli properly
 ##
 zz_connector_set_variables () {
-    {
-        printf 'Please use next commands in order to '
-        printf 'configure %s:\n' "${module}"
-        printf 'prozzie kcli rm %s\n' "${module}"
-        printf 'prozzie config setup %s\n' "${module}"
-    } >&2
+    declare -a args
+    declare properties dry_run=n
 
-    return 1
+    while [[ $1 == '--'* ]]; do
+        if [[ $1 == '--dry-run' ]]; then
+            dry_run=y
+        fi
+        args+=("$1")
+        shift
+    done
+
+    declare -r module="$1" dry_run
+    shift
+
+    if [[ $dry_run == n ]]; then
+        declare -r prozzie_cmd="${PREFIX}/bin/prozzie"
+        # Create temprary file for zz_set_vars
+        properties="$(mktemp)"
+        declare -r properties
+        trap -- "rm -f '$properties'" EXIT
+        if ! "${PREFIX}"/bin/prozzie kcli get "$module" > "${properties}"; then
+            return 1
+        fi
+    else
+        declare prop_fd
+        tmp_fd prop_fd  # Safer with temp_fd
+        declare -r properties="/dev/fd/$prop_fd"
+        # Do not execute actual commands
+        declare -r prozzie_cmd=:
+    fi
+
+    "$prozzie_cmd" kcli rm "$module" && \
+    zz_set_vars "${args[@]}" "$properties" "$@" && \
+    "$prozzie_cmd" kcli create "${module}" < "$properties"
 }
 
 ##

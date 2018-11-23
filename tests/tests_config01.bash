@@ -233,6 +233,14 @@ testMeraki() {
 #--------------------------------------------------------
 
 testSetupMqttModuleVariables() {
+    if "${PROZZIE_PREFIX}/bin/prozzie" config list-enabled | grep mqtt; then
+        ${_FAIL_} '"MQTT enabled at this point"'
+    fi
+
+    if "${PROZZIE_PREFIX}/bin/prozzie" config set mqtt kafka.topic=mqtt; then
+        ${_FAIL_} '"Config allow to set variables on mqtt disabled module"'
+    fi
+
     genericSetupQuestionAnswer mqtt \
          'MQTT Topics to consume' '/my/mqtt/topic' \
          "Kafka's topic to produce MQTT consumed messages" 'mqtt' \
@@ -258,6 +266,27 @@ testSetupMqttModuleVariables() {
                               'mqtt.clean_session=true' \
                               'mqtt.keep_alive_interval=60' \
                               'mqtt.connection_timeout=30'
+
+    declare current_kafka_topic
+    if ! current_kafka_topic=$("${PROZZIE_PREFIX}/bin/prozzie" config get \
+                                                         mqtt kafka.topic); then
+        ${_FAIL_} '"Unknown failure getting mqtt kafka topic"'
+    fi
+    ${_ASSERT_EQUALS_} '"Get does not offer actual topic"' \
+        "'$current_kafka_topic'" mqtt
+
+    declare set_out
+    set_out=$("${PROZZIE_PREFIX}/bin/prozzie" config set mqtt kafka.topic=mq2tt)
+
+    if ! grep mq2tt -q <<< "$set_out"; then
+        ${_FAIL_} '"New value not contained in prozzie config mqtt set"'
+    fi
+    if ! current_kafka_topic=$("${PROZZIE_PREFIX}/bin/prozzie" config get \
+                                                         mqtt kafka.topic); then
+        ${_FAIL_} '"Unknown failure getting mqtt kafka topic"'
+    fi
+    ${_ASSERT_EQUALS_} '"Get does not offer actual topic"' \
+        "'$current_kafka_topic'" mq2tt
 
     # Disable mqtt module, since kafka-connect tools will slow down every other
     # test that use config list-enabled

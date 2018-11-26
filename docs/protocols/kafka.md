@@ -28,3 +28,5 @@ integrated in prozzie with
 
 Since prozzie will convert all messages to kafka protocol, you can use the
 previous command to check that prozzie is receiving them and how.
+
+The default configured value of `log.retention.bytes` is up to 1GB by topic partition and `log.segment.bytes` is up to 512MB.

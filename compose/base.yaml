@@ -27,7 +27,8 @@ services:
       KAFKA_BROKER_ID: 0
       KAFKA_LOG_DIRS: /kafka/kafka-logs
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-
+      KAFKA_LOG_RETENTION_BYTES: 1073741824
+      KAFKA_LOG_SEGMENT_BYTES: 536870912
   kafka-connect:
     image: gcr.io/wizzie-registry/wizzie-kc:0.2.1
     restart: always

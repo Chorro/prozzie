@@ -52,7 +52,8 @@ zz_connector_print_send_message_hint () {
 MONITOR_CUSTOM_MIB_PATH_sanitize () {
 	# Use of docker volume output redirection for obtain grep exit status
 	if [[ 'monitor_custom_mibs' == "$1" || -d "$1" ]] || \
-	                  (set -o pipefail; docker volume ls -q | grep "^$1$"); then
+	                  (set -o pipefail; docker volume ls -q | \
+	                   grep -q "^$1$"); then
 	    printf '%s' "$1"
 		return 0
 	fi
@@ -65,3 +66,6 @@ MONITOR_CUSTOM_MIB_PATH_sanitize () {
 
 	return 1
 }
+
+#shellcheck disable=2034
+declare -r MONITOR_CUSTOM_MIB_PATH_is_dot_env=y

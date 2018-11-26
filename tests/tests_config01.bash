@@ -120,6 +120,8 @@ testSetupMonitorModuleVariables() {
     mibs_directory2=$(mktemp -d)
     declare -r mibs_directory mibs_directory2
 
+    touch "$mibs_directory/I_am_a_mock_mib"
+
     genericSetupQuestionAnswer monitor \
        'monitor custom mibs path (use monitor_custom_mibs for no custom mibs)' \
          "${mibs_directory}" \
@@ -131,6 +133,11 @@ testSetupMonitorModuleVariables() {
                                 'KAFKA_TOPIC=monitor' \
                                 'REQUESTS_TIMEOUT=25' \
                                 "SENSORS_ARRAY=''"
+
+    if ! "${PROZZIE_PREFIX}/bin/prozzie" compose exec monitor \
+            find / -name 'I_am_a_mock_mib' | grep -q .; then
+        ${_FAIL_} '"Monitor mock MIB not found"'
+    fi
 
     while ! /opt/prozzie/bin/prozzie logs monitor | \
                                             grep -q 'Listening for traps'; do

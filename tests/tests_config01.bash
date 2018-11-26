@@ -532,8 +532,7 @@ testEnableModule() {
         ${_FAIL_} '"Fail to send syslog message"'
     fi
 
-    ${_ASSERT_EQUALS_} '"Incorrect number of messages in topic syslog"' \
-    '1' "$("${PROZZIE_PREFIX}/bin/prozzie" kafka consume syslog --from-beginning --max-messages 1 | grep -o -E '{.+}' | wc -l)"
+    assert_one_message_in_topic syslog
 }
 
 testDisableModule() {

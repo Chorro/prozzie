@@ -363,8 +363,7 @@ function app_setup () {
   prozzie_postinstall
 
   log info "Starting Prozzie..."$'\n\n'
-
-  "${PREFIX}/bin/prozzie" start
+  "${PREFIX}/bin/prozzie" up -d
 }
 
 # Allow inclusion on other modules with no app_setup call

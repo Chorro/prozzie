@@ -20,6 +20,14 @@ P_tests: &P_tests
           yes |
           env PREFIX="${PROZZIE_PREFIX}" INTERFACE_IP=${HOSTNAME}
           kcov ${KCOV_FLAGS} install_cov setups/linux_setup.sh
+    - run:
+        name: Check all base services are up
+        command: >
+          [[ $("${PROZZIE_PREFIX}"/bin/prozzie compose ps --services | sort | \
+                                                           tee /dev/stderr) == \
+             $("$PROZZIE_PREFIX"/bin/prozzie up -d >&2 && \
+               "${PROZZIE_PREFIX}"/bin/prozzie compose ps --services | sort | \
+                                                           tee /dev/stderr) ]]
     # Circleci forbids us to communicate with remote docker host, so we need
     # to simulate external kafka port forwarding
     - run:

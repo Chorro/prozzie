@@ -18,6 +18,12 @@ To listen for snmp in a specific port you have to use the `TRAPS_PORT` environme
 
 You can check that messages are properly delivered using `prozzie kafka consume <your-monitor-topic>`.
 
+## Custom mibs
+Monitor connector includes all
+[net-snmp mibs](http://www.net-snmp.org/docs/mibs/) distributed Mibs. Create a
+docker named volume with the mibs you want to use and set it in
+`MONITOR_CUSTOM_MIB_PATH` variable to to use your customs MIBs.
+
 ## Variables
 
 REQUESTS_TIMEOUT
@@ -27,7 +33,7 @@ KAFKA_TOPIC
 : Topic to produce monitor metrics. By default `monitor`
 
 MONITOR_CUSTOM_MIB_PATH
-: Monitor custom MIB path. By default `monitor_custom_mibs`
+: Monitor custom MIB volume. By default `monitor_custom_mibs`
 
 SENSORS_ARRAY
 : Monitor agents array. By default `''`

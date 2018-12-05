@@ -30,6 +30,7 @@ Please do these checks in PR and delete it from PR message:
 - [ ] Update tests cases, especially looking for corner cases and errors path.
       Code coverage should show that tests passed by the code I modified.
 - [ ] New libraries/components have a test to show when they are outdated.
+- [ ] Changes are reflected in `update_internal.bash` if needed.
 
 # Use of tools
 - [ ] Check text changes against these tools:

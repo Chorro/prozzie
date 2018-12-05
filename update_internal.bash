@@ -41,6 +41,20 @@ main () {
         # Move new directory and its content
         mv "$upgrade_path/compose" "${PREFIX}"/share/prozzie
     fi
+
+    # Base env file was created in 0.6.0~0.7.0 range
+    if [[ ! -f "${PREFIX}"/etc/prozzie/envs/base.env ]]; then
+        log info 'Upgrading prozzie config from pre-0.7.0 format...'$'\n'
+        mv -v "${PREFIX}"/etc/prozzie/.env "${PREFIX}"/etc/prozzie/envs/base.env
+        grep INTERFACE_IP "${PREFIX}"/etc/prozzie/envs/base.env > \
+            "${PREFIX}"/etc/prozzie/.env
+
+        declare -r ZZ_HTTP_ENDPOINT_S='s/^ZZ_HTTP_ENDPOINT=/HTTP_ENDPOINT=/'
+        declare -r CLIENT_API_KEY_S='s/^CLIENT_API_KEY=/HTTP_POST_PARAMS=apikey:/'
+
+        sed -i "${ZZ_HTTP_ENDPOINT_S};${CLIENT_API_KEY_S}" -- \
+                                           "${PREFIX}"/etc/prozzie/envs/base.env
+    fi
 }
 
 main "$@"

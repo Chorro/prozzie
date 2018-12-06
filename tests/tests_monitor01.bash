@@ -33,14 +33,4 @@ test_monitor_mib_bad_path () {
     fi
 }
 
-test_set_monitor_bad_mib_path () {
-    "${PROZZIE_PREFIX}/bin/prozzie" config enable monitor
-
-    # Try to set a file as
-    if "${PROZZIE_PREFIX}/bin/prozzie" config set monitor \
-            MONITOR_CUSTOM_MIB_PATH="$(mktemp "$SHUNIT_TMPDIR/monitor_mib.XXXXXX")"; then
-        ${_FAIL_} \''Can set bad monitor mib path with config set'\'
-    fi
-}
-
 . test_run.sh

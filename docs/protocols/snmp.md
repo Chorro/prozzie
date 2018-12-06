@@ -20,9 +20,23 @@ You can check that messages are properly delivered using `prozzie kafka consume 
 
 ## Custom mibs
 Monitor connector includes all
-[net-snmp mibs](http://www.net-snmp.org/docs/mibs/) distributed Mibs. Create a
-docker named volume with the mibs you want to use and set it in
-`MONITOR_CUSTOM_MIB_PATH` variable to to use your customs MIBs.
+[net-snmp mibs](http://www.net-snmp.org/docs/mibs/) distributed MIBs. If you
+want to add more, the easier way is to set the MONITOR_CUSTOM_MIB_PATH
+variable. When you set it, the next things happens:
+
+* If the path is a directory or a docker volume, all files under that are
+added to custom MIBs.
+* If the path is a file, that file will be copied to custom mibs.
+* If the variable is `monitor_custom_mibs`, nothing happens.
+* Otherwise, you have an error.
+
+Internally, all variables are added to `prozzie_monitor_custom_mibs` volume.
+The procedure to delete old MIBs is to manually mount the volume in a temporary
+container and delete it:
+
+```
+docker run --rm -it -v prozzie_monitor_custom_mibs:/mibs --workdir /mibs alpine sh
+```
 
 ## Variables
 

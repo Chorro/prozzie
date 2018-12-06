@@ -19,4 +19,4 @@ services:
       TRAPS_PORT: '162'
 
     volumes:
-      - "${MONITOR_CUSTOM_MIB_PATH:-monitor_custom_mibs}:/root/.snmp/mibs:ro"
+      - "monitor_custom_mibs:/root/.snmp/mibs:ro"

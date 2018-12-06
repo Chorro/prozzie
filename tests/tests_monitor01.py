@@ -28,7 +28,6 @@ if __name__ == "__main__":
         # Not existent volume
         'monitor custom mibs path.*:': [Line('random_volume_' +
                                              str(random.randint(0, 1000))),
-                                        Line('/proc/cpuinfo'),
                                         (pexpect.spawn.sendintr)],
         'Seconds between monitor polling': [Line('25')],
         'Topic to produce monitor metrics': [Line('monitor')],

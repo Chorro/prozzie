@@ -129,13 +129,13 @@ testSetupMonitorModuleVariables() {
        'Seconds between monitor polling' '25' \
        'Monitor agents array' "\\'\\'"
 
-    genericTestModule 4 monitor "MONITOR_CUSTOM_MIB_PATH=${mibs_directory}" \
+    genericTestModule 4 monitor "MONITOR_CUSTOM_MIB_PATH=monitor_custom_mibs" \
                                 'KAFKA_TOPIC=monitor' \
                                 'REQUESTS_TIMEOUT=25' \
                                 "SENSORS_ARRAY=''"
 
     if ! "${PROZZIE_PREFIX}/bin/prozzie" compose exec monitor \
-            find / -name 'I_am_a_mock_mib' | grep -q .; then
+            find /root/ -name 'I_am_a_mock_mib' | grep -q .; then
         ${_FAIL_} '"Monitor mock MIB not found"'
     fi
 
@@ -152,7 +152,7 @@ testSetupMonitorModuleVariables() {
         REQUESTS_TIMEOUT=60 \
         SENSORS_ARRAY="''"
 
-    genericTestModule 4 monitor "MONITOR_CUSTOM_MIB_PATH=${mibs_directory2}" \
+    genericTestModule 4 monitor "MONITOR_CUSTOM_MIB_PATH=monitor_custom_mibs" \
                                 'KAFKA_TOPIC=myMonitorTopic' \
                                 'REQUESTS_TIMEOUT=60' \
                                 "SENSORS_ARRAY=''"

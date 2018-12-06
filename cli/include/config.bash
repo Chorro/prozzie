@@ -422,7 +422,9 @@ connector_setup () {
   declare -r src_env_file
   shift
 
-  trap print_not_modified_warning EXIT
+  # shellcheck disable=SC2034
+  declare zz_trap_stack
+  zz_trap_push zz_trap_stack print_not_modified_warning EXIT
 
   # Check if the user previously provided the variables. In that case,
   # offer user to mantain previous value.
@@ -451,7 +453,7 @@ connector_setup () {
                                                       "${new_connector_vars[@]}"
 
   # Hurray! app installation end!
-  trap '' EXIT
+  zz_trap_pop zz_trap_stack EXIT
 }
 
 # List enable modules
@@ -464,15 +466,11 @@ zz_list_enabled_modules() {
     declare -r search_prefix='*/compose/'
     declare -r suffix='.yaml'
 
-    declare restore_sigpipe_cmd
-    restore_sigpipe_cmd=$(trap -p SIGPIPE)
-    if [[ -z "$restore_sigpipe_cmd" ]]; then
-        restore_sigpipe_cmd='trap - SIGPIPE'
-    fi
-    declare -r restore_sigpipe_cmd
-
+    # zz_trap_push/pop use this variable
+    # shellcheck disable=SC2034
+    declare zz_trap_stack
     # If can't write, return properly. It may be grep -q or similar.
-    trap '$restore_sigpipe_cmd; return 0' SIGPIPE
+    zz_trap_push zz_trap_stack 'return 0' SIGPIPE
 
     # Yaml modules
     for module in "${PREFIX}"/etc/prozzie/compose/*.yaml; do
@@ -489,7 +487,7 @@ zz_list_enabled_modules() {
                         grep -q 'RUNNING' && printf '%s\n' "$module"
     done
 
-    $restore_sigpipe_cmd
+    zz_trap_pop zz_trap_stack SIGPIPE
 }
 
 ##

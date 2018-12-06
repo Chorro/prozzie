@@ -140,9 +140,8 @@ install_rollback () {
 #
 # Exit status:
 #  -
-stop_prozzie_install_rollback () {
+stop_prozzie () {
     "${PREFIX}/bin/prozzie" down
-    install_rollback
 }
 
 
@@ -335,7 +334,9 @@ function app_setup () {
   create_directory_tree
   echo $PROZZIE_VERSION > "${PREFIX}/etc/prozzie/.version"
 
-  trap install_rollback EXIT
+  # shellcheck disable=SC2034
+  declare trap_stack_install_rollback trap_stack_install_rollback_unused
+  zz_trap_push trap_stack_install_rollback install_rollback EXIT
 
   log info "Prozzie will be installed under: [${PREFIX}]"$'\n'
 
@@ -351,14 +352,14 @@ function app_setup () {
 
   # Need for kafka connect modules configuration.
   "${PREFIX}/bin/prozzie" up -d kafka-connect
-  trap stop_prozzie_install_rollback EXIT
+  zz_trap_push trap_stack_install_rollback_unused stop_prozzie EXIT
 
   "${PREFIX}/bin/prozzie" config wizard
 
   printf 'Done!\n\n'
 
   log ok $'Prozzie installation is finished!\n'
-  trap '' EXIT # No need for file cleanup anymore
+  zz_trap_pop trap_stack_install_rollback EXIT
 
   prozzie_postinstall
 

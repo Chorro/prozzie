@@ -203,6 +203,10 @@ print_github_last_release () {
 upgrade_to_new_version () {
     declare -r new_version="$1"
 
+    # zz_trap_push/pop use this variable
+    # shellcheck disable=SC2034
+    declare trap_stack
+
     # Clear screen
     clear
     # Download selected prozzie release
@@ -215,12 +219,12 @@ upgrade_to_new_version () {
     backup_prozzie
     log info $'Upgrading Prozzie release, please wait...\n'
     # Rollback if prozzie upgrade is cancelled
-    trap rollback_backup EXIT
+    zz_trap_push trap_stack rollback_backup EXIT
     # upgrade prozzie files and version
     if upgrade_prozzie_files "$new_version"; then
         echo "$new_version" > "${PREFIX}"/etc/prozzie/.version
         log ok $'Prozzie has been upgraded successfully to version '"$new_version"$'!\n'
-        trap '' EXIT
+        zz_trap_pop trap_stack EXIT
         "${PREFIX}/bin/prozzie" up -d
     else
         log error $'An error has been occurred!\n' >&2

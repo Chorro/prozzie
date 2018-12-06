@@ -289,3 +289,58 @@ zz_sponge() {
     declare -a lines
     readarray lines && printf "%s" "${lines[@]}" > "$1"
 }
+
+##
+## @brief      Push a trap action to the prozzie trap stack
+##             Wrapper over bash trap that allows to stack actions to a given
+##             signal, allowing us to not to override previous established traps
+##
+## @param      1 The variable to save previous stack
+## @param      2 The trap condition
+## @param      3 The new trap action
+##
+## @return     trap return value
+## @see        zz_trap_pop
+##
+zz_trap_push() {
+    declare -r stack_var="$1"
+    declare -r trap_action="$2"
+    declare -r trap_condition="$3"
+
+    declare stack_var_actions=''
+
+    printf -v "$stack_var" '%s' "$(trap -p "${trap_condition}")"
+
+    if [[ -n "${!stack_var}" ]]; then
+        # There was a previous trap. Format them to add after ${trap_action}
+        # Need to use expr here to make BASH expand it, not an external program
+        # shellcheck disable=SC2003
+        stack_var_actions=$(expr match "${!stack_var}" \
+                                         "trap -- '\\(.*\\)' ${trap_condition}")
+        stack_var_actions="; ${stack_var_actions}"
+    fi
+
+    # We want to expand stack_var and trap_action now
+    # shellcheck disable=2064
+    trap "${trap_action}${stack_var_actions}" "${trap_condition}"
+}
+
+##
+## @brief      Pop the prozzie trap stack, NOT executing the saved action with
+##             zz_trap_push.
+##
+## @param      1 Stack variable previously used with zz_trap_push
+##
+## @return     Trap return code
+##
+zz_trap_pop() {
+    declare -r stack_var="$1"
+    declare -r trap_condition="$2"
+
+    if [[ -n "${!stack_var}" ]]; then
+        eval "${!stack_var}"
+    else
+        trap - "${trap_condition}"
+    fi
+
+}

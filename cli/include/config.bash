@@ -93,7 +93,7 @@ zz_variable () {
     fi
 
     if [[ -z "${!1}" && -z "$default" ]]; then
-      log fail "[${!1}][$default] Empty $1 not allowed"$'\n'
+      log fail "Empty $1 not allowed"$'\n'
       continue
     fi
 

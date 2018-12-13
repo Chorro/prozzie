@@ -59,7 +59,18 @@ zz_connector_print_send_message_hint () {
 	printf '"prozzie kafka consume <mutopic>"\n'
 }
 
+##
+## @brief  Add protocol (http://) and URI to k2http endpoint
+## @param  [--dry-run] Ignored, only to comply with interface
+## @param  1 User-introduced value
+##
+## @return Always true
+##
 HTTP_ENDPOINT_sanitize() {
+	if [[ $1 == --dry-run ]]; then
+		shift
+	fi
+
 	declare out="$1"
 	if [[ ! "$out" =~ ^http[s]?://* ]]; then
 		declare out="https://${out}"
@@ -71,11 +82,17 @@ HTTP_ENDPOINT_sanitize() {
 }
 
 ##
-## @brief      http2k expect POST parameters to be in this format
+## @brief  k2http expect POST parameters to be in this format
+## @param  [--dry-run] Ignored, only to comply with interface
+## @param  1 User-introduced value
 ##
-## @return     { description_of_the_return_value }
+## @return Always true
 ##
 HTTP_POST_PARAMS_sanitize() {
+	if [[ $1 == --dry-run ]]; then
+		shift
+	fi
+
     declare out="$1"
     if [[ $out != "apikey:"* ]]; then
         out="apikey:$out"

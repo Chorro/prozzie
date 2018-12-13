@@ -72,7 +72,8 @@ ${variable_name}_sanitize
 : This function runs after the user's variable value
 introduction, and can modify the variable value. Pre-sanitize variable's value
 is the first parameter, and sanitize function must return the variable's new
-value.
+value. It must accept a `--dry-run` parameter that make the function not to do
+side-effects actions, like to change a file.
 
 ${variable_name}_hint
 : Interactive configurations like `prozzie setup` will use this function's

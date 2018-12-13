@@ -232,9 +232,9 @@ zz_get_vars () {
 zz_set_vars () {
     declare -a vars dot_env_vars
 
-    declare dry_run_arg pair key val
+    declare dry_run=n pair key val
     if [[ "$1" == '--dry-run' ]]; then
-        declare -r dry_run_arg=--dry-run
+        declare -r dry_run=y
         shift
     fi
 
@@ -258,7 +258,7 @@ zz_set_vars () {
         fi
 
         if func_exists "${key}_sanitize" && \
-                                ! val="$("${key}_sanitize" "${val}")"; then
+                    ! val="$("${key}_sanitize" --dry-run "${val}")"; then
             # Can't sanitize value from command line. Error message must tell
             # the error.
             return 1
@@ -279,12 +279,31 @@ zz_set_vars () {
 
     printf '%s\n' "${vars[@]}"
 
-    if [[ -n $dry_run_arg ]]; then
+    if [[ $dry_run == y ]]; then
         return 0
     fi
 
-    # Still copying
-    declare file keys_or_joined
+    declare file keys_or_joined applied_warning
+    tmp_fd applied_warning
+
+    # Run sanitize functions
+    for pair in "$@"; do
+        key="${pair%%=*}"
+        val="${pair#*=}"
+
+        if func_exists "${key}_sanitize" && \
+                                 ! "${key}_sanitize" "${val}" > /dev/null; then
+            # Can't sanitize value from command line. Error message must tell
+            # the error.
+            printf '%s\n' "$(</dev/fd/"${applied_warning}")" >&2
+            return 1
+        fi
+
+        printf 'Warning! %s modifications applied!\n' "$key" >> \
+            /dev/fd/"${applied_warning}"
+    done
+
+    # Replace in files
     for file in "${env_files[@]}"; do
         if [[ $file == *"/.env" ]]; then
             # Compose variable

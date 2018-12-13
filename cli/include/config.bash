@@ -220,112 +220,92 @@ zz_get_vars () {
         done
 }
 
-# Set variable in env file and prints it in order to check sanitations applied.
-# Arguments:
-#  [[ --dry-run ]] Do not change anything in env file or in actual variables
-#  1 - File from get variables
-#  2 - Variable to set
-#  3 - Value to set
-# Environment:
-#  -
-#
-# Out:
-#  New key=val
-#
-# Exit status:
-#  0 - Variable is set without error
-#  1 - An error has ocurred while set a variable (variable not found or mispelled)
-zz_set_var () {
-    declare dry_run=n key_value file
-    if [[ $1 == --dry-run ]]; then
-        dry_run=y
+## Check and set a list of key-value pairs separated by delimiter
+## @param --dry-run Do not make any actual change
+## @param 1         File from get variables
+## @param 2         List of key-value pairs separated by delimiter
+##
+## @note Use module_envs global variable: user provided key must exists in
+## array keys.
+##
+## @note It print backs the ACTUAL variables that changed, and its new value, or
+## error via stderr.
+##
+## @return True if can change variable, false otherwise.
+zz_set_vars () {
+    declare -a vars dot_env_vars
+
+    declare dry_run_arg pair key val
+    if [[ "$1" == '--dry-run' ]]; then
+        declare -r dry_run_arg=--dry-run
         shift
-    fi
-
-    if ! exists_key_in_module_envs "$2"; then
-        printf "Variable '%s' not recognized! No changes made to %s\\n" \
-                                                                   "$2" "$1" >&2
-        return 1
-    fi
-
-    declare value="$3"
-    if func_exists "$2_sanitize" && ! value="$("$2_sanitize" "${3}")"; then
-        # Can't sanitize value from command line
-        return 1
-    fi
-
-    printf -v key_value "%s=%s" "$2" "$value"
-    printf '%s\n' "$key_value"
-
-    if [[ $dry_run == y ]]; then
-        return 0
     fi
 
     declare -a env_files=("$1")
-    declare -r is_dot_env_variable="$2_is_dot_env"
-    if [[ ${!is_dot_env_variable:=n} == y ]]; then
-        env_files+=("${PREFIX}/etc/prozzie/.env")
-    fi
-
-    for file in "${env_files[@]}"; do
-        # Can suppress stderr: If no such file, printf will try to create it
-        if grep -q . "$file" 2>/dev/null; then
-            # shellcheck disable=SC2094
-            sed -n -e "/^$2=/!p; \$a$key_value" < "$file" | zz_sponge "$file"
-            #         ^^^^^^^^^^
-            #         Do not copy non interesting values
-            #                    ^^^^^^^^^^^^^^^
-            #                    Append interesting values
-        else
-            # Sed does not work with empty files
-            printf '%s\n' "$key_value" > "$file"
-        fi
-    done
-}
-
-# Check and set a list of key-value pairs separated by delimiter
-# Arguments:
-#  [[--dry-run]] - Do not make any actual change
-#  1 - File from get variables
-#  2 - List of key-value pairs separated by delimiter
-# Environment:
-#  -
-#
-# Out:
-#  -
-#
-# Exit status:
-#  Always 0
-zz_set_vars () {
-    declare key val
-
-    declare dry_run_arg
-    if [[ "$1" == '--dry-run' ]]; then
-        dry_run_arg=--dry-run
-        shift
-    fi
-
-    declare -r env_file="$1"
     shift
-
-    if [[ -z $dry_run_arg ]]; then
-        # Check that all parameters are OK before do any change
-        zz_set_vars --dry-run "$env_file" "$@" >/dev/null || return 1
-        dry_run_arg=
-    fi
-    declare -r dry_run_arg
 
     for pair in "$@"; do
         if [[ $pair != *=* ]]; then
             printf "The argument '%s' isn't a valid key=value pair " "$pair" >&2
             printf "and won't be applied\\n" >&2
             return 1
-        else
-            key=${pair%%=*}
-            val="${pair#*=}"
-
-            zz_set_var $dry_run_arg "$env_file" "$key" "$val" || return 1
         fi
+
+        key="${pair%%=*}"
+        val="${pair#*=}"
+
+        if ! exists_key_in_module_envs "${key}"; then
+            printf "Variable '%s' not recognized! No changes made to %s\\n" \
+                                                 "${key}" "${env_file}" >&2
+            return 1
+        fi
+
+        if func_exists "${key}_sanitize" && \
+                                ! val="$("${key}_sanitize" "${val}")"; then
+            # Can't sanitize value from command line. Error message must tell
+            # the error.
+            return 1
+        fi
+
+        declare is_dot_env_variable="${key}_is_dot_env"
+        if [[ ${!is_dot_env_variable:=n} == y ]]; then
+            if ! array_contains "${PREFIX}/etc/prozzie/.env" \
+                                                        "${env_files[@]}"; then
+                env_files+=("${PREFIX}/etc/prozzie/.env")
+            fi
+
+            dot_env_vars+=("${key}=${val}")
+        fi
+
+        vars+=("${key}=${val}")
+    done
+
+    printf '%s\n' "${vars[@]}"
+
+    if [[ -n $dry_run_arg ]]; then
+        return 0
+    fi
+
+    # Still copying
+    declare file keys_or_joined
+    for file in "${env_files[@]}"; do
+        if [[ $file == *"/.env" ]]; then
+            # Compose variable
+            set -- "${dot_env_vars[@]}"
+        else
+            # Module variables
+            set -- "${vars[@]}"
+        fi
+
+        keys_or_joined=$(str_join '\|' "${@/=*/=}")
+
+        {
+            # Print only not modified values, if file exists and we can read it
+            grep -v "^\\(${keys_or_joined}\\)" "$file" 2>/dev/null
+
+            # Print modified variables
+            printf '%s\n' "$@"
+        } | zz_sponge "$file"
     done
 }
 

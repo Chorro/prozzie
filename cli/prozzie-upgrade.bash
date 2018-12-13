@@ -18,10 +18,8 @@
 # Get current release
 current_release=$(<"${PREFIX}/etc/prozzie/.version")
 declare -r current_release
-declare -r latest_prerelease_cmd="curl --silent https://api.github.com/repos/wizzie-io/
-prozzie/releases | jq -j 'first(.[] | select(.prerelease==true) | .tag_name)'"
-declare -r latest_release_cmd="curl --silent https://api.github.com/repos/wizzie-io/pro
-zzie/releases/latest | jq -j '.tag_name'"
+declare -r latest_prerelease_cmd="curl --silent https://api.github.com/repos/wizzie-io/prozzie/releases | jq -j 'first(.[] | select(.prerelease==true) | .tag_name)'"
+declare -r latest_release_cmd="curl --silent https://api.github.com/repos/wizzie-io/prozzie/releases/latest | jq -j '.tag_name'"
 
 printShortHelp() {
     printf "Check and upgrade Prozzie to latest release\\n"

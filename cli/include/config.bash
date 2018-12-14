@@ -98,24 +98,21 @@ zz_variable () {
     fi
 
     # Check if the value is valid
-    if [[ $check_for_valid == n ]]; then
-      new_value="${!1}"
-    elif ! new_value=$("${PREFIX}/bin/prozzie" config set --no-reload-prozzie \
-                                           "$module" --dry-run "$1=${!1}"); then
+    if [[ $check_for_valid == y ]] && \
+                      ! "${PREFIX}/bin/prozzie" config set --no-reload-prozzie \
+                                           "$module" --dry-run "$1=${!1}" > /dev/null; then
       if [[ $env_provided == y ]]; then
         # Tried to force and it fails
         exit 1
       fi
 
+      # Continue the loop
       unset -v "$1"
-      continue
-    else
-      new_value="${new_value#*=}"
     fi
 
-    # Set environment variable to actual new value
-    printf -v "$1" '%s' "${new_value#*=}"
-    break
+    if [[ $env_provided == y ]]; then
+        break;
+    fi
   done
 }
 

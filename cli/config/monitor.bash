@@ -118,6 +118,10 @@ MONITOR_CUSTOM_MIB_PATH_sanitize () {
 	fi
 
 	if [[ $rc -eq 0 ]]; then
+		if [[ $1 != "${return_value}" && $dry_run == n ]]; then
+			"${PREFIX}"/bin/prozzie compose rm -s -f monitor >&2
+		fi
+
 		printf '%s' "${return_value}"
 		return 0
 	fi

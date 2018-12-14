@@ -115,12 +115,12 @@ send_snmp_trap () {
 }
 
 testSetupMonitorModuleVariables() {
-    declare mibs_directory mibs_directory2
+    declare mibs_directory mib_file
     mibs_directory=$(mktemp -d)
-    mibs_directory2=$(mktemp -d)
-    declare -r mibs_directory mibs_directory2
+    mib_file=$(mktemp -d)/my_mib.txt
+    declare -r mibs_directory mib_file
 
-    touch "$mibs_directory/I_am_a_mock_mib"
+    touch "$mibs_directory/I_am_a_mock_mib" "$mib_file"
 
     genericSetupQuestionAnswer monitor \
        'monitor custom mibs path (use monitor_custom_mibs for no custom mibs)' \
@@ -129,7 +129,7 @@ testSetupMonitorModuleVariables() {
        'Seconds between monitor polling' '25' \
        'Monitor agents array' "\\'\\'"
 
-    genericTestModule 4 monitor "MONITOR_CUSTOM_MIB_PATH=monitor_custom_mibs" \
+    genericTestModule 4 monitor 'MONITOR_CUSTOM_MIB_PATH=monitor_custom_mibs' \
                                 'KAFKA_TOPIC=monitor' \
                                 'REQUESTS_TIMEOUT=25' \
                                 "SENSORS_ARRAY=''"
@@ -147,12 +147,12 @@ testSetupMonitorModuleVariables() {
     assert_one_message_in_topic monitor
 
     "${PROZZIE_PREFIX}"/bin/prozzie config set monitor \
-        MONITOR_CUSTOM_MIB_PATH="${mibs_directory2}" \
+        MONITOR_CUSTOM_MIB_PATH="${mib_file}" \
         KAFKA_TOPIC=myMonitorTopic \
         REQUESTS_TIMEOUT=60 \
         SENSORS_ARRAY="''"
 
-    genericTestModule 4 monitor "MONITOR_CUSTOM_MIB_PATH=monitor_custom_mibs" \
+    genericTestModule 4 monitor 'MONITOR_CUSTOM_MIB_PATH=monitor_custom_mibs' \
                                 'KAFKA_TOPIC=myMonitorTopic' \
                                 'REQUESTS_TIMEOUT=60' \
                                 "SENSORS_ARRAY=''"
@@ -161,6 +161,11 @@ testSetupMonitorModuleVariables() {
                                             grep -q 'Listening for traps'; do
         :;
     done
+
+    if ! "${PROZZIE_PREFIX}/bin/prozzie" compose exec monitor \
+            find /root/ -name 'my_mib.txt' | grep -q .; then
+        ${_FAIL_} '"Monitor mock MIB not found"'
+    fi
 
     send_snmp_trap "${HOSTNAME}"
     assert_one_message_in_topic myMonitorTopic

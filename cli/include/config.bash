@@ -420,10 +420,7 @@ connector_setup () {
     fi
     zz_variable "$connector" "$var_key" "$var_default" "$var_prompt"
 
-    if [[ "${!var_key}" != \
-            "$("${PREFIX}/bin/prozzie" config get "$connector" "${var_key}")" ]]; then
-        new_connector_vars+=("${var_key}=${!var_key}")
-    fi
+    new_connector_vars+=("${var_key}=${!var_key}")
   done
 
   "${PREFIX}/bin/prozzie" config set --no-reload-prozzie "$connector" \

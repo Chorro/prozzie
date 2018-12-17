@@ -344,3 +344,148 @@ zz_trap_pop() {
     fi
 
 }
+
+##
+## @brief Archive a directory in tar format.
+##
+## @param  1 Directory to archive
+##
+## @return `tar` return command
+##
+tar_directory_to_volume_format () {
+    tar c -C "$1" -f - .
+}
+
+##
+## @brief  Copy file from the host is tunning CLI to a given volume
+## @param  [--mode=<unix mode>] Mode to copy. Only valid in file mode.
+## @param  1 Allowed sources (File, Directory, Volume)
+## @param  2 Source Source file, directory, or volume to copy.
+## @param  3 Destination volume to add source file. Can use volume:dst to
+##           specify file, or volume:dst/ to save the file in that directory.
+##           Need to be explicit with final / to add to directory; otherwise,
+##           an error is raised.
+##
+## @return True if can make the copy, false otherwise.
+##
+zz_docker_copy_file_to_volume () {
+    declare dry_run=n
+    eval set -- "$(getopt -o '' --long mode:,dry-run -- "$@")"
+
+    while true; do
+        case $1 in
+        --mode)
+            declare -r file_mode="${2}";
+            shift 2
+            ;;
+        --dry-run)
+            declare dry_run=y
+            shift
+            ;;
+        --)
+            shift
+            break
+            ;;
+        esac
+    done
+
+    declare -r source="$2"
+    declare -r destination="$3"
+    declare origin_type origin_f=n origin_d=n origin_v=n
+    for origin_type in f d v; do
+        if [[ "$1" == *"$origin_type"* ]]; then
+            printf -v "origin_${origin_type}" y
+        fi
+    done
+
+    # Sadly, there is not a more elegant way to copy stuff to a volume than
+    # through a container...
+    if [[ "$origin_v" == y ]] && \
+                                docker volume ls -q | grep -xq "${source}"; then
+        if [[ $dry_run == y ]]; then
+            return
+        fi
+
+        zz_toolbox_exec \
+            --mount "type=volume,source=${source},target=/from" \
+            --mount "type=volume,source=${destination},target=/dest_v" \
+            -- rsync -a /from/ /dest_v/
+        return  # $?
+    elif [[ "$origin_d" == y && -d "${source}" ]]; then
+        if [[ $dry_run == y ]]; then
+            # Check if we can actually compress the directory
+            tar_directory_to_volume_format "$2" >/dev/null
+            return  # $?
+        fi
+
+        tar_directory_to_volume_format "$2" | zz_toolbox_exec -i \
+            --mount "type=volume,source=${destination},target=/dest_v" \
+            --workdir "/dest_v" \
+            -- /bin/tar x -f -
+        return  # $?
+    elif [[ "$origin_f" == y && -f "${source}" ]]; then
+        if [[ $dry_run == y ]]; then
+            return
+        fi
+
+        declare destination_volume="${destination%:*}"
+
+        declare destination_name
+        if [[ $destination == *:* ]]; then
+            # User provides a file after volume name
+            destination_name="${destination##*:}"
+        else
+            destination_name="$(basename "${source}")"
+        fi
+
+        if ! zz_toolbox_exec -i \
+                --mount \
+                    "type=volume,source=${destination_volume},target=/dest_v" \
+                --workdir '/dest_v' \
+                -- /usr/bin/tee \
+                "${destination_name}" < "${source}" >/dev/null; then
+            return 1
+        fi
+
+        if [[ -v file_mode ]] && \
+                ! zz_toolbox_exec \
+                --mount \
+                    "type=volume,source=${destination_volume},target=/dest_v" \
+                --workdir '/dest_v' \
+                -- /usr/bin/chmod "${destination_name}" "${file_mode}"; then
+            return 1
+        fi
+
+        return 0
+    fi
+
+    return 1
+}
+
+##
+## @brief      Run a command in prozzie toolbox container. Need to separate
+##             prozzie options of command arguments with '--'. First parameter
+##             after -- is the docker entrypoint.
+##
+## @return     Command return code
+##
+zz_toolbox_exec () {
+    declare -r prozzie_toolbox_sha=1f3ef1fe86c30f604d532e133fe7964f8b7cab2fd4e140515d3e80928d93c4e6
+    declare -a docker_options
+
+    while :; do
+        declare opt="$1"
+        shift
+
+        case "$opt" in
+            --) unset -v opt; break ;;
+            *) docker_options+=("$opt") ;;
+        esac
+    done
+
+    declare -r entrypoint="$1"
+    shift
+
+    docker run --rm "${docker_options[@]}" --entrypoint "${entrypoint}" \
+        -- "wizzieio/prozzie-toolbox@sha256:${prozzie_toolbox_sha}" "$@"
+}

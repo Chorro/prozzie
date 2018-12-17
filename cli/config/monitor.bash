@@ -47,17 +47,6 @@ zz_connector_print_send_message_hint () {
 }
 
 ##
-## @brief Archive a directory in tar format.
-##
-## @param  1 Directory to archive
-##
-## @return `tar` return command
-##
-tar_directory_to_volume_format () {
-	tar c -C "$1" -f - .
-}
-
-##
 ## @brief      Check that monitor_custom_mibs is either 'monitor_custom_mibs', a
 ##             valid docker volume or a valid system directory
 ##
@@ -67,59 +56,21 @@ tar_directory_to_volume_format () {
 ## @return     True if valid, false otherwise
 ##
 MONITOR_CUSTOM_MIB_PATH_sanitize () {
-	declare -r prozzie_toolbox_sha='1f3ef1fe86c30f604d532e133fe7964f8b7cab2fd4e140515d3e80928d93c4e6'
-	declare rc=1 dry_run=n
+	declare dry_run_arg
 	declare -r return_value='monitor_custom_mibs'
 	declare -r monitor_mibs_volume="prozzie_${return_value}"
 
 	if [[ $1 == --dry-run ]]; then
-		dry_run=y
+		dry_run_arg=--dry-run
 		shift
 	fi
 
-	# Use of docker volume output redirection for obtain grep exit status
-	if [[ "${return_value}" == "$1" ]]; then
-	    rc=0
-	fi
-
-	# Sadly, there is not a more elegant way to copy stuff to a volume than
-	# through a container...
-	if [[ $rc -eq 1 ]] && docker volume ls -q | grep -xq "$1"; then
-		[[ $dry_run == y ]] || \
-		docker run --rm \
-			--mount "type=volume,source=$1,target=/from" \
-			--mount "type=volume,source=${monitor_mibs_volume},target=/mibs" \
-			--entrypoint rsync \
-			"wizzieio/prozzie-toolbox@sha256:${prozzie_toolbox_sha}" \
-			-a /from/ /mibs/ && rc=0
-	elif [[ $rc -eq 1 && -d "$1" ]]; then
-		# (dry run && can compress) or actual command success
-		{ [[ $dry_run == y ]] && \
-						 tar_directory_to_volume_format "$1" >/dev/null; }  || \
-		tar_directory_to_volume_format "$1" | \
-			docker run -i --rm \
-				--mount \
-					  "type=volume,source=${monitor_mibs_volume},target=/mibs" \
-				--workdir "/mibs" \
-		        --entrypoint /bin/tar \
-		        wizzieio/prozzie-toolbox \
-		        x --directory /mibs -f - && rc=0
-	elif [[ $rc -eq 1 && -r "$1" ]]; then
-		# Whatever it is, can we read it?
-		# Shellcheck thinks that we are reading & writing in the same file
-		# shellcheck disable=SC2094
-		[[ $dry_run == y ]] || \
-		docker run --rm \
-				--mount \
-					"type=volume,source=${monitor_mibs_volume},target=/mibs" \
-		        --entrypoint /usr/bin/tee \
-		        wizzieio/prozzie-toolbox \
-		        "/mibs/$(basename "$1")" < "$1" >/dev/null && rc=0
-	fi
-
-	if [[ $rc -eq 0 ]]; then
-		if [[ $1 != "${return_value}" && $dry_run == n ]]; then
-			"${PREFIX}"/bin/prozzie compose rm -s -f monitor >&2
+	if [[ "${return_value}" == "$1" ]] || \
+			zz_docker_copy_file_to_volume \
+				${dry_run_arg:-} fdv "$1" "$monitor_mibs_volume"; then
+		if [[ -z $dry_run_arg ]]; then
+			"${PREFIX}"/bin/prozzie compose rm -s -f monitor 2>&1 | \
+				grep -v 'No such service: monitor' >&2
 		fi
 
 		printf '%s' "${return_value}"

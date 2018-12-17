@@ -169,6 +169,11 @@ testSetupMonitorModuleVariables() {
 
     send_snmp_trap "${HOSTNAME}"
     assert_one_message_in_topic myMonitorTopic
+
+    if "${PROZZIE_PREFIX}"/bin/prozzie config set monitor \
+                                MONITOR_CUSTOM_MIB_PATH=/not/existent/file; then
+        ${_FAIL_} '"Can set a not existent file to monitor mib"'
+    fi
 }
 
 #--------------------------------------------------------

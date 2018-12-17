@@ -172,7 +172,7 @@ main () {
 print_github_last_prerelease () {
     # Get latest github prerelease
     declare latest_prerelease
-    if ! latest_prerelease=$(docker run --rm wizzieio/prozzie-toolbox sh -c "$latest_prerelease_cmd"); then
+    if ! latest_prerelease=$(zz_toolbox_exec -- sh -c "$latest_prerelease_cmd"); then
         printf "Error to check latest prozzie prerelease in github\\n" >&2
         return 1
     fi
@@ -187,7 +187,7 @@ print_github_last_prerelease () {
 print_github_last_release () {
     # Get latest github release
     declare latest_release
-    if ! latest_release=$(docker run --rm wizzieio/prozzie-toolbox sh -c "$latest_release_cmd"); then
+    if ! latest_release=$(zz_toolbox_exec -- sh -c "$latest_release_cmd"); then
         printf "Error to check latest prozzie release in github\\n" >&2
         return 1
     fi

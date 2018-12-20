@@ -92,7 +92,7 @@ zz_variable () {
       "$read_callback" "$1" "$3" "$default"
     fi
 
-    if [[ -z "${!1}" && -z "$default" ]]; then
+    if [[ -z "${!1}" ]]; then
       log fail "Empty $1 not allowed"$'\n'
       continue
     fi

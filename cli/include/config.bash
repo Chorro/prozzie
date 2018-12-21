@@ -32,13 +32,13 @@ zz_read_path () {
 #  $2 - Prompt to user
 #  $3 - Default answer (optional)
 zz_read () {
-    read -r "$1" < <(
-        # Process substitution avoids overriding complete un-binding. Another
+    printf -v "$1" '%s' "$(
+        # Command substitution avoids overriding complete un-binding. Another
         # way, exiting with Ctrol-C would cause binding ruined.
         bind -u 'complete' 2>/dev/null
         zz_read_path "$1" "$2" "$3" >/dev/tty
         printf '%s' "${!1}"
-    )
+    )"
 }
 
 # ZZ variables treatment. Checks if an environment variable is defined, and ask

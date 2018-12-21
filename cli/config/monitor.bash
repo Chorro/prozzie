@@ -85,6 +85,3 @@ MONITOR_CUSTOM_MIB_PATH_sanitize () {
 
 	return 1
 }
-
-#shellcheck disable=2034
-declare -r MONITOR_CUSTOM_MIB_PATH_is_dot_env=y

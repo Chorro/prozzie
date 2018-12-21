@@ -264,8 +264,7 @@ zz_set_vars () {
             return 1
         fi
 
-        declare is_dot_env_variable="${key}_is_dot_env"
-        if [[ ${!is_dot_env_variable:=n} == y ]]; then
+        if [[ $(zz_connector_var_meta_get "$key" is_dot_env n) == y ]]; then
             if ! array_contains "${PREFIX}/etc/prozzie/.env" \
                                                         "${env_files[@]}"; then
                 env_files+=("${PREFIX}/etc/prozzie/.env")
@@ -447,6 +446,63 @@ connector_setup () {
 
   # Hurray! app installation end!
   zz_trap_pop zz_trap_stack EXIT
+}
+
+## @brief INTERNAL name used for connector environment metadata.
+## @param  1 Connector environment name
+## @param  2 Connector metadata key
+##
+## @note   Output: Internal variable name
+## @return Always true
+zz_connector_var_meta_var_name () {
+    printf 'pzz__%s__%s' "$1" "$2"
+}
+
+## @brief Set metadata for a given connector environment variable
+## @param  1 Connector environment name
+## @param  2 Connector metadata key
+## @param  3 Connector metadata value
+##
+## @return Always true
+zz_connector_var_meta_set () {
+    declare meta_name
+    meta_name="$(zz_connector_var_meta_var_name "$1" "$2")"
+
+    declare -g "$meta_name"
+    printf -v "$meta_name" '%s' "$3"
+}
+
+## @brief Checks if metadata exists for a given connector environment variable
+## @param  1 Connector environment name
+## @param  2 Connector metadata key
+##
+## @return True if metadata exists, false otherwise
+zz_connector_var_meta_exists () {
+    declare meta_name
+    meta_name="$(zz_connector_var_meta_var_name "$1" "$2")"
+    [[ -v "$meta_name" && -n "${!meta_name}" ]]
+}
+
+## @brief Get metadata for a given connector environment variable
+## @param  1 Connector environment name
+## @param  2 Connector metadata key
+## @param  3 Connector metadata default if it does not exists
+##
+## @return False if it does not exists and it does not have a default
+zz_connector_var_meta_get () {
+    declare meta_name
+    meta_name="$(zz_connector_var_meta_var_name "$1" "$2")"
+
+    if [[ ! -v "$meta_name" ]]; then
+        if [[ ! -v 3 ]]; then
+            return 1
+        fi
+
+        printf '%s' "$3"
+        return
+    fi
+
+    printf '%s' "${!meta_name}"
 }
 
 # List enable modules

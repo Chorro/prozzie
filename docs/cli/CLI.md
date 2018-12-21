@@ -88,7 +88,6 @@ modifier can set prozzie in an inconsistent state: Configuration files and
 current connectors configuration are not synced until you do `prozzie up` or
 similar.
 
-
 `prozzie config` command allows you check and handle the configuration in next modules:
 
 - [x] [**base**](https://github.com/wizzie-io/prozzie/blob/master/docs/installation/Installation.md)
@@ -282,6 +281,39 @@ Prozzie upgrade command has next options:
 
 `-h, --help`
 : Shows `prozzie upgrade` command help.
+
+### Prozzie kafka-connect connectors installation
+
+You can add new connectors of kafka-connect with `prozzie config install` command. This command has the next parameters:
+
+`--dry-run`:
+Optional. Only validate the configuration, do not modify anything.
+
+`--kafka-connector`:
+Mandatory. This parameter allows us to specify the path of kafka-connect connector jar file. You can use a relative or absolute path.
+
+`--config-file`:
+Mandatory. This parameter allows us to specify the path of configuration bash file to handle the connector's configuration. You can use a relative or absolute path.
+
+#### How to create a new configuration bash file
+
+To create a new configuration bash file for your kafka-connect connector, you can follow the next basic template:
+
+```bash
+#!/usr/bin/env bash
+
+. "${BASH_SOURCE%/*/*}/include/config_kcli.bash"
+
+declare -A module_envs=(
+    [var.name.1]='defaultValue1|my description 1',
+    [var.name.2]='defaultValue2|my description 2'
+)
+
+declare -A module_hidden_envs=(
+    [hidden.var.name.1]='defaultValue1|my description 1',
+    [hidden.var.name.2]='defaultValue2|my description 2'
+)
+```
 
 ## Creating custom subcommands
 

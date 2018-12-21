@@ -556,6 +556,114 @@ zz_list_enabled_modules() {
 }
 
 ##
+## @brief      Allows "install" connectors of kafka-connect.
+##             Basically add the *.jar file to kafka-connect docker volume and 
+##             copy or generate the config bash file to ${PREFIX}/share/prozzie/cli/config
+##
+## @param  [--dry-run] Do not make any actual change, just validate input
+## @param  [--kafka-connector] Mandatory, jar file to add to kafka-connect docker volume
+## @param  [--config-file] Mandatory, configuration bash file
+##
+## @return     0 If everything goes well or 1 If an error occurred
+##
+zz_install_connector () {
+    declare args=("$@" --)
+    set -- "${args[@]}"
+    declare dry_run_arg
+    declare kafka_connector_jar_path
+    declare config_file_path
+    declare config_filename
+
+    while true; do
+        case $1 in
+        --dry-run)
+            dry_run_arg=--dry-run
+            shift
+            ;;
+        --kafka-connector)
+            if [[ ! -f "$2" ]]; then
+                printf "The file '%s' doesn't exist\\n" "$2"
+                exit 1
+            fi
+            kafka_connector_jar_path="$2"
+            shift 2
+            ;;
+        --config-file)
+            if [[ ! -f "$2" ]]; then
+                printf "The file '%s' doesn't exist\\n" "$2"
+                exit 1
+            fi
+            config_file_path="$2"
+            config_filename="${config_file_path##*/}"
+            shift 2
+            ;;
+        --)
+            shift
+            break
+            ;;
+        --help)
+			cat <<-EOF
+				prozzie config install [--help] [--dry-run] --kafka-connector <path-to-jar> --config-file <path-to-config-bash-file>
+				--dry-run               Only validate the configuration, do not modify anything
+				--kafka-connector       Path to kafka-connect connector jar file
+				--config-file           Path to kafka-connect connector configuration file
+			EOF
+            exit 0
+            ;;
+        *)
+			cat >&2 <<-EOF
+				prozzie config install [--help] [--dry-run] --kafka-connector <path-to-jar> --config-file <path-to-config-bash-file>
+				--dry-run               Only validate the configuration, do not modify anything
+				--kafka-connector       Path to kafka-connect connector jar file
+				--config-file           Path to kafka-connect connector configuration file
+			EOF
+            exit 1
+            ;;
+        esac
+    done
+
+    if [[ -z $kafka_connector_jar_path ]]; then
+        printf -- "--kafka-connector <path-to-jar> is required\\n"
+        exit 1
+    fi
+
+    if [[ -z $config_file_path ]]; then
+        printf -- "--config-file <path-to-bash-config-file> is required\\n"
+        exit 1
+    fi
+
+    if [[ -z $dry_run_arg ]]; then
+        if ! cp "$config_file_path" "${PROZZIE_CLI_CONFIG}"; then
+            return 1;
+        fi
+    fi
+
+    declare -r kafka_connect_jars_volume="prozzie_kafka_connect_jars"
+
+    # zz_trap_push/pop use this variable
+    # shellcheck disable=SC2034
+    declare trap_copy_to_volume_stack
+    zz_trap_push trap_copy_to_volume_stack "rm ${PROZZIE_CLI_CONFIG}/$config_filename" EXIT
+
+    if zz_docker_copy_file_to_volume \
+            ${dry_run_arg:-} f "$kafka_connector_jar_path" "$kafka_connect_jars_volume"; then
+
+        printf "Added %s to volume %s\\n" "$kafka_connector_jar_path" "$kafka_connect_jars_volume"
+
+        if [[ -z $dry_run_arg ]]; then
+            "${PREFIX}"/bin/prozzie compose rm -s -f kafka-connect 2>&1 | \
+            grep -v 'No such service: kafka-connect' >&2
+
+            "${PREFIX}"/bin/prozzie up -d
+        fi
+    fi
+
+    zz_trap_pop trap_copy_to_volume_stack EXIT
+
+    printf "Added %s to %s\\n" "$config_file_path" "${PROZZIE_CLI_CONFIG}"
+}
+
+##
 ## @brief      Prints description of every variable in module_envs and
 ##             module_hidden_envs environment variables via stdout.
 ##

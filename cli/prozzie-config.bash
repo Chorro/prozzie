@@ -39,6 +39,7 @@ printUsage() {
         ['enable <modules-list>']='Enable modules'
         ['disable <modules-list>']='Disable modules'
         ['list-enabled']='List all enabled modules'
+        ['install']='Install a new source connector of kafka-connect with bash config file'
         ['-h, --help']='Show this help'
     )
 
@@ -53,6 +54,7 @@ printUsage() {
         'wizard'
         'describe-all'
         'list-enabled'
+        'install'
     )
 
     declare -a options_order=(
@@ -305,6 +307,10 @@ main() {
             zz_list_enabled_modules "$@"
             exit 0
         ;;
+        install)
+            zz_install_connector "$@"
+            exit 0
+            ;;
         --shorthelp)
             printShortHelp
             exit 0

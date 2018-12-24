@@ -357,7 +357,43 @@ tar_directory_to_volume_format () {
 }
 
 ##
+## @brief      Delete a file on a volume
+##
+## @param      [-f|--force] Do not prompt or return error if
+## @param        The long
+##
+## @return     { description_of_the_return_value }
+##
+zz_docker_rm_file_on_volume () {
+    declare dry_run=n force_arg=''
+    eval set -- "$(getopt -o 'f' --long force -- "$@")"
+
+    while true; do
+        case $1 in
+        -f|--force)
+            force_arg=-f
+            shift
+            ;;
+        --)
+            shift
+            break
+            ;;
+        esac
+    done
+
+    declare -r volume="$1"
+    declare -r file="$2"
+
+    zz_toolbox_exec \
+            --mount "type=volume,source=${volume},target=/dest_v" \
+            --workdir "/dest_v" \
+            -- rm ${force_arg:-} "${file}"
+}
+
+##
 ## @brief  Copy file from the host is tunning CLI to a given volume
+## @param  [--dry-run] Do not make an actual copy of the file, only check that
+##         it is possible.
 ## @param  [--mode=<unix mode>] Mode to copy. Only valid in file mode.
 ## @param  1 Allowed sources (File, Directory, Volume)
 ## @param  2 Source Source file, directory, or volume to copy.
@@ -452,7 +488,7 @@ zz_docker_copy_file_to_volume () {
                 --mount \
                     "type=volume,source=${destination_volume},target=/dest_v" \
                 --workdir '/dest_v' \
-                -- /usr/bin/chmod "${destination_name}" "${file_mode}"; then
+                -- /bin/chmod "${file_mode}" "${destination_name}"; then
             return 1
         fi
 

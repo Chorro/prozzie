@@ -81,9 +81,16 @@ output if no previous value exists.
 
 Also, you can set variables metadata with
 `zz_connector_var_meta_set ${variable_name} ${variable_meta_key} ${value}`.
-Currently, the only metadata supported is is_dot_env, that set the connector
-variable at the global docker-compose `.env` file too, so it is available for
-the others connectors and for the docker-compose stuff like volumes.
+The supported variable metadata are:
+
+is_dot_env
+: Set the connector variable at the global docker-compose `.env` file too,
+so it is available for the others connectors and for the docker-compose stuff
+like volumes.
+
+unset_blank
+: Allow blank values and, in the case of blank, delete it from the connector
+environment.
 
 ### Compose based
 To be able to enable/disable docker based components, the compose is formed by

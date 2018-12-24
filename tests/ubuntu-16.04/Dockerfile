@@ -155,6 +155,7 @@ RUN ${PKG_MANAGER_UPDATE} && ${PKG_MANAGER_INSTALL} \
 	${TCL} \
 	ca-certificates \
 	make \
+	openssl \
 	perl \
 	procps \
 	rsync \

@@ -59,7 +59,7 @@ zz_read () {
 # Exit status:
 #  Always 0
 zz_variable () {
-  declare new_value check_for_valid=y
+  declare check_for_valid=y
 
   if [[ $1 == --no-check-valid ]]; then
     check_for_valid=n
@@ -76,7 +76,7 @@ zz_variable () {
     declare -r env_provided=n
   fi
 
-  if [[ "$1" == PREFIX || "$1" == *_PATH ]]; then
+  if [[ "$1" == PREFIX || "$1" == *_PATH || "$1" == *_FILE ]]; then
     declare -r read_callback=zz_read_path
   else
     declare -r read_callback=zz_read
@@ -93,8 +93,14 @@ zz_variable () {
     fi
 
     if [[ -z "${!1}" ]]; then
-      log fail "Empty $1 not allowed"$'\n'
-      continue
+      if [[ "$(zz_connector_var_meta_get "$1" unset_blank n)" == n ]]; then
+        log fail "Empty $1 not allowed"$'\n'
+        continue
+      else
+        # Variable accepts blank: no need to call sanitize, since it must do
+        # nothing because of the --dry-run
+        break
+      fi
     fi
 
     # Check if the value is valid
@@ -242,13 +248,15 @@ zz_set_vars () {
     shift
 
     for pair in "$@"; do
-        if [[ $pair != *=* ]]; then
+        key="${pair%%=*}"
+        if [[ $pair != *=* || \
+                ($(zz_connector_var_meta_get "$1" unset_blank n) == y && \
+                    $pair != *=) ]]; then
             printf "The argument '%s' isn't a valid key=value pair " "$pair" >&2
             printf "and won't be applied\\n" >&2
             return 1
         fi
 
-        key="${pair%%=*}"
         val="${pair#*=}"
 
         if ! exists_key_in_module_envs "${key}"; then
@@ -264,19 +272,25 @@ zz_set_vars () {
             return 1
         fi
 
-        if [[ $(zz_connector_var_meta_get "$key" is_dot_env n) == y ]]; then
-            if ! array_contains "${PREFIX}/etc/prozzie/.env" \
-                                                        "${env_files[@]}"; then
-                env_files+=("${PREFIX}/etc/prozzie/.env")
-            fi
-
-            dot_env_vars+=("${key}=${val}")
+        if [[ $(zz_connector_var_meta_get "$key" is_dot_env n) == y ]] && \
+                                ! array_contains "${PREFIX}/etc/prozzie/.env" \
+                                "${env_files[@]}"; then
+            env_files+=("${PREFIX}/etc/prozzie/.env")
         fi
 
-        vars+=("${key}=${val}")
+        if [[ $(zz_connector_var_meta_get "$1" unset_blank n) == n || \
+                                                            $pair != *= ]]; then
+            if [[ $(zz_connector_var_meta_get "$key" is_dot_env n) == y ]]; then
+                dot_env_vars+=("${key}=${val}")
+            fi
+
+            vars+=("${key}=${val}")
+        fi
     done
 
-    printf '%s\n' "${vars[@]}"
+    if [[ ${#vars[@]} -gt 0 ]]; then
+        printf '%s\n' "${vars[@]}"
+    fi
 
     if [[ $dry_run == y ]]; then
         return 0
@@ -319,7 +333,9 @@ zz_set_vars () {
             grep -v "^\\(${keys_or_joined}\\)" "$file" 2>/dev/null
 
             # Print modified variables
-            printf '%s\n' "$@"
+            if [[ $# -gt 0 ]]; then
+                printf '%s\n' "$@"
+            fi
         } | zz_sponge "$file"
     done
 }

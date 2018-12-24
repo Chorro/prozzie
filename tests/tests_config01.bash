@@ -201,6 +201,99 @@ testSetupSfacctdModuleVariables() {
 }
 
 #--------------------------------------------------------
+# TEST HTTP2K MODULE
+#--------------------------------------------------------
+
+##
+## @brief      Send a meraki message and checks that it is received via kafka.
+##
+## @param      1 HTTP POST message
+## @param      2 URL to send message
+## @param      3 Topic to expect messages
+## @param      4 Number of messages expected. Only the last will be checked
+## @param      5 Kafka message expected in position $2
+##
+## @return     { description_of_the_return_value }
+##
+send_http2k_msg() {
+    declare recv_kafka_messages
+
+    curl -v -d "$1" "$2"
+
+    recv_kafka_messages=$("${PROZZIE_PREFIX}/bin/prozzie" kafka consume "$3" \
+        --from-beginning --max-messages "$4" | tail -n 1)
+    ${_ASSERT_EQUALS_} '"Wrong message recieved via meraki"' \
+        "'$5'" "'${recv_kafka_messages}'"
+}
+
+testHttp2k() {
+    declare prozzie_host
+    prozzie_host="$(${PROZZIE_PREFIX}/bin/prozzie config get base INTERFACE_IP)"
+    declare -r prozzie_host
+
+    # Create key/cert pair
+    openssl req \
+        -newkey rsa:2048 -nodes -keyout "${SHUNIT_TMPDIR}"/key.pem \
+        -x509 -days 3650 -subj "/CN=${prozzie_host}/" -extensions SAN \
+        -config <(cat /etc/ssl/openssl.cnf - <<-EOF
+					[req]
+					distinguished_name = req_distinguished_name
+
+					[req_distinguished_name]
+
+					[ SAN ]
+					subjectAltName=DNS:localhost
+					EOF
+                ) \
+        -out "${SHUNIT_TMPDIR}"/certificate.pem
+
+    if ! ../tests/tests_config_http2k01.py \
+            "${PROZZIE_PREFIX}/bin/prozzie config setup http2k"; then
+        ${_FAIL_} \''Unexpected http2k setup return code'\'
+    fi
+
+    # After setup, we must be able to send and receive http2k messages
+    declare -r test_message1='{"test":1}{"test":2}'
+    if ! send_http2k_msg \
+                        "$test_message1" \
+                        "http://${prozzie_host}:7980/v1/data/testHttp2k_topic" \
+                        'testHttp2k_topic' \
+                        2 \
+                        '{"test":2}'; then
+        ${_FAIL_} "'Cannot send expected message'"
+    fi
+
+    # Set certificate and key
+    ${PROZZIE_PREFIX}/bin/prozzie config set http2k \
+        HTTP_TLS_KEY_FILE="${SHUNIT_TMPDIR}"/key.pem \
+        HTTP_TLS_CERT_FILE="${SHUNIT_TMPDIR}"/certificate.pem \
+
+    if curl -v -d "$test_message1" \
+            "http://${prozzie_host}:7980/v1/data/testHttp2k_topic"; then
+        ${_FAIL_} "'Can send plain http with TLS options set'"
+    fi
+
+    if ! curl -k -d "$test_message1" \
+            "https://${prozzie_host}:7980/v1/data/testHttp2k_topic"; then
+        ${_FAIL_} "'Cannot send https with TLS options set'"
+    fi
+
+    # Delete tls
+    ${PROZZIE_PREFIX}/bin/prozzie config set http2k \
+        HTTP_TLS_KEY_FILE= \
+        HTTP_TLS_CERT_FILE=
+
+    if ! send_http2k_msg \
+                        "$test_message1" \
+                        "http://${prozzie_host}:7980/v1/data/testHttp2k_topic" \
+                        'testHttp2k_topic' \
+                        4 \
+                        '{"test":2}'; then
+        ${_FAIL_} "'Cannot send expected message'"
+    fi
+}
+
+#--------------------------------------------------------
 # TEST MERAKI MODULE
 #--------------------------------------------------------
 
@@ -219,16 +312,12 @@ send_meraki_msg() {
     ${_ASSERT_EQUALS_} '"Not valid meraki validator returned"' \
         "'$(curl http://localhost:2057/v1/meraki/validator)'" "'validator'"
 
-    curl -v -d "$1" "http://localhost:2057/v1/meraki/validator"
-
-    recv_kafka_messages=$("${PROZZIE_PREFIX}/bin/prozzie" kafka consume meraki \
-        --from-beginning --max-messages "$2" | tail -n 1)
-    ${_ASSERT_EQUALS_} '"Wrong message recieved via meraki"' \
-        "'$3'" "'${recv_kafka_messages}'"
+    send_http2k_msg "$1" 'http://localhost:2057/v1/meraki' 'meraki' "$2" "$3"
 }
 
 testMeraki() {
-    "${PROZZIE_PREFIX}/bin/prozzie" config setup meraki
+    ../tests/tests_config_http2k01.py \
+            "${PROZZIE_PREFIX}/bin/prozzie config setup meraki"
 
     # After setup, we must be able to send and receive meraki messages
     declare -r meraki_message1='{"test":1}{"test":2}'

@@ -38,7 +38,6 @@ def test_pexpect(exec_args, expected_interactions):
     """
 
     logfile = sys.stdout
-    exit_status = 0
 
     bash_xtracefd = os.environ.get('BASH_XTRACEFD', False)
     spawn_kwargs = {}
@@ -55,13 +54,15 @@ def test_pexpect(exec_args, expected_interactions):
         while True:
             res_index = child.expect(expect_patterns, timeout=300)
 
+            if expect_patterns[res_index] == pexpect.EOF:
+                break
+
             # If the list is empty, this raises an IndexError exception. This
             # is intended.
             res = expected_interactions[expect_patterns[res_index]].pop(0)
             if res == pexpect.spawn.sendintr:
                 # Send intr and exit
                 child.sendintr()
-                exit_status = child.wait()
                 break
 
             expected_child_response = None
@@ -81,4 +82,4 @@ def test_pexpect(exec_args, expected_interactions):
             if expected_child_response:
                 child.expect([expected_child_response], timeout=1)
 
-    return exit_status
+    return child.wait()

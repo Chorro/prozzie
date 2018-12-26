@@ -25,3 +25,5 @@ If you want to use your own host, you must use `--net` docker option with `host`
 
 - curl
 - jq
+- rsync
+- [yaml2json](https://github.com/bronze1man/yaml2json)

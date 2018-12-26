@@ -1,8 +1,9 @@
 FROM alpine:latest
 
-# Install tools
+# Install tools
 RUN apk --no-cache add \
         curl \
         jq \
-        rsync
-
+        rsync \
+        && wget -O /usr/bin/y2j https://github.com/bronze1man/yaml2json/releases/download/v1.3/yaml2json_linux_amd64 \
+        && chmod +x /usr/bin/y2j

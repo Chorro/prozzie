@@ -506,7 +506,7 @@ zz_docker_copy_file_to_volume () {
 ## @return     Command return code
 ##
 zz_toolbox_exec () {
-    declare -r prozzie_toolbox_sha=1f3ef1fe86c30f604d532e133fe7964f8b7cab2fd4e140515d3e80928d93c4e6
+    declare -r prozzie_toolbox_sha=4bbb390774d32a81a2781b4bce42d69f5bd5af4ac3f87200f2ffb8135ce5da0b
     declare -a docker_options
 
     while :; do

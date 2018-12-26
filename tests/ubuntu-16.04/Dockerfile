@@ -11,6 +11,10 @@ ARG PKG_MANAGER_INSTALL
 ARG PKG_MANAGER_UPDATE
 ARG PYTHON3
 
+# Note: We only install python-pexpect here to apply the pass_fds patch. Once
+# mainstream pexpect is OK, please delete it from here.
+ARG PYTHON3_PEXPECT
+
 # Get kcov dependencies
 RUN ${PKG_MANAGER_UPDATE} && ${PKG_MANAGER_INSTALL} \
 	${CXX} \
@@ -19,6 +23,7 @@ RUN ${PKG_MANAGER_UPDATE} && ${PKG_MANAGER_INSTALL} \
 	${LIBZ_DEV} \
 	${PKG_CONFIG} \
 	${PYTHON3} \
+	${PYTHON3_PEXPECT} \
 	ca-certificates \
 	cmake \
 	curl \
@@ -111,10 +116,14 @@ RUN ! ${IS_CENTOS} || { tgz=$(mktemp) && curl -L -o "$tgz" \
 		's|^./configure|./configure --prefix=/usr|;s|--enable-json|--disable-json|;/^build libyajl/d' bootstrap.sh && \
 	./bootstrap.sh; make install; }
 
+WORKDIR /usr/lib/python3/dist-packages/
+COPY ubuntu-16.04/*.patch ./
+RUN ${IS_CENTOS} || { patch --strip=1 < ptyprocess.patch && patch --strip=1 < pexpect.patch; }
+
 # Pack everything to add to final container. DO NOT use dockerfile COPY, since
 # it will not "rsync" directories, but expant it's content
 WORKDIR /
-RUN ["/bin/bash", "-c", "tar czf boot.tgz /usr/bin/{expect,kafkacat,kcov,rkill,shunit2,tclsh*} /usr/lib/{python3.6/site-packages/,expect*,{lib,}tcl*} 2>&1 | grep -v 'No such file or directory'"]
+RUN ["/bin/bash", "-c", "tar czf boot.tgz /usr/bin/{expect,kafkacat,kcov,rkill,shunit2,tclsh*} /usr/lib/{python3/dist-packages,python3.6/site-packages/,expect*,{lib,}tcl*} 2>&1 | grep -v 'No such file or directory'"]
 
 #
 # Actual run container

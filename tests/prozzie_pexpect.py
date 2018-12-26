@@ -17,6 +17,8 @@
 #
 
 import pexpect
+
+import os
 import sys
 
 
@@ -38,11 +40,17 @@ def test_pexpect(exec_args, expected_interactions):
     logfile = sys.stdout
     exit_status = 0
 
+    bash_xtracefd = os.environ.get('BASH_XTRACEFD', False)
+    spawn_kwargs = {}
+    if bash_xtracefd:
+        spawn_kwargs = {'pass_fds': (int(bash_xtracefd),)}
+
     with pexpect.spawn(exec_args,
                        logfile=logfile,
                        # Short columns make spawned output introduce '\n'
                        dimensions=[25, 2000],
-                       encoding='utf-8') as child:
+                       encoding='utf-8',
+                       **spawn_kwargs) as child:
         expect_patterns = list(expected_interactions.keys())
         while True:
             res_index = child.expect(expect_patterns, timeout=300)

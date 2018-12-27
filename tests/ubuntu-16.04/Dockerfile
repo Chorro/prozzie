@@ -45,14 +45,14 @@ WORKDIR /kcov
 ENV KCOV_VERSION 35
 
 # GET kcov
-RUN curl -L "https://github.com/SimonKagstrom/kcov/archive/v${KCOV_VERSION}.tar.gz" | tar xz
+RUN ${IS_CENTOS} || curl -L "https://github.com/SimonKagstrom/kcov/archive/v${KCOV_VERSION}.tar.gz" | tar xz
 # trick for PS4 to work
-RUN sed -i "/set -x/i PS4='kcov@\${BASH_SOURCE}@\${LINENO}@'" "./kcov-${KCOV_VERSION}/src/engines/bash-helper.sh"
+RUN ${IS_CENTOS} || sed -i "/set -x/i PS4='kcov@\${BASH_SOURCE}@\${LINENO}@'" "./kcov-${KCOV_VERSION}/src/engines/bash-helper.sh"
 # Patch for not to account `fn ()` like lines in coverage
 RUN [ "/bin/bash", "-c", \
-	"patch <(curl -L https://github.com/SimonKagstrom/kcov/pull/258.patch)" ]
+	"${IS_CENTOS} || patch <(curl -L https://github.com/SimonKagstrom/kcov/pull/258.patch)" ]
 WORKDIR "/kcov/kcov-${KCOV_VERSION}/build"
-RUN env CXX=g++ cmake .. && make -j 2 kcov && cp src/kcov /usr/bin/
+RUN ${IS_CENTOS} || { env CXX=g++ cmake .. && make -j 2 kcov && cp src/kcov /usr/bin/; }
 # Centos still doesn't work well with kcov
 RUN ! ${IS_CENTOS} || \
 	{ echo '[[ $1 == '\''--merge'\'' ]] || { mkdir -p "$2"; exec "./$3" "${@:4}"; }' \

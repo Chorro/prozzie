@@ -567,12 +567,25 @@ zz_list_enabled_modules() {
 ## @return     0 If everything goes well or 1 If an error occurred
 ##
 zz_install_connector () {
+
+    usage() {
+		cat <<-EOF
+			prozzie config install [--help] [--dry-run] --kafka-connector <path-to-jar> --config-file <path-to-config-bash-file>
+			--dry-run               Only validate the configuration, do not modify anything
+			--kafka-connector       Path to kafka-connect connector jar file
+			--config-file[.json]    Path to kafka-connect connector configuration bash file or json schema
+		EOF
+    }
+
     declare args=("$@" --)
     set -- "${args[@]}"
     declare dry_run_arg
     declare kafka_connector_jar_path
+    declare config_file_cmd_base="--config-file."
     declare config_file_path
     declare config_filename
+    declare file_type
+    declare bash_file=y
 
     while true; do
         case $1 in
@@ -588,13 +601,14 @@ zz_install_connector () {
             kafka_connector_jar_path="$2"
             shift 2
             ;;
-        --config-file)
+        --config-file*)
             if [[ ! -f "$2" ]]; then
                 printf "The file '%s' doesn't exist\\n" "$2"
                 exit 1
             fi
             config_file_path="$2"
             config_filename="${config_file_path##*/}"
+            file_type=${1#"$config_file_cmd_base"}
             shift 2
             ;;
         --)
@@ -602,21 +616,11 @@ zz_install_connector () {
             break
             ;;
         --help)
-			cat <<-EOF
-				prozzie config install [--help] [--dry-run] --kafka-connector <path-to-jar> --config-file <path-to-config-bash-file>
-				--dry-run               Only validate the configuration, do not modify anything
-				--kafka-connector       Path to kafka-connect connector jar file
-				--config-file           Path to kafka-connect connector configuration file
-			EOF
+            usage
             exit 0
             ;;
         *)
-			cat >&2 <<-EOF
-				prozzie config install [--help] [--dry-run] --kafka-connector <path-to-jar> --config-file <path-to-config-bash-file>
-				--dry-run               Only validate the configuration, do not modify anything
-				--kafka-connector       Path to kafka-connect connector jar file
-				--config-file           Path to kafka-connect connector configuration file
-			EOF
+            usage
             exit 1
             ;;
         esac
@@ -628,33 +632,69 @@ zz_install_connector () {
     fi
 
     if [[ -z $config_file_path ]]; then
-        printf -- "--config-file <path-to-bash-config-file> is required\\n"
+        printf -- "--config-file[.json] <path-to-bash-config-file> is required\\n"
         exit 1
     fi
 
-    if [[ -z $dry_run_arg ]]; then
-        if ! cp "$config_file_path" "${PROZZIE_CLI_CONFIG}"; then
-            return 1;
-        fi
-    fi
-
     declare -r kafka_connect_jars_volume="prozzie_kafka_connect_jars"
+    declare module_env_vars
+    declare module_hidden_env_vars
+    declare config_filename="${config_file_path##*/}"
+    config_filename=${config_filename%.*}
+
+    case $file_type in
+        json)
+            if ! zz_toolbox_exec -i -- jq -e . < "$config_file_path" >/dev/null 2>&1; then
+                printf "Failed to parse JSON, or got false/null\\n" >&2
+                exit 1
+            fi
+            bash_file=n
+        ;;
+        *)
+            if [[ -z $dry_run_arg ]]; then
+                if ! cp "$config_file_path" "${PROZZIE_CLI_CONFIG}"; then
+                    return 1;
+                fi
+            fi
+
+            printf "Added %s to %s\\n" "$config_file_path" "${PROZZIE_CLI_CONFIG}"
+        ;;
+    esac
+
+    if [[ $bash_file == n ]];then
+        declare -r jq_query_base="if has(\"configs\") then .configs[] else error(\"'configs' key is not defined!\") end 
+        | if has(\"var_name\") then . else error(\"'var_name' key is not defined!\") end 
+        | if has(\"hidden\") then . else . + {hidden: false} end 
+        | select(.hidden==#IS_HIDDEN#) 
+        | \"[\\(.var_name)]='\\(if .default_value != null then .default_value else \"\" end)|\\(if .description != null then .description else \"\" end)'\""
+        
+        if ! module_env_vars=$(zz_toolbox_exec -i -- jq -r "${jq_query_base/\#IS_HIDDEN\#/false}" < "$config_file_path") \
+            || ! module_hidden_env_vars=$(zz_toolbox_exec -i -- jq -r "${jq_query_base/\#IS_HIDDEN\#/true}" < "$config_file_path"); then
+            printf "Error to parse vars in file %s\\n" "$config_file_path" >&2
+            exit 1
+        fi
+
+        generate_config_bash_file \
+            ${dry_run_arg:-} "$config_filename" "$module_env_vars" "$module_hidden_env_vars"
+    fi
 
     # zz_trap_push/pop use this variable
     # shellcheck disable=SC2034
     declare trap_copy_to_volume_stack
-    zz_trap_push trap_copy_to_volume_stack "rm ${PROZZIE_CLI_CONFIG}/$config_filename" EXIT
+    zz_trap_push trap_copy_to_volume_stack "rm ${PROZZIE_CLI_CONFIG}/$config_filename.bash" EXIT
 
     if zz_docker_copy_file_to_volume \
             ${dry_run_arg:-} f "$kafka_connector_jar_path" "$kafka_connect_jars_volume"; then
 
-        printf "Added %s to volume %s\\n" "$kafka_connector_jar_path" "$kafka_connect_jars_volume"
-
         if [[ -z $dry_run_arg ]]; then
+            printf "Added kafka connector %s\\n" "$kafka_connector_jar_path"
+
             "${PREFIX}"/bin/prozzie compose rm -s -f kafka-connect 2>&1 | \
             grep -v 'No such service: kafka-connect' >&2
 
             "${PREFIX}"/bin/prozzie up -d
+        else
+            printf "kafka connector %s would be added\\n" "$kafka_connector_jar_path"
         fi
     fi
 
@@ -696,4 +736,53 @@ zz_connector_show_vars_description () {
 
         printf '\t%-40s%s\n' "${var_key}" "${var_description}"
     done
+}
+
+##
+## @brief      Generates a new config bash file in ${PREFIX}/share/prozzie/cli/config
+##
+## @param  [--dry-run] Do not create any config bash file, just show the output
+## @param  1 - Filename to create the config bash file without extension
+## @param  2 - Array that contains the module envs to add to config bash file
+## @param  3 - Array that contains the module hidden envs to add to config bash file
+##
+## Out:
+##  User interface
+##
+## @return     Always 0
+##
+generate_config_bash_file() {
+    printf "Generating config bash file. Please wait..."
+    declare -r SHEBANG_HEADER="#!/usr/bin/env bash"
+    declare -r FILE_GENERATION_WARNING="# WARNING: This file is automatically generated. Edit under your own risk."
+    declare -r SOURCE_FILES=". \"\${BASH_SOURCE%/*/*}/include/config_kcli.bash\""
+    declare -r MODULE_ENVS_ARRAY_TEMPLATE="declare -A module_envs=(#CONTENT#)"
+    declare -r MODULE_HIDDEN_ENVS_ARRAY_TEMPLATE="declare -A module_hidden_envs=(#CONTENT#)"
+    declare dry_run=n
+    declare output1 output2
+
+    if [[ $1 == '--dry-run' ]]; then
+        dry_run=y
+        shift
+    fi
+
+    declare -r config_filename="$1"
+    printf -v module_envs_content "\\n%s" "$2"
+    printf -v module_hidden_envs_content "\\n%s" "$3"
+
+    printf -v output1 "%s\\n\\n" "$SHEBANG_HEADER" "$FILE_GENERATION_WARNING" "$SOURCE_FILES" \
+                      "${MODULE_ENVS_ARRAY_TEMPLATE/\#CONTENT\#/$module_envs_content}"
+
+    printf -v output2 "%s\\n" "${MODULE_HIDDEN_ENVS_ARRAY_TEMPLATE/\#CONTENT\#/$module_hidden_envs_content}"
+
+    declare output="$output1$output2"
+    printf "Done!\\n"
+    printf "Generated file: %s\\n" "${PROZZIE_CLI_CONFIG}/$config_filename".bash
+
+    if [[ $dry_run == y ]]; then
+        printf "%s" "$output"
+    else
+        printf "%s" "$output" > "${PROZZIE_CLI_CONFIG}/$config_filename".bash
+    fi
+
 }

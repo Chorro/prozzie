@@ -297,7 +297,42 @@ Mandatory. This parameter allows us to specify the path of configuration bash fi
 
 #### How to create a new configuration bash file
 
-To create a new configuration bash file for your kafka-connect connector, you can follow the next basic template:
+To create a new configuration bash file for your kafka-connect connector, you can use a simple json scheme to generate automatically the bash file.
+
+```json
+{
+    "configs": [
+        {
+            "var_name": "variable.name.1",
+            "default_value": "my-default-value",
+            "description": "description about variable.name.1",
+            "hidden": false
+        },
+        {
+            "var_name": "variable.name.2",
+            "default_value": true,
+            "description": "description about variable.name.2",
+            "hidden": true
+        }
+    ]
+}
+```
+
+The `configs` field contains all the variables that our kafka-connect connector use. Each variable definition has the next fields:
+
+`var_name`
+: The variable's name. This field is mandatory.
+
+`default_value`
+: The default value for variable. This field is optional.
+
+`description`
+: A brief description of the variable. This field is optional
+
+`hidden`
+: This field can have two possible values `true` or `false`, by default it's `false`. If you set `hidden` to `true` the variable will be classified like `module_hidden_envs` else `module_envs`. This field is optional.
+
+Or you just follow the next basic template:
 
 ```bash
 #!/usr/bin/env bash

@@ -135,11 +135,6 @@ jobs:
     docker:
       - image: wizzieio/prozzie-test-env:debian-9
 
-  debianbuster:
-    <<: *P_tests
-    docker:
-      - image: wizzieio/prozzie-test-env:debian-buster
-
   centos7:
     <<: *P_tests
     docker:
@@ -171,11 +166,9 @@ workflows:
       - ubuntu18.04
       - centos7
       - debian9
-      - debianbuster
       - coverage:
           requires:
             - ubuntu16.04
             - ubuntu18.04
             - centos7
             - debian9
-            - debianbuster

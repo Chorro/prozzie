@@ -1,0 +1,32 @@
+{
+	"configs": [
+		{
+			"var_name": "module.var1",
+			"default_value": "value1",
+			"description": "Description for module.var1"
+		},
+		{
+			"var_name": "module.var2",
+			"default_value": 12,
+			"description": "Description for module.var2"
+		},
+		{
+			"var_name": "module.var3",
+			"default_value": true,
+			"description": "Description for module.var3",
+			"hidden": false
+		},
+		{
+			"var_name": "hidden.module.var1",
+			"default_value": "valueA",
+			"description": "Description for hidden.module.var1",
+			"hidden": true
+		},
+		{
+			"var_name": "hidden.module.var2",
+			"default_value": "valueB",
+			"description": "Description for hidden.module.var2",
+			"hidden": true
+		}
+	]
+}

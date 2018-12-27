@@ -2,6 +2,7 @@
 
 declare -r PROZZIE_PREFIX=/opt/prozzie
 declare -r INTERFACE_IP="a.b.c.d"
+declare -r DUMMY_CONFIG_FILE_MD5="4cf8fcba3d6ff0f7c88ad1183e864245"
 
 . backupconfig.sh
 . base_tests_config.bash
@@ -710,6 +711,44 @@ testListEnabledModules() {
     # Base module should never be printed here
     if "${PROZZIE_PREFIX}/bin/prozzie" config list-enabled -q | grep base; then
         ${_FAIL_} "'Base compose module listed in \"prozzie config list-enabled\"'"
+    fi
+}
+
+#--------------------------------------------------------
+# TEST INSTALL KAFKA-CONNECT CONNECTOR AND GENERATE CONFIG FILE
+#--------------------------------------------------------
+
+testAddBashConfigFileToFolder() {
+
+    "${PROZZIE_PREFIX}/bin/prozzie" config install --kafka-connector resources/dummy-connector.jar --config-file resources/dummy-connector.bash
+
+    declare GENERATED_MD5
+    GENERATED_MD5=$(md5sum "${PROZZIE_PREFIX}/share/prozzie/cli/config/dummy-connector.bash" | cut -f 1 -d " ")
+
+    if [[ "$GENERATED_MD5" != "$DUMMY_CONFIG_FILE_MD5" ]]; then
+        ${_FAIL_} '"Copied dummy-connector.bash is not correct"'
+    fi
+}
+
+testAddYamlConfigFileToFolder() {
+    "${PROZZIE_PREFIX}/bin/prozzie" config install --kafka-connector resources/dummy-connector.jar --config-file.yaml resources/dummy-connector.yaml
+
+    declare GENERATED_MD5
+    GENERATED_MD5=$(md5sum "${PROZZIE_PREFIX}/share/prozzie/cli/config/dummy-connector.bash" | cut -f 1 -d " ")
+
+    if [[ "$GENERATED_MD5" != "$DUMMY_CONFIG_FILE_MD5" ]]; then
+        ${_FAIL_} '"Generated dummy-connector.bash is not correct"'
+    fi
+}
+
+testJsonConfigFileToFolder() {
+    "${PROZZIE_PREFIX}/bin/prozzie" config install --kafka-connector resources/dummy-connector.jar --config-file.json resources/dummy-connector.json
+
+    declare GENERATED_MD5
+    GENERATED_MD5=$(md5sum "${PROZZIE_PREFIX}/share/prozzie/cli/config/dummy-connector.bash" | cut -f 1 -d " ")
+
+    if [[ "$GENERATED_MD5" != "$DUMMY_CONFIG_FILE_MD5" ]]; then
+        ${_FAIL_} '"Generated dummy-connector.bash is not correct"'
     fi
 }
 

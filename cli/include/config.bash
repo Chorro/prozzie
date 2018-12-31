@@ -571,9 +571,9 @@ zz_install_connector () {
     usage() {
 		cat <<-EOF
 			prozzie config install [--help] [--dry-run] --kafka-connector <path-to-jar> --config-file <path-to-config-bash-file>
-			--dry-run               Only validate the configuration, do not modify anything
-			--kafka-connector       Path to kafka-connect connector jar file
-			--config-file[.json]    Path to kafka-connect connector configuration bash file or json schema
+			--dry-run                       Only validate the configuration, do not modify anything
+			--kafka-connector               Path to kafka-connect connector jar file
+			--config-file[.json|yaml]       Path to kafka-connect connector configuration bash file or json/yaml schema
 		EOF
     }
 
@@ -585,7 +585,6 @@ zz_install_connector () {
     declare config_file_path
     declare config_filename
     declare file_type
-    declare bash_file=y
 
     while true; do
         case $1 in
@@ -641,13 +640,23 @@ zz_install_connector () {
     declare module_hidden_env_vars
     declare config_filename="${config_file_path##*/}"
     config_filename=${config_filename%.*}
+    declare input_json_file_path="$config_file_path"
+    declare bash_file=y
 
     case $file_type in
-        json)
-            if ! zz_toolbox_exec -i -- jq -e . < "$config_file_path" >/dev/null 2>&1; then
-                printf "Failed to parse JSON, or got false/null\\n" >&2
+        json|yaml)
+
+            if [[ "$file_type" == yaml ]]; then
+                tmp_fd input_json_file_path
+                input_json_file_path=/dev/fd/"$input_json_file_path"
+                zz_toolbox_exec -i -- y2j < "$config_file_path" > "$input_json_file_path"
+            fi
+
+            if ! zz_toolbox_exec -i -- jq -e . < "$input_json_file_path" > /dev/null 2>&1; then
+                printf "Failed to parse %s, or got false/null\\n" "$file_type" >&2
                 exit 1
             fi
+
             bash_file=n
         ;;
         *)
@@ -667,10 +676,10 @@ zz_install_connector () {
         | if has(\"hidden\") then . else . + {hidden: false} end 
         | select(.hidden==#IS_HIDDEN#) 
         | \"[\\(.var_name)]='\\(if .default_value != null then .default_value else \"\" end)|\\(if .description != null then .description else \"\" end)'\""
-        
-        if ! module_env_vars=$(zz_toolbox_exec -i -- jq -r "${jq_query_base/\#IS_HIDDEN\#/false}" < "$config_file_path") \
-            || ! module_hidden_env_vars=$(zz_toolbox_exec -i -- jq -r "${jq_query_base/\#IS_HIDDEN\#/true}" < "$config_file_path"); then
-            printf "Error to parse vars in file %s\\n" "$config_file_path" >&2
+
+        if ! module_env_vars=$(zz_toolbox_exec -i -- jq -r "${jq_query_base/\#IS_HIDDEN\#/false}" < "$input_json_file_path") \
+            || ! module_hidden_env_vars=$(zz_toolbox_exec -i -- jq -r "${jq_query_base/\#IS_HIDDEN\#/true}" < "$input_json_file_path"); then
+            printf "Error to parse vars in file %s\\n" "$input_json_file_path" >&2
             exit 1
         fi
 

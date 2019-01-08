@@ -22,11 +22,13 @@
 declare -A module_envs=(
 	[HTTP_TLS_KEY_FILE]='|Private key to use (blank for plain http)'
 	[HTTP_TLS_CERT_FILE]='|Certificate to export (blank for plain http)'
+	[HTTP_TLS_CLIENT_CA_FILE]='|Certificate Authority for clients (blank for no client verification)'
 	[HTTP_TLS_KEY_PASSWORD]='|Password to decrypt key (blank for no password)')
 
 zz_connector_var_meta_set HTTP_TLS_KEY_FILE unset_blank y
 zz_connector_var_meta_set HTTP_TLS_CERT_FILE unset_blank y
 zz_connector_var_meta_set HTTP_TLS_KEY_PASSWORD unset_blank y
+zz_connector_var_meta_set HTTP_TLS_CLIENT_CA_FILE unset_blank y
 
 ##
 ## @brief  Generic function to get key or certificate file from user
@@ -93,7 +95,7 @@ tls_file_sanitize() {
 }
 
 ##
-## @brief      Check that monitor_custom_mibs is either empty or a valid file
+## @brief      Make proper treatment of private https TLS key
 ##
 ## @param [--dry-run]  Do not make any actual change
 ## @param 1            User introduced value
@@ -105,15 +107,27 @@ HTTP_TLS_KEY_FILE_sanitize () {
 }
 
 ##
-## @brief      Check that monitor_custom_mibs is either empty or a valid file
+## @brief      Make proper treatment of https TLS certificate
 ##
 ## @param [--dry-run]  Do not make any actual change
-## @param      User introduced value
+## @param 1            User introduced value
 ##
 ## @return     True if valid, false otherwise
 ##
 HTTP_TLS_CERT_FILE_sanitize () {
 	tls_file_sanitize '/run/secrets/cert' "$@"
+}
+
+##
+## @brief      Make proper treatment of https TLS client CA certificate
+##
+## @param [--dry-run]  Do not make any actual change
+## @param 1            User introduced value
+##
+## @return     True if valid, false otherwise
+##
+HTTP_TLS_CLIENT_CA_FILE_sanitize () {
+	tls_file_sanitize '/run/secrets/cert.client' "$@"
 }
 
 ##

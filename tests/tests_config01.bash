@@ -243,25 +243,27 @@ send_http2k_msg() {
 }
 
 testHttp2k() {
-    declare prozzie_host
+    declare prozzie_host i
     prozzie_host="$(${PROZZIE_PREFIX}/bin/prozzie config get base INTERFACE_IP)"
     declare -r prozzie_host
 
     # Create key/cert pair
-    openssl req \
-        -newkey rsa:2048 -nodes -keyout "${SHUNIT_TMPDIR}"/key.pem \
-        -x509 -days 3650 -subj "/CN=${prozzie_host}/" -extensions SAN \
-        -config <(cat /etc/ssl/openssl.cnf - <<-EOF
-					[req]
-					distinguished_name = req_distinguished_name
+    for i in server client; do
+        openssl req \
+            -newkey rsa:2048 -nodes -keyout "${SHUNIT_TMPDIR}/${i}"-key.pem \
+            -x509 -days 3650 -subj "/CN=${prozzie_host}/" -extensions SAN \
+            -config <(cat /etc/ssl/openssl.cnf - <<-EOF
+						[req]
+						distinguished_name = req_distinguished_name
 
-					[req_distinguished_name]
+						[req_distinguished_name]
 
-					[ SAN ]
-					subjectAltName=DNS:localhost
-					EOF
-                ) \
-        -out "${SHUNIT_TMPDIR}"/certificate.pem
+						[ SAN ]
+						subjectAltName=DNS:localhost
+						EOF
+	                ) \
+            -out "${SHUNIT_TMPDIR}/${i}"-certificate.pem
+        done
 
     if ! ../tests/tests_config_http2k01.py \
             "${PROZZIE_PREFIX}/bin/prozzie config setup http2k"; then
@@ -281,8 +283,8 @@ testHttp2k() {
 
     # Set certificate and key
     ${PROZZIE_PREFIX}/bin/prozzie config set http2k \
-        HTTP_TLS_KEY_FILE="${SHUNIT_TMPDIR}"/key.pem \
-        HTTP_TLS_CERT_FILE="${SHUNIT_TMPDIR}"/certificate.pem \
+        HTTP_TLS_KEY_FILE="${SHUNIT_TMPDIR}"/server-key.pem \
+        HTTP_TLS_CERT_FILE="${SHUNIT_TMPDIR}"/server-certificate.pem \
 
     if curl -v -d "$test_message1" \
             "http://${prozzie_host}:7980/v1/data/testHttp2k_topic"; then
@@ -294,10 +296,37 @@ testHttp2k() {
         ${_FAIL_} "'Cannot send https with TLS options set'"
     fi
 
+    # Set certificate, key, and client certificate authority
+    ${PROZZIE_PREFIX}/bin/prozzie config set http2k \
+        HTTP_TLS_CLIENT_CA_FILE="${SHUNIT_TMPDIR}"/client-certificate.pem
+
+    ${_ASSERT_EQUALS_} \
+        '"Can send client request with no certificate"' \
+        "'$(curl -k -d "$test_message1" \
+            "https://${prozzie_host}:7980/v1/data/testHttp2k_topic")'" \
+        '"Unknown error checking certificate, do you have one?"'
+
+    ${_ASSERT_EQUALS_} \
+        '"Can send message with a bad key/certificate pair"' \
+        "'$(curl -k -d "$test_message1" \
+            --key "${SHUNIT_TMPDIR}"/server-key.pem \
+            --cert "${SHUNIT_TMPDIR}"/server-certificate.pem \
+            "https://${prozzie_host}:7980/v1/data/testHttp2k_topic")'" \
+        '"The signature verification failed"'
+
+    if ! curl -vk \
+            --key "${SHUNIT_TMPDIR}"/client-key.pem \
+            --cert "${SHUNIT_TMPDIR}"/client-certificate.pem \
+            -d '{"test":1}' https://localhost:7980/v1/data/abc 2>&1 | \
+            grep 'HTTP/1.1 200 OK'; then
+        ${_FAIL_} "\"Can't send HTTP message with right certificate\""
+    fi
+
     # Delete tls
     ${PROZZIE_PREFIX}/bin/prozzie config set http2k \
         HTTP_TLS_KEY_FILE= \
-        HTTP_TLS_CERT_FILE=
+        HTTP_TLS_CERT_FILE= \
+        HTTP_TLS_CLIENT_CA_FILE=
 
     if ! send_http2k_msg \
                         "$test_message1" \

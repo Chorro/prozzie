@@ -39,6 +39,10 @@ if __name__ == "__main__":
             *invalid_values[:],
             Line(''),
         ],
+        'Certificate Authority for clients \\(blank for no client '
+        'verification\\)': [
+            Line(''),
+        ],
         pexpect.EOF: [],
     }
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# Prozzie - Wizzie Data Platform (WDP) main entrypoint
-# Copyright (C) 2018 Wizzie S.L.
+# This file is part of Prozzie - The Wizzie Data Platform (WDP) main entrypoint
+# Copyright (C) 2018-2019 Wizzie S.L.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.

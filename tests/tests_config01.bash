@@ -18,6 +18,7 @@
 declare -r PROZZIE_PREFIX=/opt/prozzie
 declare -r INTERFACE_IP="a.b.c.d"
 declare -r DUMMY_CONFIG_FILE_MD5="4cf8fcba3d6ff0f7c88ad1183e864245"
+declare -r KAFKACAT_CONFIG_FILE_MD5="53841519e294dfad78d99337dd123252"
 
 . backupconfig.sh
 . base_tests_config.bash
@@ -793,6 +794,28 @@ testJsonConfigFileToFolder() {
 
     if [[ "$GENERATED_MD5" != "$DUMMY_CONFIG_FILE_MD5" ]]; then
         ${_FAIL_} '"Generated dummy-connector.bash is not correct"'
+    fi
+}
+
+testAddDockefileBasedConnectors() {
+    "${PROZZIE_PREFIX}/bin/prozzie" config install --compose-file "$PWD"/resources/kafkacat.yaml --config-file.json resources/kafkacat.json
+
+    declare GENERATED_MD5
+    GENERATED_MD5=$(md5sum "${PROZZIE_PREFIX}/share/prozzie/cli/config/kafkacat.bash" | cut -f 1 -d " ")
+
+    if [[ "$GENERATED_MD5" != "$KAFKACAT_CONFIG_FILE_MD5" ]]; then
+        ${_FAIL_} '"Generated kafkacat.bash is not correct"'
+    fi
+
+    if ! "${PROZZIE_PREFIX}/bin/prozzie" config setup kafkacat; then
+        ${_FAIL_} '"An error has occurred to setup kafkacat"'
+    fi
+
+    declare message
+    message=$("${PROZZIE_PREFIX}/bin/prozzie" kafka consume dockerfile_test_topic --from-beginning --max-messages 1 --timeout-ms 5000)
+
+    if [[ -z "$message" ]]; then
+        ${_FAIL_} '"Must arrive message to topic dockerfile_test_topic"'
     fi
 }
 

@@ -1,0 +1,8 @@
+version: '3.6'
+
+services:
+  kafkacat:
+    image: ryane/kafkacat:latest
+    entrypoint: bash -c "echo 'test' | kafkacat -P -b $INTERFACE_IP -t dockerfile_test_topic"
+    env_file:
+      - ${PREFIX}/etc/prozzie/envs/base.env

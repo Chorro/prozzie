@@ -300,16 +300,21 @@ Optional. Only validate the configuration, do not modify anything.
 `--kafka-connector`:
 Mandatory. This parameter allows us to specify the path of kafka-connect connector jar file. You can use a relative or absolute path.
 
+`--compose-file`:
+Mandatory. This parameter allows us to specify the **absolute path** of docker-compose file. You must use a absolute path due to docker-compose context.
+
 `--config-file`:
 Mandatory. This parameter allows us to specify the path of configuration bash file to handle the connector's configuration. You can use a relative or absolute path.
 
 #### How to create a new configuration bash file
 
-To create a new configuration bash file for your kafka-connect connector, you can use a simple `json` or `yaml` scheme to generate automatically the bash file:
+You can create a new configuration bash file for a new connector based in kafka-connect (using `--kafka-connector`) or docker-compose (using `--compose-file`). You can use a simple `json` or `yaml` scheme to generate automatically the bash file:
 
 **JSON schema:**
 
 To use a json schema you need to specify it with `--config-file.json` option.
+
+`kafka-connect based connector`
 
 ```json
 {
@@ -319,12 +324,21 @@ To use a json schema you need to specify it with `--config-file.json` option.
             "default_value": "my-default-value",
             "description": "description about variable.name.1",
             "hidden": false
-        },
+        }
+    ]
+}
+```
+
+`docker-compose file based connector`
+
+```json
+{
+    "configs": [
         {
-            "var_name": "variable.name.2",
-            "default_value": true,
-            "description": "description about variable.name.2",
-            "hidden": true
+            "var_name": "ENV_VAR_1",
+            "default_value": "my-default-value",
+            "description": "description about ENV_VAR_1",
+            "hidden": false
         }
     ]
 }
@@ -334,19 +348,27 @@ To use a json schema you need to specify it with `--config-file.json` option.
 
 To use a yaml schema you need to specify it with `--config-file.yaml` option.
 
+`kafka-connect based connector`
+
 ```yaml
 configs:
     - var_name: "variable.name.1"
       default_value: "my-default-value"
       description: "description about variable.name.1"
       hidden: false
-    - var_name: "variable.name.2"
-      default_value: true
-      description: "description about variable.name.2"
-      hidden: true
 ```
 
-The `configs` field contains all the variables that our kafka-connect connector use. Each variable definition has the next fields:
+`docker-compose file based connector`
+
+```yaml
+configs:
+    - var_name: "ENV_VAR_1"
+      default_value: "my-default-value"
+      description: "description about ENV_VAR_1"
+      hidden: false
+```
+
+The `configs` field contains all the variables that our kafka-connect or docker-compose connector use. Each variable definition has the next fields:
 
 **Mandatory fields**:
 
@@ -366,6 +388,8 @@ The `configs` field contains all the variables that our kafka-connect connector 
 
 Or you just follow the next basic template:
 
+`kafka-connect based connector`
+
 ```bash
 #!/usr/bin/env bash
 
@@ -382,10 +406,31 @@ declare -A module_hidden_envs=(
 )
 ```
 
-**IMPORTANT NOTE:**
-We don't take any responsibility If you create a schema or config file and then doesn't work. The user must know the variables and default values of the kafka-connector that desire install. These variables could be specified in its repository or documentation.
+`docker-compose file based connector`
 
-You must define at least the `name` property that must match with the connector's name. Also, you must add the `connector.class`. You can found more information about this topic in [Configuring Connectors](https://docs.confluent.io/3.0.0/connect/userguide.html#configuring-connectors) of Confluent docs.
+```bash
+#!/usr/bin/env bash
+
+. "${BASH_SOURCE%/*/*}/include/config_compose.bash"
+
+declare -A module_envs=(
+    [ENV_VAR_1]='defaultValue1|my description 1',
+    [ENV_VAR_2]='defaultValue2|my description 2'
+)
+
+declare -A module_hidden_envs=(
+    [HIDDEN_ENV_VAR_1]='defaultValue1|my description 1',
+    [HIDDEN_ENV_VAR_2]='defaultValue2|my description 2'
+)
+```
+
+**IMPORTANT NOTE:**
+
+We don't take any responsibility If you create a schema or config file and then doesn't work. The user must know the variables and default values of the kafka-connect based connector or docker-compose file based connector that desire install. These variables could be specified in its repository or documentation.
+
+If you use a **kafka-connect based connector**, you must define at least the `name` property that must match with the connector's name. Also, you must add the `connector.class`. You can found more information about this topic in [Configuring Connectors](https://docs.confluent.io/3.0.0/connect/userguide.html#configuring-connectors) of Confluent docs.
+
+If you use a **docker-compose file based connector**, you only need to add the appropriate environment vars.
 
 ## Creating custom subcommands
 

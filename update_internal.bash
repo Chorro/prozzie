@@ -28,18 +28,14 @@ main () {
 
     if [[ -d "$upgrade_path/cli" ]]; then
         log info $'Upgrading prozzie CLI...\n'
-        # Delete old directory and its content
-        rm -rf "${PREFIX}"/share/prozzie/cli
-        # Move new directory and its content
-        mv "$upgrade_path/cli" "${PREFIX}"/share/prozzie
+        # Rsync cli directory and its content
+        docker run --rm -v "${PREFIX}"/share/prozzie:/destination -v "$upgrade_path":/source wizzieio/prozzie-toolbox rsync -az /source/cli /destination
     fi
 
     if [[ -d "$upgrade_path/compose" ]]; then
         log info $'Upgrading prozzie compose files...\n'
-        # Delete old directory and its  content
-        rm -rf "${PREFIX}"/share/prozzie/compose
-        # Move new directory and its content
-        mv "$upgrade_path/compose" "${PREFIX}"/share/prozzie
+        # Rsync compose directory and its content
+        docker run --rm -v "${PREFIX}"/share/prozzie:/destination -v "$upgrade_path":/source wizzieio/prozzie-toolbox rsync -az /source/compose /destination
     fi
 
     # Base env file was created in 0.6.0~0.7.0 range

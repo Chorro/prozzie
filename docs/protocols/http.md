@@ -23,12 +23,15 @@ You can check that messages are properly delivered using
 `prozzie kafka consume testtopic`.
 
 # The http2k connector
+
 Please enable the connector using `prozzie config setup http2k`. It will ask
 you SSL/TLS related questions, that you could leave blank if you don't want to
 use them.
 
 # SSL/TLS
+
 ## Quick SSL/TLS setup
+
 Here you have some instructions if you want to test the http2k TLS
 implementation quickly. It should be easy to change the individual steps, like
 obtaining the key/certificate pair or adapt the HTTP client option from curl.
@@ -59,6 +62,7 @@ EOF
 ```
 
 Change every parameter at convenience, taking into account:
+
 - Name of key/certificate produced (`-keyout`, `out`)
 - Validity in days (`-days`)
 - Exported common names and alternative names. Need to match with client
@@ -71,6 +75,7 @@ client authentication mechanism too.
 After that, answer the questions of command `prozzie config setup http2k`.
 
 ### Testing with curl
+
 You can make requests using https if you have configured certificate common
 name or alternate name:
 
@@ -95,26 +100,13 @@ https://localhost:7980/v1/data/abc
 ```
 
 # Variables
+
 You can set these variables in the environment before calling
 `prozzie config setup`, use them on `prozzie config set http2k VAR=VAL`, or delete them with `prozzie config set http2k VAR=`.
 
-<table>
-<tr><th>ENV</th><th>Description</th></tr>
-<tr>
-    <td>HTTP_TLS_KEY_FILE</td>
-    <td>Private key to use (blank for plain http)</td>
-</tr>
-<tr>
-    <td>HTTP_TLS_CERT_FILE</td>
-    <td>Certificate to export (blank for plain http)</td>
-</tr>
-<tr>
-    <td>HTTP_TLS_CLIENT_CA_FILE</td>
-    <td>Certificate Authority for clients (blank for no client verification)
-    </td>
-</tr>
-<tr>
-    <td>HTTP_TLS_KEY_PASSWORD</td>
-    <td>Password to decrypt key (blank for no password)</td>
-</tr>
-</table>
+|ENV|Description|
+|:-|:-|
+|HTTP_TLS_KEY_FILE|Private key to use (blank for plain http)|
+|HTTP_TLS_CERT_FILE|Certificate to export (blank for plain http)|
+|HTTP_TLS_CLIENT_CA_FILE|Certificate Authority for clients (blank for no client verification)|
+|HTTP_TLS_KEY_PASSWORD|Password to decrypt key (blank for no password)|

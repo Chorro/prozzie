@@ -7,7 +7,7 @@ To configure Syslog you can use `kcli` tool.
 
 * syslog.properties
 
-```
+```properties
 name=syslog
 connector.class=com.github.jcustenborder.kafka.connect.syslog.UDPSyslogSourceConnector
 tasks.max=1
@@ -36,6 +36,7 @@ When you configure the `syslog.properties` you need to create the connector:
 `prozzie kcli create syslog-connector < syslog.properties`
 
 ## Warning
+
 Currently, the only port in what you can expose syslog server is 1514.
 
 You can check that messages are properly delivered using `prozzie kafka consume <your-syslog-topic>`.

@@ -4,6 +4,7 @@
 # MQTT
 
 ## Interactive script
+
 You can run `prozzie config setup mqtt` to interactively configure one mqtt kafka
 connector. You will be asked for the next variables, that can't have any
 default:
@@ -27,7 +28,7 @@ To configure MQTT you can use `kcli` tool.
 
 * mqtt.properties
 
-```
+```properties
 name=mqtt
 connector.class=com.evokly.kafka.connect.mqtt.MqttSourceConnector
 tasks.max=1

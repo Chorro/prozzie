@@ -18,7 +18,8 @@ Please navigate through the different sections to know how to
 [Install](installation/Installation) or configure prozzie.
 
 ## License
-Copyright 2018 Wizzie S.L.
+
+Copyright 2018-2019 Wizzie S.L.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -32,8 +33,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-
 ## Prozzie documentation license
+
 Permission is granted to copy, distribute and/or modify this
 document under the terms of the GNU Free Documentation License,
 Version 1.3 or any later version published by the Free Software

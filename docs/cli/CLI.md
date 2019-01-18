@@ -28,93 +28,22 @@ internals or advance docker or docker-compose commands.
 
 You can handle prozzie components configuration with `prozzie config` command. This command allows you to configure modules with a `wizard` assistant, `get`, `set` and `setup` prozzie components configuration and `enable` or `disable` modules.
 
-#### Checking prozzie configuration with basic actions
-
-You can use `get` and `set` actions to check and list all variables in a specific module.
-
-You can get a complete key-value list of variables for a specified module:
-
-```bash
-prozzie config get <module>
-```
-
-i.e:
-
-```bash
-$ prozzie config get base
-```
-
-You can get a specified variable value with next command:
-
-```bash
-prozzie config get <module> <key1> <key2> ··· <keyN>···
-```
-
-i.e:
-
-```bash
-$ prozzie config get base INTERFACE_IP CLIENT_API_KEY
-```
-
-You can set a specific a list of variables with next action:
-
-```bash
-prozzie config set <module> <key-value-1> <key-value-2> ··· <key-value-N> ···
-```
-
-i.e:
-
-```bash
-$ prozzie config set base INTERFACE_IP=192.168.1.100 CLIENT_API_KEY=myAwesomeAPIKey
-```
-
-As you can see, the format of key-value pairs are `<key>`=`<value>`
-
-Please note that the prozzie makes some verifications, and the variables can be
-modified or rejected. The new `key=val` will be printed to check the actual new
-variable assignment.
-
-The command `prozzie config set` also accepts two modifiers in the case of
-compose modules that accept configuration:
-
-:`--dry-run`
-Only validate configuration, do not modify anything.
-
-:`--no-reload-prozzie`
-Do NOT reload prozzie after configuration. This is useful in case you want to
-modify the configuration of many modules and you don't want to wait for all the
-reloads: just set this modifier in all but the last. Note that the use of this
-modifier can set prozzie in an inconsistent state: Configuration files and
-current connectors configuration are not synced until you do `prozzie up` or
-similar.
-
-`prozzie config` command allows you check and handle the configuration in next modules:
-
-- [x] [**base**](https://github.com/wizzie-io/prozzie/blob/master/docs/installation/Installation.md)
-- [x] [**f2K**](https://github.com/wizzie-io/prozzie/blob/master/docs/protocols/flow.md)
-- [x] [**monitor**](https://github.com/wizzie-io/prozzie/blob/master/docs/protocols/snmp.md)
-- [x] [**sfacctd**](https://github.com/wizzie-io/prozzie/blob/master/docs/protocols/flow.md)
-- [x] [**syslog**](https://github.com/wizzie-io/prozzie/blob/master/docs/protocols/syslog.md)
-- [x] [**mqtt**](https://github.com/wizzie-io/prozzie/blob/master/docs/protocols/mqtt.md)
-
-#### Prozzie config actions
-
-Prozzie config command has next actions:
+Prozzie config command has the next actions:
 
 `prozzie config get`
-: Allow you get information about prozzie component configuration
+: Allows you get information about prozzie component configuration
 
 `prozzie config set`
-: Allow you handle prozzie component configuration
+: Allows you set prozzie component configuration
 
 `prozzie config wizard`
-: Allow you configure all available modules with wizard assistant
+: Allows you configure all available modules with wizard assistant
 
 `prozzie config describe <module>`
 : Shows what variables have a specific module
 
 `prozzie config setup <module>`
-: Allow you configure a module with setup assistant
+: Allows you configure a module with setup assistant
 
 `prozzie config describe-all`
 : Shows all variables of each module
@@ -131,8 +60,78 @@ making it more suitable for scripting.
 
 Prozzie config command has next options:
 
-`prozzie config [-h|--help]`
+`--help|-h`
 : Shows prozzie config subcommand help
+
+`--no-reload-prozzie`
+: Do NOT reload prozzie after configuration. This is useful in case you want to
+modify the configuration of many modules and you don't want to wait for all the
+reloads: just set this modifier in all but the last. Note that the use of this
+modifier can set prozzie in an inconsistent state: Configuration files and
+current connectors configuration are not synced until you do `prozzie up` or
+similar.
+
+Prozzie config `setup` and `set` has next aditional options:
+
+`--dry-run`
+: Only validate configuration, do not modify anything.
+
+#### Checking prozzie configuration with basic actions
+
+You can use `get` and `set` actions to check and list all variables in a specific module.
+
+You can get a complete key-value list of variables for a specified module:
+
+```bash
+prozzie config get <module>
+```
+
+i.e:
+
+```bash
+prozzie config get base
+```
+
+You can get a specified variable value with next command:
+
+```bash
+prozzie config get <module> <key1> <key2> ··· <keyN>···
+```
+
+i.e:
+
+```bash
+prozzie config get base INTERFACE_IP CLIENT_API_KEY
+```
+
+You can set a specific a list of variables with next action:
+
+```bash
+prozzie config set <module> <key-1>=<value-1> <key-2>=<value-2> ··· <key-N>=<value-N>
+```
+
+i.e:
+
+```bash
+prozzie config set base INTERFACE_IP=192.168.1.100 CLIENT_API_KEY=myAwesomeAPIKey
+```
+
+As you can see, the format of key-value pairs are `<key>`=`<value>`
+
+Please note that the prozzie makes some verifications, and the variables can be
+modified or rejected. The new `key=value` will be printed to check the actual new
+variable assignment.
+
+The command `prozzie config set` also accepts `--dry-run` and `--no-reload-prozzie` modifiers.
+
+`prozzie config` command allows you check and handle the configuration in next modules:
+
+- [x] [**base**](https://github.com/wizzie-io/prozzie/blob/master/docs/installation/Installation.md)
+- [x] [**f2K**](https://github.com/wizzie-io/prozzie/blob/master/docs/protocols/flow.md)
+- [x] [**monitor**](https://github.com/wizzie-io/prozzie/blob/master/docs/protocols/snmp.md)
+- [x] [**sfacctd**](https://github.com/wizzie-io/prozzie/blob/master/docs/protocols/flow.md)
+- [x] [**syslog**](https://github.com/wizzie-io/prozzie/blob/master/docs/protocols/syslog.md)
+- [x] [**mqtt**](https://github.com/wizzie-io/prozzie/blob/master/docs/protocols/mqtt.md)
 
 ### Prozzie service operation
 
@@ -150,8 +149,8 @@ You have the next commands for basic prozzie operation:
 `prozzie stop`
 : Stop prozzie services
 
-`prozzie up`
-: (re)Create and start prozzie services
+`prozzie up -d`
+: (re)Create and start prozzie services. The `-d` flag is for using detached mode.
 
 You can start, stop, create or destroy prozzie compose with installed commands
 `prozzie start`, `prozzie stop`, `prozzie up` and `prozzie down`, respectively.
@@ -173,27 +172,26 @@ So, `prozzie start`, `prozzie stop`, `prozzie up` and
 You can use the command `logs` to see the different prozzie components logs:
 
 ```bash
-$ prozzie logs
+prozzie logs
 ```
 
 You can keep seeing logs with the option `-f/--follow`:
 
 ```bash
-$ prozzie logs -f
+prozzie logs -f
 ```
 
 And check only a specific component if you append that component's name. For
 example, to check kafka logs:
 
 ```bash
-$ prozzie logs kafka
+prozzie logs kafka
 ```
 
-If log file is too long, you can use `--tail <n>` option to show the last part
-of log, where `<n>` is the number of lines to show:
+If log file is too long, you can use `--tail <n>` option to show the newest entries in log, where `<n>` is the number of entries to show. For exmaple, to show the 1000 newest entries of kafka's log we can type:
 
 ```bash
-$ prozzie logs -f --tail 1000 kafka
+prozzie logs -f --tail 1000 kafka
 ```
 
 ### Prozzie message queue operation
@@ -207,7 +205,7 @@ this document.
 ##### Creating topics
 
 ```bash
-$ prozzie kafka topics --create --topic abc --partitions 1 --replication-factor 1
+prozzie kafka topics --create --topic abc --partitions 1 --replication-factor 1
 ```
 
 Note that you don't need to create a topic before produce data. Kafka cluster
@@ -216,7 +214,7 @@ creates it for you at the same moment you produce the first message.
 #### List topics
 
 ```bash
-$ prozzie kafka topics --list
+prozzie kafka topics --list
 ```
 
 #### Produce messages
@@ -225,7 +223,11 @@ $ prozzie kafka topics --list
 prozzie kafka produce <topic>
 ```
 
-You can introduce as many messages as you want, separated by a newline.
+You can introduce as many messages as you want, separated by a newline. If you want to produce messages with key you can use the next command:
+
+```bash
+prozzie kafka produce <topic> --property "parse.key=true" --property "key.separator=,"
+```
 
 #### Consume messages
 
@@ -246,11 +248,17 @@ Or consume from the earlier message in the kafka log:
 prozzie kafka consume <topic> [<partition>] --from-beginning
 ```
 
+If you want to consume messages and show its keys you can use the next command:
+
+```bash
+prozzie kafka consume <topic> --property "print.key=true" --property "key.separator= -> "
+```
+
 #### Advanced operation
 
 If you know how to use kafka distributed configuration scripts, you can
 execute them directly using
-`prozzie compose exec kafka /opt/kafka/bin/<you_script>`.
+`prozzie compose exec kafka /opt/kafka/bin/<your_script>`.
 
 ### Prozzie upgrade operation
 
@@ -324,7 +332,7 @@ To use a json schema you need to specify it with `--config-file.json` option.
 
 **YAML schema**:
 
-To use a json schema you need to specify it with `--config-file.yaml` option.
+To use a yaml schema you need to specify it with `--config-file.yaml` option.
 
 ```yaml
 configs:
@@ -351,7 +359,7 @@ The `configs` field contains all the variables that our kafka-connect connector 
 : The default value for variable.
 
 `description`
-: A brief description of the variable. This field is optional
+: A brief description of the variable.
 
 `hidden`
 : This field can have two possible values `true` or `false`, by default it's `false`. If you set `hidden` to `true` the variable will be classified like `module_hidden_envs` else `module_envs`.
@@ -373,6 +381,11 @@ declare -A module_hidden_envs=(
     [hidden.var.name.2]='defaultValue2|my description 2'
 )
 ```
+
+**IMPORTANT NOTE:**
+We don't take any responsibility If you create a schema or config file and then doesn't work. The user must know the variables and default values of the kafka-connector that desire install. These variables could be specified in its repository or documentation.
+
+You must define at least the `name` property that must match with the connector's name. Also, you must add the `connector.class`. You can found more information about this topic in [Configuring Connectors](https://docs.confluent.io/3.0.0/connect/userguide.html#configuring-connectors) of Confluent docs.
 
 ## Creating custom subcommands
 

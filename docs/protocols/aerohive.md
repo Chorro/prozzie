@@ -33,7 +33,8 @@ following the [Advanced configuration](#Advanced-configuration).
 
 To configure Aerohive you can use `kcli` tool.
 
-`aerohive.properties`
+`aerohive.properties file`
+
 ```properties
 # Connector's Name
 name=aerohive
@@ -64,6 +65,3 @@ When you configure the `aerohive.properties` file you need to create the connect
 `prozzie kcli create aerohive-connector < aerohive.properties`
 
 You can check that messages are properly delivered using `prozzie kafka consume <your-aerohive-topic>`
-
-#### Links
-- [Kafka Connect Aerohive Connector](https://github.com/wizzie-io/kafka-connect-aerohive)

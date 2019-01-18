@@ -6,6 +6,7 @@
 ## Base Linux installation
 
 ### Getting installation script
+
 #### Automagical installation
 
 Prozzie will be downloaded & installed if you execute the next command in a
@@ -21,6 +22,7 @@ Clone the repo and execute the `setups/linux_setup.sh` script that will guide
 you through the entire installation:
 
 ### Installation steps
+
 #### Base prozzie installation
 
 You will be asked for a prozzie installation path, and you must remember it at
@@ -28,6 +30,7 @@ every change you want to make from now on.
 
 If you have not installed docker or docker-compose yet, `linux_setup.sh` script
 will install them. Next tools it needs for installation:
+
 - `curl`
 
 Curl is only needed to install docker. Beyond that point, all dependencies are contained in a docker image named [`prozzie-toolbox`](https://hub.docker.com/r/wizzieio/prozzie-toolbox/).
@@ -46,6 +49,7 @@ ZZ_HTTP_ENDPOINT
 : You WDP endpoint
 
 #### Modules configuration
+
 After that, you can configure different prozzie connectors introducing the name or
 the number in the prompted menu:
 
@@ -94,13 +98,16 @@ Prozzie doesn't provide any mechanism to uninstall prozzie. If you want to unins
 
 When you install prozzie first time you must specify a `prefix`, by default It's `/usr/local`. In this prefix, prozzie creates following directories:
 
-- `${PREFIX}/share/prozzie`
+`${PREFIX}/share/prozzie`
 : Contains files about prozzie cli and docker compose files.
-- `${PREFIX}/bin`
+
+`${PREFIX}/bin`
 : Contains the symbolic link to prozzie command.
-- `${PREFIX}/etc/prozzie`
+
+`${PREFIX}/etc/prozzie`
 : Contains information about prozzie modules configuration.
-- `${PREFIX}/var/prozzie/backup`
+
+`${PREFIX}/var/prozzie/backup`
 : Contains prozzie backup when upgrade prozzie.
 
 To uninstall prozzie you must follow the next steps:

@@ -354,7 +354,21 @@ function app_setup () {
   "${PREFIX}/bin/prozzie" up -d kafka-connect
   zz_trap_push trap_stack_install_rollback_unused stop_prozzie EXIT
 
-  "${PREFIX}/bin/prozzie" config wizard
+  # Need to expand to nothing if not set or NULL
+  if [[ ! -v CONFIG_APPS ]]; then
+    # shellcheck disable=SC2086
+    "${PREFIX}/bin/prozzie" config wizard ${CONFIG_APPS}
+  elif [[ -n "${CONFIG_APPS}" ]]; then
+    declare connector
+    declare -a setup_connectors
+    readarray -t setup_connectors <<< "$(tr -s '[:space:]' '\n' \
+                                                          <<< "${CONFIG_APPS}")"
+    for connector in "${setup_connectors[@]}"; do
+      if ! "${PREFIX}/bin/prozzie" config setup "${connector}"; then
+        return 1
+      fi
+    done
+  fi
 
   printf 'Done!\n\n'
 

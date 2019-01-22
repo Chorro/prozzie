@@ -363,18 +363,13 @@ zz_set_default () {
 
 # Search for modules in a specific directory and offers them to the user to
 # setup them
-# Arguments:
-#  1 - Directory to search modules from
-#  2 - Current temp env file
-#  3 - (Optional) list of modules to configure
 wizard () {
     declare -r PS3='Do you want to configure modules? (Enter for quit): '
     declare -r search_prefix='*/cli/config/'
     declare -r suffix='.bash'
 
-    declare -a modules config_modules
+    declare -a modules
     declare reply
-    read -r -a config_modules <<< "$3"
 
     for module in "${PROZZIE_CLI_CONFIG}"/*.bash; do
         if [[ "$module" == *base.bash ]]; then
@@ -387,20 +382,14 @@ wizard () {
     done
 
     while :; do
-        if [[ -z ${3+x} ]]; then
-            reply=$(zz_select "${modules[@]}")
-        elif [[ ${#config_modules[@]} -gt 0 ]]; then
-            reply=${config_modules[-1]}
-        else
-            reply=''
-        fi
+        reply=$(zz_select "${modules[@]}")
 
         if [[ -z ${reply} ]]; then
             break
         fi
 
         set +m  # Send SIGINT only to child
-        "${PREFIX}"/bin/prozzie config setup ${reply}
+        "${PREFIX}"/bin/prozzie config setup "${reply}"
         set -m
     done
 }

@@ -557,7 +557,7 @@ zz_list_enabled_modules() {
 
 ##
 ## @brief      Allows "install" connectors of kafka-connect.
-##             Basically add the *.jar file to kafka-connect docker volume and 
+##             Basically add the *.jar file to kafka-connect docker volume and
 ##             copy or generate the config bash file to ${PREFIX}/share/prozzie/cli/config
 ##
 ## @param  [--dry-run] Do not make any actual change, just validate input
@@ -671,10 +671,10 @@ zz_install_connector () {
     esac
 
     if [[ $bash_file == n ]];then
-        declare -r jq_query_base="if has(\"configs\") then .configs[] else error(\"'configs' key is not defined!\") end 
-        | if has(\"var_name\") then . else error(\"'var_name' key is not defined!\") end 
-        | if has(\"hidden\") then . else . + {hidden: false} end 
-        | select(.hidden==#IS_HIDDEN#) 
+        declare -r jq_query_base="if has(\"configs\") then .configs[] else error(\"'configs' key is not defined!\") end
+        | if has(\"var_name\") then . else error(\"'var_name' key is not defined!\") end
+        | if has(\"hidden\") then . else . + {hidden: false} end
+        | select(.hidden==#IS_HIDDEN#)
         | \"[\\(.var_name)]='\\(if .default_value != null then .default_value else \"\" end)|\\(if .description != null then .description else \"\" end)'\""
 
         if ! module_env_vars=$(zz_toolbox_exec -i -- jq -r "${jq_query_base/\#IS_HIDDEN\#/false}" < "$input_json_file_path") \

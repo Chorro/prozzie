@@ -571,7 +571,8 @@ zz_install_connector () {
     declare dry_run_arg
     declare connector_file_path
     declare config_file_cmd_base="--config-file."
-    declare config_file_path
+    declare config_file_relative_path
+    declare config_file
     declare config_filename
     declare file_type
     declare is_kafka_connector=y
@@ -599,8 +600,9 @@ zz_install_connector () {
                 printf "The file '%s' doesn't exist\\n" "$2"
                 exit 1
             fi
-            config_file_path="$2"
-            config_filename="${config_file_path##*/}"
+            config_file_relative_path="$2"
+            config_file="${config_file_relative_path##*/}"
+            config_filename="${config_file%.*}"
             file_type=${1#"$config_file_cmd_base"}
             shift 2
             ;;
@@ -624,7 +626,7 @@ zz_install_connector () {
         exit 1
     fi
 
-    if [[ -z $config_file_path ]]; then
+    if [[ -z $config_file_relative_path ]]; then
         printf -- "--config-file[.json] <path-to-bash-config-file> is required\\n"
         exit 1
     fi
@@ -632,9 +634,7 @@ zz_install_connector () {
     declare -r kafka_connect_jars_volume="prozzie_kafka_connect_jars"
     declare module_env_vars
     declare module_hidden_env_vars
-    declare config_filename="${config_file_path##*/}"
-    config_filename=${config_filename%.*}
-    declare input_json_file_path="$config_file_path"
+    declare input_json_file_path="$config_file_relative_path"
     declare bash_file=y
 
     case $file_type in
@@ -643,7 +643,7 @@ zz_install_connector () {
             if [[ "$file_type" == yaml ]]; then
                 tmp_fd input_json_file_path
                 input_json_file_path=/dev/fd/"$input_json_file_path"
-                zz_toolbox_exec -i -- y2j < "$config_file_path" > "$input_json_file_path"
+                zz_toolbox_exec -i -- y2j < "$config_file_relative_path" > "$input_json_file_path"
             fi
 
             if ! zz_toolbox_exec -i -- jq -e . < "$input_json_file_path" > /dev/null 2>&1; then
@@ -653,14 +653,25 @@ zz_install_connector () {
 
             bash_file=n
         ;;
-        *)
-            if [[ -z $dry_run_arg ]]; then
-                if ! cp "$config_file_path" "${PROZZIE_CLI_CONFIG}"; then
-                    return 1;
-                fi
+        bash|*)
+            if [[ -z $file_type || "$file_type" != bash ]]; then
+                printf "WARN: The specified file type is empty or not recognized. Assuming as bash file\\n"
             fi
 
-            printf "Added %s to %s\\n" "$config_file_path" "${PROZZIE_CLI_CONFIG}"
+            if ! zz_toolbox_exec -i -- shellcheck -e SC1090 -e SC2034 - < "$config_file_relative_path"; then
+                printf "The file %s is not a valid config bash file\\n" "$config_file" >&2
+                exit 1
+            fi
+
+            if [[ -z $dry_run_arg ]]; then
+                if ! cp "$config_file_relative_path" "${PROZZIE_CLI_CONFIG}"; then
+                    return 1;
+                fi
+
+                printf "Added %s to %s\\n" "$config_file" "${PROZZIE_CLI_CONFIG}"
+            else
+                printf "The config file %s would be added\\n" "$config_file"
+            fi
         ;;
     esac
 
@@ -800,11 +811,12 @@ generate_config_bash_file() {
 
     declare output="$output1$output2"
     printf "Done!\\n"
-    printf "Generated file: %s\\n" "${PROZZIE_CLI_CONFIG}/$config_filename".bash
 
     if [[ $dry_run == y ]]; then
-        printf "%s" "$output"
+        printf "Would generate the next file: %s\\n" "${PROZZIE_CLI_CONFIG}/$config_filename".bash
+        printf "With the next output:\\n\\n%s\\n" "$output"
     else
+        printf "Generated file: %s\\n" "${PROZZIE_CLI_CONFIG}/$config_filename".bash
         printf "%s" "$output" > "${PROZZIE_CLI_CONFIG}/$config_filename".bash
     fi
 }

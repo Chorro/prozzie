@@ -36,10 +36,10 @@ services:
     image: gcr.io/wizzie-registry/wizzie-kc:0.2.1
     restart: always
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://kafka-connect:8083"]
-      interval: 1s
-      timeout: 3s
-      retries: 60
+      test: ["CMD", "nc", "-z", "kafka-connect", "8083"]
+      interval: 15s
+      timeout: 30s
+      retries: 3
     depends_on:
       - kafka
     ports:

@@ -6,7 +6,7 @@ volumes:
 
 services:
   http2k:
-    image: wizzieio/n2kafka:2.2.0.tls_client
+    image: wizzieio/n2kafka:2.3.1.xml
     restart: always
     env_file:
       - ${PREFIX}/etc/prozzie/envs/http2k.env

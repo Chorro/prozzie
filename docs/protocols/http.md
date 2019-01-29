@@ -1,7 +1,8 @@
 ---
 ---
 
-# JSON/HTTP
+# HTTP
+## JSON/HTTP
 
 Here you can send JSON data over HTTP using curl directly (or similar http
 client) to port 7980:
@@ -21,6 +22,40 @@ localhost:7980/v1/data/testtopic
 
 You can check that messages are properly delivered using
 `prozzie kafka consume testtopic`.
+
+## XML/HTTP
+
+Prozzie http2k connector also support XML messages, transforming them
+internally to a JSON over Kafka. For example, the next command:
+
+```bash
+$ curl -d \
+'<root><child1 a="r">t1</child1>tt<child2>t2</child2></root>' \
+localhost:7980/v1/data/testtopic
+```
+
+Will output the next kafka message (blanks are included for prettify it, all
+items are compacted):
+
+```json
+{
+    "tag":"root",
+    "children":[
+        {
+            "tag":"child1",
+            "attributes":{"a":"r"},
+            "text":"t1","tail":"tt"
+        },
+        {
+            "tag":"child2",
+            "text":"t2"
+        }
+]}
+```
+
+For a more detailed transformation examples, please see
+[http2k](https://github.com/wizzie-io/n2kafka/blob/master/src/decoder/zz_http2k/README.md)
+docs.
 
 # The http2k connector
 Please enable the connector using `prozzie config setup http2k`. It will ask

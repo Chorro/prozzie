@@ -16,7 +16,7 @@
 # limitations under the License.
 
 
-declare -r PROZZIE_VERSION=0.7.0
+declare -r PROZZIE_VERSION=$(curl -L --header 'Accept: application/vnd.github.v3.raw' 'https://api.github.com/repos/wizzie-io/prozzie/contents/setups/.version')
 
 . /etc/os-release
 

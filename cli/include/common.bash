@@ -296,8 +296,8 @@ zz_sponge() {
 ##             signal, allowing us to not to override previous established traps
 ##
 ## @param      1 The variable to save previous stack
-## @param      2 The trap condition
-## @param      3 The new trap action
+## @param      2 The new trap action
+## @param      3 The trap condition
 ##
 ## @return     trap return value
 ## @see        zz_trap_pop

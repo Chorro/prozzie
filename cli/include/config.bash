@@ -569,7 +569,7 @@ zz_install_connector () {
     declare args=("$@" --)
     set -- "${args[@]}"
     declare dry_run_arg
-    declare connector_file_path
+    declare connector_file_location
     declare config_file_cmd_base="--config-file."
     declare config_file_relative_path
     declare config_file
@@ -584,15 +584,10 @@ zz_install_connector () {
             shift
             ;;
         --kafka-connector|--compose-file)
-            if [[ ! -f "$2" ]]; then
-                printf "The file '%s' doesn't exist\\n" "$2"
-                exit 1
-            fi
-
             if [[ $1 != --kafka-connector ]]; then
                 is_kafka_connector=n
             fi
-            connector_file_path="$2"
+            connector_file_location="$2"
             shift 2
             ;;
         --config-file*)
@@ -621,7 +616,7 @@ zz_install_connector () {
         esac
     done
 
-    if [[ -z $connector_file_path ]]; then
+    if [[ -z $connector_file_location ]]; then
         printf -- "--kafka-connector <path-to-jar> or --compose-file <path-to-file> is required\\n"
         exit 1
     fi
@@ -694,35 +689,71 @@ zz_install_connector () {
 
     # zz_trap_push/pop use this variable
     # shellcheck disable=SC2034
-    declare trap_copy_to_volume_or_directory_stack
-    zz_trap_push trap_copy_to_volume_or_directory_stack "rm ${PROZZIE_CLI_CONFIG}/$config_filename.bash" EXIT
+    declare trap_copy_to_volume_or_directory_stack trap_download_file_stack
 
-    if [[ "$is_kafka_connector" == y ]] && zz_docker_copy_file_to_volume \
-            ${dry_run_arg:-} f "$connector_file_path" "$kafka_connect_jars_volume"; then
+    if [[ -z $dry_run_arg ]]; then
+        zz_trap_push trap_copy_to_volume_or_directory_stack "rm ${PROZZIE_CLI_CONFIG}/$config_filename.bash" EXIT
+    fi
 
-        if [[ -z $dry_run_arg ]]; then
-            printf "Added kafka connector %s\\n" "$connector_file_path"
+    if [[ "$is_kafka_connector" == y ]]; then
+        if [[ "$connector_file_location" =~ ^https?://.+ ]]; then
+            if ! curl -s --head "$connector_file_location" | grep -q "200 OK"; then
+                printf "The url '%s' is not valid and cannot be loaded\\n" "$connector_file_location"
+                exit 1
+            fi
 
-            "${PREFIX}"/bin/prozzie compose rm -s -f kafka-connect 2>&1 | \
-            grep -v 'No such service: kafka-connect' >&2
+            if [[ -z $dry_run_arg ]]; then
+                # Download in /tmp directory
+                (cd /tmp || exit; curl -s -O "$connector_file_location")
+                connector_file_location="/tmp/${connector_file_location##*/}"
 
-            "${PREFIX}"/bin/prozzie up -d
-        else
-            printf "kafka connector %s would be added\\n" "$connector_file_path"
+                # zz_trap_push/pop use this variable
+                # shellcheck disable=SC2034
+                zz_trap_push trap_download_file_stack "rm $connector_file_location" EXIT
+            else
+                printf "The url '%s' is valid and could be downloaded\\n" "$connector_file_location"
+            fi
+        fi
+
+        if [[ -z $dry_run_arg && ! -f "$connector_file_location" ]]; then
+            printf "The file '%s' doesn't exist\\n" "$connector_file_location"
+            exit 1
+        fi
+
+        if zz_docker_copy_file_to_volume ${dry_run_arg:-} f "$connector_file_location" "$kafka_connect_jars_volume"; then
+            if [[ -z $dry_run_arg ]]; then
+                printf "Added kafka connector %s\\n" "$connector_file_location"
+
+                "${PREFIX}"/bin/prozzie compose rm -s -f kafka-connect 2>&1 | \
+                grep -v 'No such service: kafka-connect' >&2
+
+                "${PREFIX}"/bin/prozzie up -d
+
+                # Pop all traps
+                zz_trap_pop trap_copy_to_volume_or_directory_stack EXIT
+
+                if [[ ! -z $trap_download_file_stack ]]; then
+                    rm "$connector_file_location"
+                    zz_trap_pop trap_download_file_stack EXIT
+                fi
+
+            else
+                printf "kafka connector %s would be added\\n" "$connector_file_location"
+            fi
         fi
     else
         if [[ -z $dry_run_arg ]]; then
-            if ! "${PREFIX}"/bin/prozzie compose --file "$connector_file_path" config > /dev/null; then
-                printf "The file '%s' isn't a valid compose file\\n" "$connector_file_path" >&2
+            if ! "${PREFIX}"/bin/prozzie compose --file "$connector_file_location" config > /dev/null; then
+                printf "The file '%s' isn't a valid compose file\\n" "$connector_file_location" >&2
                 return 1
             fi
 
-            if ! cp "$connector_file_path" "${PREFIX}/share/prozzie/compose"; then
+            if ! cp "$connector_file_location" "${PREFIX}/share/prozzie/compose"; then
                 return 1
             fi
-            printf "Added compose file %s to %s\\n" "${PREFIX}/share/prozzie/compose" "$connector_file_path"
+            printf "Added compose file %s to %s\\n" "${PREFIX}/share/prozzie/compose" "$connector_file_location"
         else
-            printf "Docker-compose file %s would be added\\n" "$connector_file_path"
+            printf "Docker-compose file %s would be added\\n" "$connector_file_location"
         fi
     fi
 

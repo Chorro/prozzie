@@ -162,13 +162,13 @@ workflows:
     jobs:
       - flake8
       - shellcheck
-      - ubuntu16.04
-      - ubuntu18.04
-      - centos7
-      - debian9
+#      - ubuntu16.04
+#      - ubuntu18.04
+#      - centos7
+#      - debian9
       - coverage:
           requires:
-            - ubuntu16.04
-            - ubuntu18.04
-            - centos7
-            - debian9
+#            - ubuntu16.04
+#            - ubuntu18.04
+#            - centos7
+#            - debian9

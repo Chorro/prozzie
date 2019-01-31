@@ -202,7 +202,7 @@ print_github_last_release () {
 # Arguments:
 # Exit status:
 upgrade_to_new_version () {
-    declare -r new_version="$1"
+    declare -r git_reference="$1"
 
     # zz_trap_push/pop use this variable
     # shellcheck disable=SC2034
@@ -212,7 +212,7 @@ upgrade_to_new_version () {
     clear
     # Download selected prozzie release
     log info $'Downloading new release of Prozzie, please wait...\n'
-    if ! curl -L -o "/tmp/prozzie-$new_version.tar.gz" "https://github.com/wizzie-io/prozzie/archive/${new_version}.tar.gz"; then
+    if ! curl -L -o "/tmp/prozzie-$git_reference.tar.gz" "https://github.com/wizzie-io/prozzie/archive/${git_reference}.tar.gz"; then
         log error $'An error has been occurred to download the specified prozzie version!\n' >&2
         exit 1
     fi
@@ -222,9 +222,14 @@ upgrade_to_new_version () {
     # Rollback if prozzie upgrade is cancelled
     zz_trap_push trap_stack rollback_backup EXIT
     # upgrade prozzie files and version
-    if upgrade_prozzie_files "$new_version"; then
-        echo "$new_version" > "${PREFIX}"/etc/prozzie/.version
-        log ok $'Prozzie has been upgraded successfully to version '"$new_version"$'!\n'
+    if upgrade_prozzie_files "$git_reference"; then
+        PROZZIE_VERSION=$(curl -L --header 'Accept: application/vnd.github.v3.raw' 'https://api.github.com/repos/wizzie-io/prozzie/contents/.version?ref=$git_reference')
+        declare -r PROZZIE_VERSION
+        GIT_REFERENCE_COMMIT=$(curl -H "Accept: application/vnd.github.VERSION.sha" https://api.github.com/repos/wizzie-io/prozzie/commits/$git_reference|head -c 7)
+        declare -r GIT_REFERENCE_COMMIT
+        echo "$PROZZIE_VERSION" > "${PREFIX}"/etc/prozzie/.version
+        echo "$GIT_REFERENCE_COMMIT" >> "${PREFIX}"/etc/prozzie/.version
+        log ok $'Prozzie has been upgraded successfully to version '"$PROZZIE_VERSION ($GIT_REFERENCE_COMMIT)"$'!\n'
         zz_trap_pop trap_stack EXIT
         "${PREFIX}/bin/prozzie" up -d
     else

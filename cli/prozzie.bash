@@ -62,7 +62,8 @@ main_help () {
 #  Subcommand exit status
 main () {
     if [[ "$1" == '--version' || $1 == '-v' ]]; then
-        printf "Prozzie - Wizzie Data Platform (WDP) main entrypoint\\nVersion: %s\\n" "$(<"${PREFIX}/etc/prozzie/.version")"
+        prozzie_version_info=($(<"${PREFIX}/etc/prozzie/.version"))
+        printf "Prozzie - Wizzie Data Platform (WDP) main entrypoint\\nVersion: %s\\nGitHash: %s\\n" "${prozzie_version_info[0]}" "${prozzie_version_info[1]}"
         exit 0
     fi
 

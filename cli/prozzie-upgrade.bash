@@ -223,10 +223,9 @@ upgrade_to_new_version () {
     zz_trap_push trap_stack rollback_backup EXIT
     # upgrade prozzie files and version
     if upgrade_prozzie_files "$git_reference"; then
-        PROZZIE_VERSION=$(curl -L --header 'Accept: application/vnd.github.v3.raw' 'https://api.github.com/repos/wizzie-io/prozzie/contents/.version?ref=$git_reference')
-        declare -r PROZZIE_VERSION
-        GIT_REFERENCE_COMMIT=$(curl -H "Accept: application/vnd.github.VERSION.sha" https://api.github.com/repos/wizzie-io/prozzie/commits/$git_reference|head -c 7)
-        declare -r GIT_REFERENCE_COMMIT
+        declare -r PROZZIE_VERSION=$(curl -L --header 'Accept: application/vnd.github.v3.raw' "https://api.github.com/repos/wizzie-io/prozzie/contents/.version?ref=$git_reference")
+        declare -r GIT_REFERENCE_COMMIT=$(curl -H "Accept: application/vnd.github.VERSION.sha" "https://api.github.com/repos/wizzie-io/prozzie/commits/$git_reference"|head -c 7)
+        
         echo "$PROZZIE_VERSION" > "${PREFIX}"/etc/prozzie/.version
         echo "$GIT_REFERENCE_COMMIT" >> "${PREFIX}"/etc/prozzie/.version
         log ok $'Prozzie has been upgraded successfully to version '"$PROZZIE_VERSION ($GIT_REFERENCE_COMMIT)"$'!\n'
@@ -265,14 +264,14 @@ rollback_backup () {
 # Exit status:
 #  Always 0
 upgrade_prozzie_files () {
-    declare -r new_version="$1"
+    declare -r git_reference="$1"
     declare -r target="/tmp/prozzie-$1.tar.gz"
 
     rm -rf "${PREFIX}"/share/prozzie/*
     log info $'Extracting files...\n'
     tar -zxf "$target" -C /tmp
 
-    bash "/tmp/prozzie-$new_version/update_internal.bash" "${PREFIX}" "/tmp/prozzie-$new_version"
+    bash "/tmp/prozzie-$git_reference/update_internal.bash" "${PREFIX}" "/tmp/prozzie-$git_reference"
 }
 
 main "$@"
